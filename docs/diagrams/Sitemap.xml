@@ -1,0 +1,747 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="nTihX2XCRgARRCp8PRfY">
+    <mxGraphModel dx="14150" dy="-2990" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;flowchart TD\n    %% ==========================================\n    %% LAYOUT &amp; STYLE DEFINITIONS\n    %% ==========================================\n    classDef auth fill:#ECEFF1,stroke:#37474F,stroke-width:2px,color:#263238;\n    classDef siswa fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20;\n    classDef kaprog fill:#EDE7F6,stroke:#4527A0,stroke-width:2px,color:#4A148C;\n    classDef guru fill:#FFF3E0,stroke:#EF6C00,stroke-width:2px,color:#E65100;\n    classDef hubin fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#01579B;\n    classDef core fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#78909C;\n\n    %% ==========================================\n    %% 1. AUTHENTICATION &amp; SECURITY GATE\n    %% ==========================================\n    subgraph GATEWAY [\&quot;Kredensial &amp; Autentikasi (BR15)\&quot;]\n        Landing[\&quot;Landing Page &lt;br&gt; (/)\&quot;]:::auth\n        Login[\&quot;Login Form &lt;br&gt; (/login)\&quot;]:::auth\n\n        %% Middleware Gate\n        Middleware{\&quot;CheckFirstLogin &lt;br&gt; (Password == NIS/NIP?)\&quot;}:::core\n\n        FirstLogin[\&quot;Ganti Password Wajib &lt;br&gt; (/first-login)\&quot;]:::auth\n    end\n\n    Landing --&gt; Login\n    Login --&gt; Middleware\n    Middleware -- \&quot;Ya (Wajib Ganti)\&quot; --&gt; FirstLogin\n    FirstLogin --&gt; Login\n    Middleware -- \&quot;Tidak (Lolos)\&quot; --&gt; RBAC_Router{\&quot;RBAC Route Controller &lt;br&gt; (Siswa / Kaprog / Guru / Hubin)\&quot;}:::core\n\n    %% ==========================================\n    %% 2. SISWA MODULE (Scoped: Milik Sendiri)\n    %% ==========================================\n    subgraph SISWA_PANEL [\&quot;🎓 PANEL SISWA (BR1, BR14, BR19)\&quot;]\n        S_Dash[\&quot;Dashboard &lt;br&gt; - Stepper Visual Progress Tracker (BR17) - &lt;br&gt; - In-App Notification (Toast) - &lt;br&gt; - Search &amp; Filter Bar (BR21) -\&quot;]:::siswa\n        S_Info[\&quot;Panduan Alur PKL &lt;br&gt; (Info Statis)\&quot;]:::siswa\n\n        %% Kelola Pengajuan\n        S_Manage[\&quot;Form Kelola Pengajuan\&quot;]:::siswa\n        S_Create[\&quot;Buat Pengajuan Baru &lt;br&gt; - Autocomplete Perusahaan &amp; Warning Kuota (BR3, BR9) -\&quot;]:::siswa\n        S_Edit[\&quot;Edit / Revisi Draft &lt;br&gt; - Riwayat Catatan Penolakan Kaprog (BR6) -\&quot;]:::siswa\n\n        %% Dokumen &amp; Cetak\n        S_Docs[\&quot;Manajemen Dokumen &amp; Cetak\&quot;]:::siswa\n        S_DownPengajuan[\&quot;Download PDF Surat Pengajuan (BR18)\&quot;]:::siswa\n        S_DownPengantar[\&quot;Download PDF Surat Pengantar &lt;br&gt; - Setelah Hubin Klik Kirim -\&quot;]:::siswa\n        S_UpBalas[\&quot;Upload Surat Balasan Perusahaan &lt;br&gt; - Kolom Terkunci s.d. Surat Pengantar Terbit (BR20) - &lt;br&gt; - Otomatis Aktifkan State Resmi PKL (BR7) -\&quot;]:::siswa\n        S_UpLap[\&quot;Upload Laporan Akhir PKL &lt;br&gt; - Dokumen PDF (Syarat Selesai PKL) (BR12) - &lt;br&gt; - Membuka Akses Formulir Penilaian Guru (Gate BR32) -\&quot;]:::siswa\n\n        %% Riwayat\n        S_Riwayat[\&quot;Riwayat PKL &lt;br&gt; - Pengajuan Periode Sebelumnya, Termasuk PKL Ulang - &lt;br&gt; - Tanpa Alur/Form Khusus (BR14) -\&quot;]:::siswa\n\n        %% Penilaian PKL\n        S_Nilai[\&quot;Lihat Hasil Penilaian PKL &lt;br&gt; - Read-only, Setelah Formulir Submitted (BR24) -\&quot;]:::siswa\n    end\n\n    RBAC_Router --&gt; S_Dash\n    S_Dash --&gt; S_Info\n    S_Dash --&gt; S_Manage\n    S_Manage --&gt; S_Create\n    S_Manage --&gt; S_Edit\n    S_Dash --&gt; S_Docs\n    S_Docs --&gt; S_DownPengajuan\n    S_Docs --&gt; S_DownPengantar\n    S_Docs --&gt; S_UpBalas\n    S_Docs --&gt; S_UpLap\n    S_Dash --&gt; S_Riwayat\n    S_Dash --&gt; S_Nilai\n\n    %% ==========================================\n    %% 3. KAPROG MODULE (Scoped: Per Jurusan)\n    %% ==========================================\n    subgraph KAPROG_PANEL [\&quot;PANEL KAPROG (BR2, BR19, BR23)\&quot;]\n        K_Dash[\&quot;Dashboard Jurusan &lt;br&gt; - Ringkasan Statistik Siswa Aktif - &lt;br&gt; - Search &amp; Filter Bar (BR21) -\&quot;]:::kaprog\n\n        %% Verifikasi\n        K_Queue[\&quot;Antrean Validasi Pengajuan &lt;br&gt; - Data Ringkas + Ghost Button \\\&quot;Lihat Detail →\\\&quot; (BR4) -\&quot;]:::kaprog\n        K_Action[\&quot;Detail Validasi Pengajuan &lt;br&gt; - Aksi Setuju (BR4: Popup Konfirmasi) - &lt;br&gt; - Aksi Tolak (BR6: Minimal Catatan 15 Karakter) -\&quot;]:::kaprog\n\n        %% Assignment\n        K_Assign[\&quot;Penugasan Guru Pembimbing &lt;br&gt; - Wewenang Eksklusif Kaprog, Termasuk Diri Sendiri (BR10) -\&quot;]:::kaprog\n        K_MonReq[\&quot;Request Kunjungan Monitoring ke Hubin &lt;br&gt; - Otomatis Scoped Jurusannya Sendiri - (BR23)\&quot;]:::kaprog\n        K_History[\&quot;Riwayat Verifikasi Jurusan\&quot;]:::kaprog\n\n        %% Bimbingan Saya (self-assign, TRD §6)\n        K_Bimbingan[\&quot;Tab \\\&quot;Bimbingan Saya\\\&quot; &lt;br&gt; - Muncul Jika Kaprog Self-Assign sbg Guru Pembimbing (BR10) - &lt;br&gt; - Reuse Komponen Kunjungan Monitoring &amp; Formulir Penilaian -\&quot;]:::kaprog\n\n        %% Penilaian PKL\n        K_Nilai[\&quot;Rekap Hasil Penilaian PKL &lt;br&gt; - Per Siswa, Jurusannya Sendiri (BR24) -\&quot;]:::kaprog\n    end\n\n    RBAC_Router --&gt; K_Dash\n    K_Dash --&gt; K_Queue\n    K_Queue --&gt; K_Action\n    K_Dash --&gt; K_Assign\n    K_Dash --&gt; K_MonReq\n    K_Dash --&gt; K_History\n    K_Dash --&gt; K_Bimbingan\n    K_Bimbingan -. \&quot;reuse form (BR22)\&quot; .-&gt; G_Mon\n    K_Bimbingan -. \&quot;reuse form (BR24-BR32)\&quot; .-&gt; G_Formulir\n    K_Dash --&gt; K_Nilai\n\n    %% ==========================================\n    %% 4. GURU PEMBIMBING MODULE (Scoped: Bimbingannya)\n    %% ==========================================\n    subgraph GURU_PANEL [\&quot;PANEL GURU PEMBIMBING (BR11, BR19, BR22)\&quot;]\n        G_Dash[\&quot;Dashboard Guru Pembimbing &lt;br&gt; - Search &amp; Filter Bar (BR21) -\&quot;]:::guru\n        G_List[\&quot;Daftar Siswa Bimbingan Aktif &lt;br&gt; - Search &amp; Filter Bar (BR21) -\&quot;]:::guru\n\n        %% Log Monitoring\n        G_Mon[\&quot;Form Laporan Kunjungan Monitoring &lt;br&gt; - Aktif Setelah Surat Tugas Monitoring Terbit (BR22) - &lt;br&gt; - Input Tanggal &amp; Catatan Kunjungan - &lt;br&gt; - Upload Media Dokumentasi (Foto/Video) -\&quot;]:::guru\n        G_Hist[\&quot;Riwayat Kunjungan Monitoring Per Siswa\&quot;]:::guru\n\n        %% Penilaian PKL\n        G_Formulir[\&quot;Isi Formulir Penilaian PKL &lt;br&gt; - Baru Terbuka Setelah Laporan Akhir PKL Diupload Siswa (Gate BR32) - &lt;br&gt; - Indikator + Sub Indikator Dinamis Sesuai Jurusan Siswa (Nullable) (BR25-BR26) - &lt;br&gt; - 1x Penilaian per Penugasan Aktif (BR24, BR30) - &lt;br&gt; - Submit Partial + Modal Konfirmasi Leaf Kosong (BR31) -\&quot;]:::guru\n    end\n\n    RBAC_Router --&gt; G_Dash\n    G_Dash --&gt; G_List\n    G_List --&gt; G_Mon\n    G_List --&gt; G_Hist\n    G_List --&gt; G_Formulir\n\n    %% ==========================================\n    %% 5. HUBIN / ADMIN MODULE (Scoped: Global Sistem)\n    %% ==========================================\n    subgraph HUBIN_PANEL [\&quot;PANEL HUBIN / ADMIN (BR5, BR19, BR22, BR23)\&quot;]\n        H_Dash[\&quot;Dashboard Global &lt;br&gt; - Ringkasan Pengajuan Per Status &amp; Periode - &lt;br&gt; - Search &amp; Filter Bar (BR21) -\&quot;]:::hubin\n\n        %% Otoritas Surat &amp; Tugas\n        H_Surat[\&quot;Bundling Surat Pengantar Per Perusahaan &lt;br&gt; - Max 6 Siswa (BR8) -\&quot;]:::hubin\n        H_SuratPreview[\&quot;Pratinjau Surat Pengantar &lt;br&gt; - Wajib Sebelum Cetak/Kirim (BR5) -\&quot;]:::hubin\n        H_SuratCetak[\&quot;Aksi Cetak &lt;br&gt; - Kanan Atas, Alert Konfirmasi - &lt;br&gt; - Tidak Mengubah Status (BR5) -\&quot;]:::hubin\n        H_SuratKirim[\&quot;Aksi Kirim &lt;br&gt; - Kanan Bawah, Alert Konfirmasi - &lt;br&gt; - Ubah Status jadi SuratPengantarTerbit (BR5) -\&quot;]:::hubin\n        H_MonSurat[\&quot;Kelola Surat Tugas Monitoring\&quot;]:::hubin\n        H_MonGlobal[\&quot;Terbitkan Surat Tugas Monitoring Global &lt;br&gt; (Seluruh Jurusan, Inisiatif Hubin) (BR22)\&quot;]:::hubin\n        H_MonScoped[\&quot;Antrean &amp; Terbitkan Surat Tugas Monitoring Scoped &lt;br&gt; (Menjawab Request Kaprog per Jurusan) (BR23)\&quot;]:::hubin\n\n        %% Management Excel &amp; Akun\n        H_Excel[\&quot;Import &amp; Export Massal (BR16)\&quot;]:::hubin\n        H_Ex_Guru[\&quot;Import Akun Guru &amp; Halaman Laporan Error Per Baris\&quot;]:::hubin\n        H_Ex_Siswa[\&quot;Import Akun Siswa &amp; Halaman Laporan Error Per Baris\&quot;]:::hubin\n        H_Ex_Template[\&quot;Download Blank Template Excel\&quot;]:::hubin\n        H_Ex_AkunData[\&quot;Export Data Akun Existing &lt;br&gt; (Backup/Audit)\&quot;]:::hubin\n\n        %% Master Data\n        H_Master[\&quot;Manajemen Master Data &lt;br&gt; - Search &amp; Filter Bar (BR21) -\&quot;]:::hubin\n        H_M_Prsh[\&quot;Mitra Perusahaan (Persisten Lintas Periode) (BR9)\&quot;]:::hubin\n        H_M_Per[\&quot;Periode Pelaksanaan PKL (BR13)\&quot;]:::hubin\n        H_M_Jur[\&quot;Kompetensi Keahlian &lt;br&gt; (Nama Jurusan &amp; Acronym) &lt;br&gt; - Status \\\&quot;Belum ada Kaprog\\\&quot; Jika Nonaktif (BR27) -\&quot;]:::hubin\n        H_M_Penilaian[\&quot;Master Indikator Penilaian &amp; Sub Indikator &lt;br&gt; - Scoped per Jurusan, Sub Nullable -\&quot;]:::hubin\n\n        H_Users[\&quot;User Management &lt;br&gt; - Search &amp; Filter Bar (BR21) - &lt;br&gt; (CRUD Pengguna &amp; Reset Password Manual) &lt;br&gt; - Aksi \\\&quot;Nonaktifkan sebagai Kaprog\\\&quot; → Otomatis jadi Guru Pembimbing (BR27) -\&quot;]:::hubin\n    end\n\n    RBAC_Router --&gt; H_Dash\n    H_Dash --&gt; H_Surat\n    H_Surat --&gt; H_SuratPreview\n    H_SuratPreview --&gt; H_SuratCetak\n    H_SuratPreview --&gt; H_SuratKirim\n    H_Dash --&gt; H_MonSurat\n    H_MonSurat --&gt; H_MonGlobal\n    H_MonSurat --&gt; H_MonScoped\n    H_Dash --&gt; H_Excel\n    H_Excel --&gt; H_Ex_Guru\n    H_Excel --&gt; H_Ex_Siswa\n    H_Excel --&gt; H_Ex_Template\n    H_Excel --&gt; H_Ex_AkunData\n    H_Dash --&gt; H_Master\n    H_Master --&gt; H_M_Prsh\n    H_Master --&gt; H_M_Per\n    H_Master --&gt; H_M_Jur\n    H_Master --&gt; H_M_Penilaian\n    H_Dash --&gt; H_Users&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="LBlkEab0ea3k6Kk_KUoM-1">
+          <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
+            <mxGeometry height="9984" width="4379" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Kredensial &amp; Autentikasi (BR15)" mermaidId="n:GATEWAY" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Kredensial &amp; Autentikasi (BR15)" id="LBlkEab0ea3k6Kk_KUoM-2">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-1" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="892" width="466" x="10969" y="8210" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Landing Page&#xa;(/)" mermaidId="n:Landing" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ECEFF1;strokeColor=#37474F;fontColor=#263238;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Landing Page&#xa;(/)" id="LBlkEab0ea3k6Kk_KUoM-3">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-2" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ECEFF1;strokeColor=#37474F;fontColor=#263238;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="154" x="185" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Login Form&#xa;(/login)" mermaidId="n:Login" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ECEFF1;strokeColor=#37474F;fontColor=#263238;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Login Form&#xa;(/login)" id="LBlkEab0ea3k6Kk_KUoM-4">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-2" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ECEFF1;strokeColor=#37474F;fontColor=#263238;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="139" x="192" y="168" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="CheckFirstLogin&#xa;(Password == NIS/NIP?)" mermaidId="n:Middleware" mermaidBaseStyle="rhombus;html=1;strokeWidth=2;whiteSpace=wrap;fillColor=#FFEBEE;strokeColor=#C62828;fontColor=#78909C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="CheckFirstLogin&#xa;(Password == NIS/NIP?)" id="LBlkEab0ea3k6Kk_KUoM-5">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-2" style="rhombus;html=1;strokeWidth=2;whiteSpace=wrap;fillColor=#FFEBEE;strokeColor=#C62828;fontColor=#78909C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="278" width="278" x="35" y="291" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Ganti Password Wajib&#xa;(/first-login)" mermaidId="n:FirstLogin" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ECEFF1;strokeColor=#37474F;fontColor=#263238;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Ganti Password Wajib&#xa;(/first-login)" id="LBlkEab0ea3k6Kk_KUoM-6">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-2" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ECEFF1;strokeColor=#37474F;fontColor=#263238;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="214" x="217" y="794" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:Landing-&gt;Login#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-7">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-2" source="LBlkEab0ea3k6Kk_KUoM-3" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-4">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:Login-&gt;Middleware#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.13;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-8">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-2" source="LBlkEab0ea3k6Kk_KUoM-4" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.13;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-5">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="175" y="266" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Ya (Wajib Ganti)" mermaidId="e:Middleware-&gt;FirstLogin#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.68;exitY=1;entryX=0.43;entryY=0;" mermaidBaseValue="Ya (Wajib Ganti)" id="LBlkEab0ea3k6Kk_KUoM-9">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-2" source="LBlkEab0ea3k6Kk_KUoM-5" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.68;exitY=1;entryX=0.43;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-6">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="237" y="604" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:FirstLogin-&gt;Login#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.55;exitY=0;entryX=1;entryY=0.97;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-10">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-2" source="LBlkEab0ea3k6Kk_KUoM-6" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.55;exitY=0;entryX=1;entryY=0.97;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-4">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="385" y="604" />
+                <mxPoint x="385" y="430" />
+                <mxPoint x="385" y="266" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="🎓 PANEL SISWA (BR1, BR14, BR19)" mermaidId="n:SISWA_PANEL" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="🎓 PANEL SISWA (BR1, BR14, BR19)" id="LBlkEab0ea3k6Kk_KUoM-11">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-1" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="525" width="2920" x="9241" y="9287" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Dashboard&#xa;- Stepper Visual Progress Tracker (BR17) -&#xa;- In-App Notification (Toast) -&#xa;- Search &amp; Filter Bar (BR21) -" mermaidId="n:S_Dash" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Dashboard&#xa;- Stepper Visual Progress Tracker (BR17) -&#xa;- In-App Notification (Toast) -&#xa;- Search &amp; Filter Bar (BR21) -" id="LBlkEab0ea3k6Kk_KUoM-12">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="112" width="357" x="1002" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Panduan Alur PKL&#xa;(Info Statis)" mermaidId="n:S_Info" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Panduan Alur PKL&#xa;(Info Statis)" id="LBlkEab0ea3k6Kk_KUoM-13">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="184" x="2701" y="227" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Form Kelola Pengajuan" mermaidId="n:S_Manage" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Form Kelola Pengajuan" id="LBlkEab0ea3k6Kk_KUoM-14">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="224" x="2246" y="236" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Buat Pengajuan Baru&#xa;- Autocomplete Perusahaan &amp; Warning Kuota (BR3, BR9) -" mermaidId="n:S_Create" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Buat Pengajuan Baru&#xa;- Autocomplete Perusahaan &amp; Warning Kuota (BR3, BR9) -" id="LBlkEab0ea3k6Kk_KUoM-15">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="471" x="2359" y="417" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Edit / Revisi Draft&#xa;- Riwayat Catatan Penolakan Kaprog (BR6) -" mermaidId="n:S_Edit" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Edit / Revisi Draft&#xa;- Riwayat Catatan Penolakan Kaprog (BR6) -" id="LBlkEab0ea3k6Kk_KUoM-16">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="374" x="1935" y="417" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Manajemen Dokumen &amp; Cetak" mermaidId="n:S_Docs" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Manajemen Dokumen &amp; Cetak" id="LBlkEab0ea3k6Kk_KUoM-17">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="275" x="1019" y="236" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Download PDF Surat Pengajuan (BR18)" mermaidId="n:S_DownPengajuan" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Download PDF Surat Pengajuan (BR18)" id="LBlkEab0ea3k6Kk_KUoM-18">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="334" x="1551" y="427" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Download PDF Surat Pengantar&#xa;- Setelah Hubin Klik Kirim -" mermaidId="n:S_DownPengantar" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Download PDF Surat Pengantar&#xa;- Setelah Hubin Klik Kirim -" id="LBlkEab0ea3k6Kk_KUoM-19">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="280" x="1221" y="417" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Upload Surat Balasan Perusahaan&#xa;- Kolom Terkunci s.d. Surat Pengantar Terbit (BR20) -&#xa;- Otomatis Aktifkan State Resmi PKL (BR7) -" mermaidId="n:S_UpBalas" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Upload Surat Balasan Perusahaan&#xa;- Kolom Terkunci s.d. Surat Pengantar Terbit (BR20) -&#xa;- Otomatis Aktifkan State Resmi PKL (BR7) -" id="LBlkEab0ea3k6Kk_KUoM-20">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="439" x="732" y="407" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Upload Laporan Akhir PKL&#xa;- Dokumen PDF (Syarat Selesai PKL) (BR12) -&#xa;- Membuka Akses Formulir Penilaian Guru (Gate BR32) -" mermaidId="n:S_UpLap" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Upload Laporan Akhir PKL&#xa;- Dokumen PDF (Syarat Selesai PKL) (BR12) -&#xa;- Membuka Akses Formulir Penilaian Guru (Gate BR32) -" id="LBlkEab0ea3k6Kk_KUoM-21">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="458" x="224" y="407" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Riwayat PKL&#xa;- Pengajuan Periode Sebelumnya, Termasuk PKL Ulang -&#xa;- Tanpa Alur/Form Khusus (BR14) -" mermaidId="n:S_Riwayat" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Riwayat PKL&#xa;- Pengajuan Periode Sebelumnya, Termasuk PKL Ulang -&#xa;- Tanpa Alur/Form Khusus (BR14) -" id="LBlkEab0ea3k6Kk_KUoM-22">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="458" x="495" y="217" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Lihat Hasil Penilaian PKL&#xa;- Read-only, Setelah Formulir Submitted (BR24) -" mermaidId="n:S_Nilai" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Lihat Hasil Penilaian PKL&#xa;- Read-only, Setelah Formulir Submitted (BR24) -" id="LBlkEab0ea3k6Kk_KUoM-23">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-11" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E8F5E9;strokeColor=#2E7D32;fontColor=#1B5E20;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="410" x="35" y="227" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Dash-&gt;S_Info#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.58;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-24">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-12" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.58;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-13">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2793" y="182" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Dash-&gt;S_Manage#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.62;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-25">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-12" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.62;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-14">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2358" y="182" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Manage-&gt;S_Create#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.82;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-26">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-14" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.82;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-15">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2595" y="354" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Manage-&gt;S_Edit#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.19;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-27">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-14" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.19;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-16">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2122" y="354" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Dash-&gt;S_Docs#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.45;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-28">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-12" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.45;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-17">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1156" y="182" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Docs-&gt;S_DownPengajuan#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.93;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-29">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-17" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.93;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-18">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1718" y="354" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Docs-&gt;S_DownPengantar#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.72;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-30">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-17" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.72;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-19">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1361" y="354" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Docs-&gt;S_UpBalas#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.28;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-31">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-17" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.28;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-20">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="952" y="354" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Docs-&gt;S_UpLap#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.83;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-32">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-17" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.83;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-21">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="453" y="354" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Dash-&gt;S_Riwayat#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.79;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-33">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-12" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.79;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-22">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="724" y="182" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:S_Dash-&gt;S_Nilai#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.64;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-34">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-11" source="LBlkEab0ea3k6Kk_KUoM-12" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.64;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-23">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="240" y="182" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="PANEL KAPROG (BR2, BR19, BR23)" mermaidId="n:KAPROG_PANEL" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="PANEL KAPROG (BR2, BR19, BR23)" id="LBlkEab0ea3k6Kk_KUoM-35">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-1" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="515" width="2769" x="6452" y="9297" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Dashboard Jurusan&#xa;- Ringkasan Statistik Siswa Aktif -&#xa;- Search &amp; Filter Bar (BR21) -" mermaidId="n:K_Dash" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Dashboard Jurusan&#xa;- Ringkasan Statistik Siswa Aktif -&#xa;- Search &amp; Filter Bar (BR21) -" id="LBlkEab0ea3k6Kk_KUoM-36">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-35" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="298" x="1153" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Antrean Validasi Pengajuan&#xa;- Data Ringkas + Ghost Button \&quot;Lihat Detail →\&quot; (BR4) -" mermaidId="n:K_Queue" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Antrean Validasi Pengajuan&#xa;- Data Ringkas + Ghost Button \&quot;Lihat Detail →\&quot; (BR4) -" id="LBlkEab0ea3k6Kk_KUoM-37">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-35" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="459" x="2275" y="217" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Detail Validasi Pengajuan&#xa;- Aksi Setuju (BR4: Popup Konfirmasi) -&#xa;- Aksi Tolak (BR6: Minimal Catatan 15 Karakter) -" mermaidId="n:K_Action" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Detail Validasi Pengajuan&#xa;- Aksi Setuju (BR4: Popup Konfirmasi) -&#xa;- Aksi Tolak (BR6: Minimal Catatan 15 Karakter) -" id="LBlkEab0ea3k6Kk_KUoM-38">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-35" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="409" x="2300" y="397" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Penugasan Guru Pembimbing&#xa;- Wewenang Eksklusif Kaprog, Termasuk Diri Sendiri (BR10) -" mermaidId="n:K_Assign" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Penugasan Guru Pembimbing&#xa;- Wewenang Eksklusif Kaprog, Termasuk Diri Sendiri (BR10) -" id="LBlkEab0ea3k6Kk_KUoM-39">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-35" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="492" x="1733" y="217" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Request Kunjungan Monitoring ke Hubin&#xa;- Otomatis Scoped Jurusannya Sendiri - (BR23)" mermaidId="n:K_MonReq" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Request Kunjungan Monitoring ke Hubin&#xa;- Otomatis Scoped Jurusannya Sendiri - (BR23)" id="LBlkEab0ea3k6Kk_KUoM-40">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-35" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="393" x="1290" y="217" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Riwayat Verifikasi Jurusan" mermaidId="n:K_History" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Riwayat Verifikasi Jurusan" id="LBlkEab0ea3k6Kk_KUoM-41">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-35" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="247" x="993" y="226" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Tab \&quot;Bimbingan Saya\&quot;&#xa;- Muncul Jika Kaprog Self-Assign sbg Guru Pembimbing (BR10) -&#xa;- Reuse Komponen Kunjungan Monitoring &amp; Formulir Penilaian -" mermaidId="n:K_Bimbingan" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Tab \&quot;Bimbingan Saya\&quot;&#xa;- Muncul Jika Kaprog Self-Assign sbg Guru Pembimbing (BR10) -&#xa;- Reuse Komponen Kunjungan Monitoring &amp; Formulir Penilaian -" id="LBlkEab0ea3k6Kk_KUoM-42">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-35" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="513" x="430" y="207" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Rekap Hasil Penilaian PKL&#xa;- Per Siswa, Jurusannya Sendiri (BR24) -" mermaidId="n:K_Nilai" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Rekap Hasil Penilaian PKL&#xa;- Per Siswa, Jurusannya Sendiri (BR24) -" id="LBlkEab0ea3k6Kk_KUoM-43">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-35" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#EDE7F6;strokeColor=#4527A0;fontColor=#4A148C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="345" x="35" y="217" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:K_Dash-&gt;K_Queue#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.6;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-44">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-35" source="LBlkEab0ea3k6Kk_KUoM-36" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.6;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-37">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2505" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:K_Queue-&gt;K_Action#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-45">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-35" source="LBlkEab0ea3k6Kk_KUoM-37" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-38">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:K_Dash-&gt;K_Assign#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.69;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-46">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-35" source="LBlkEab0ea3k6Kk_KUoM-36" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.69;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-39">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1979" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:K_Dash-&gt;K_MonReq#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.86;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-47">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-35" source="LBlkEab0ea3k6Kk_KUoM-36" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.86;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-40">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1487" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:K_Dash-&gt;K_History#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.14;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-48">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-35" source="LBlkEab0ea3k6Kk_KUoM-36" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.14;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-41">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1117" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:K_Dash-&gt;K_Bimbingan#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.71;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-49">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-35" source="LBlkEab0ea3k6Kk_KUoM-36" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.71;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-42">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="687" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:K_Dash-&gt;K_Nilai#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.61;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-50">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-35" source="LBlkEab0ea3k6Kk_KUoM-36" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.61;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-43">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="208" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="PANEL GURU PEMBIMBING (BR11, BR19, BR22)" mermaidId="n:GURU_PANEL" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="PANEL GURU PEMBIMBING (BR11, BR19, BR22)" id="LBlkEab0ea3k6Kk_KUoM-51">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-1" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="524" width="1597" x="4835" y="9307" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Form Laporan Kunjungan Monitoring&#xa;- Aktif Setelah Surat Tugas Monitoring Terbit (BR22) -&#xa;- Input Tanggal &amp; Catatan Kunjungan -&#xa;- Upload Media Dokumentasi (Foto/Video) -" mermaidId="n:G_Mon" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Form Laporan Kunjungan Monitoring&#xa;- Aktif Setelah Surat Tugas Monitoring Terbit (BR22) -&#xa;- Input Tanggal &amp; Catatan Kunjungan -&#xa;- Upload Media Dokumentasi (Foto/Video) -" id="LBlkEab0ea3k6Kk_KUoM-52">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-51" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="112" width="438" x="1124" y="378" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Isi Formulir Penilaian PKL&#xa;- Baru Terbuka Setelah Laporan Akhir PKL Diupload Siswa (Gate BR32) -&#xa;- Indikator + Sub Indikator Dinamis Sesuai Jurusan Siswa (Nullable) (BR25-BR26) -&#xa;- 1x Penilaian per Penugasan Aktif (BR24, BR30) -&#xa;- Submit Partial + Modal Konfirmasi Leaf Kosong (BR31) -" mermaidId="n:G_Formulir" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Isi Formulir Penilaian PKL&#xa;- Baru Terbuka Setelah Laporan Akhir PKL Diupload Siswa (Gate BR32) -&#xa;- Indikator + Sub Indikator Dinamis Sesuai Jurusan Siswa (Nullable) (BR25-BR26) -&#xa;- 1x Penilaian per Penugasan Aktif (BR24, BR30) -&#xa;- Submit Partial + Modal Konfirmasi Leaf Kosong (BR31) -" id="LBlkEab0ea3k6Kk_KUoM-53">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-51" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="131" width="640" x="434" y="368" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Dashboard Guru Pembimbing&#xa;- Search &amp; Filter Bar (BR21) -" mermaidId="n:G_Dash" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Dashboard Guru Pembimbing&#xa;- Search &amp; Filter Bar (BR21) -" id="LBlkEab0ea3k6Kk_KUoM-54">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-51" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="269" x="583" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Daftar Siswa Bimbingan Aktif&#xa;- Search &amp; Filter Bar (BR21) -" mermaidId="n:G_List" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Daftar Siswa Bimbingan Aktif&#xa;- Search &amp; Filter Bar (BR21) -" id="LBlkEab0ea3k6Kk_KUoM-55">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-51" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="269" x="583" y="207" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Riwayat Kunjungan Monitoring Per Siswa" mermaidId="n:G_Hist" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Riwayat Kunjungan Monitoring Per Siswa" id="LBlkEab0ea3k6Kk_KUoM-56">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-51" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#FFF3E0;strokeColor=#EF6C00;fontColor=#E65100;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="349" x="35" y="407" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:G_Dash-&gt;G_List#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-57">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-51" source="LBlkEab0ea3k6Kk_KUoM-54" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-55">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:G_List-&gt;G_Mon#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.77;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-58">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-51" source="LBlkEab0ea3k6Kk_KUoM-55" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.77;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-52">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1343" y="334" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:G_List-&gt;G_Hist#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.82;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-59">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-51" source="LBlkEab0ea3k6Kk_KUoM-55" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.82;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-56">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="210" y="334" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:G_List-&gt;G_Formulir#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.55;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-60">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-51" source="LBlkEab0ea3k6Kk_KUoM-55" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.55;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-53">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="754" y="334" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="PANEL HUBIN / ADMIN (BR5, BR19, BR22, BR23)" mermaidId="n:HUBIN_PANEL" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="PANEL HUBIN / ADMIN (BR5, BR19, BR22, BR23)" id="LBlkEab0ea3k6Kk_KUoM-61">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-1" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=light-dark(#ffffde,#1f2020);strokeColor=light-dark(#aaaa33,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="702" width="4879" x="-80" y="9297" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Dashboard Global&#xa;- Ringkasan Pengajuan Per Status &amp; Periode -&#xa;- Search &amp; Filter Bar (BR21) -" mermaidId="n:H_Dash" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Dashboard Global&#xa;- Ringkasan Pengajuan Per Status &amp; Periode -&#xa;- Search &amp; Filter Bar (BR21) -" id="LBlkEab0ea3k6Kk_KUoM-62">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="382" x="2307" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Bundling Surat Pengantar Per Perusahaan&#xa;- Max 6 Siswa (BR8) -" mermaidId="n:H_Surat" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Bundling Surat Pengantar Per Perusahaan&#xa;- Max 6 Siswa (BR8) -" id="LBlkEab0ea3k6Kk_KUoM-63">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="354" x="4326" y="217" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="LBlkEab0ea3k6Kk_KUoM-108" edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-64" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="4150" y="563" />
+            </Array>
+            <mxPoint x="4150" y="583" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <UserObject label="Pratinjau Surat Pengantar&#xa;- Wajib Sebelum Cetak/Kirim (BR5) -" mermaidId="n:H_SuratPreview" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Pratinjau Surat Pengantar&#xa;- Wajib Sebelum Cetak/Kirim (BR5) -" id="LBlkEab0ea3k6Kk_KUoM-64">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="323" x="4341" y="407" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Aksi Cetak&#xa;- Kanan Atas, Alert Konfirmasi -&#xa;- Tidak Mengubah Status (BR5) -" mermaidId="n:H_SuratCetak" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Aksi Cetak&#xa;- Kanan Atas, Alert Konfirmasi -&#xa;- Tidak Mengubah Status (BR5) -" id="LBlkEab0ea3k6Kk_KUoM-65">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="288" x="4556" y="584" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Kelola Surat Tugas Monitoring" mermaidId="n:H_MonSurat" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Kelola Surat Tugas Monitoring" id="LBlkEab0ea3k6Kk_KUoM-67">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="270" x="3764" y="226" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Terbitkan Surat Tugas Monitoring Global&#xa;(Seluruh Jurusan, Inisiatif Hubin) (BR22)" mermaidId="n:H_MonGlobal" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Terbitkan Surat Tugas Monitoring Global&#xa;(Seluruh Jurusan, Inisiatif Hubin) (BR22)" id="LBlkEab0ea3k6Kk_KUoM-68">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="348" x="3943" y="407" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Antrean &amp; Terbitkan Surat Tugas Monitoring Scoped&#xa;(Menjawab Request Kaprog per Jurusan) (BR23)" mermaidId="n:H_MonScoped" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Antrean &amp; Terbitkan Surat Tugas Monitoring Scoped&#xa;(Menjawab Request Kaprog per Jurusan) (BR23)" id="LBlkEab0ea3k6Kk_KUoM-69">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="426" x="3467" y="407" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Import &amp; Export Massal (BR16)" mermaidId="n:H_Excel" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Import &amp; Export Massal (BR16)" id="LBlkEab0ea3k6Kk_KUoM-70">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="278" x="2372" y="226" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Import Akun Guru &amp; Halaman Laporan Error Per Baris" mermaidId="n:H_Ex_Guru" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Import Akun Guru &amp; Halaman Laporan Error Per Baris" id="LBlkEab0ea3k6Kk_KUoM-71">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="440" x="2977" y="417" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Import Akun Siswa &amp; Halaman Laporan Error Per Baris" mermaidId="n:H_Ex_Siswa" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Import Akun Siswa &amp; Halaman Laporan Error Per Baris" id="LBlkEab0ea3k6Kk_KUoM-72">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="444" x="2483" y="417" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Download Blank Template Excel" mermaidId="n:H_Ex_Template" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Download Blank Template Excel" id="LBlkEab0ea3k6Kk_KUoM-73">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="287" x="2146" y="417" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Export Data Akun Existing&#xa;(Backup/Audit)" mermaidId="n:H_Ex_AkunData" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Export Data Akun Existing&#xa;(Backup/Audit)" id="LBlkEab0ea3k6Kk_KUoM-74">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="244" x="1852" y="407" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Manajemen Master Data&#xa;- Search &amp; Filter Bar (BR21) -" mermaidId="n:H_Master" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Manajemen Master Data&#xa;- Search &amp; Filter Bar (BR21) -" id="LBlkEab0ea3k6Kk_KUoM-75">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="269" x="746" y="217" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Mitra Perusahaan (Persisten Lintas Periode) (BR9)" mermaidId="n:H_M_Prsh" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Mitra Perusahaan (Persisten Lintas Periode) (BR9)" id="LBlkEab0ea3k6Kk_KUoM-76">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="413" x="1389" y="417" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Periode Pelaksanaan PKL (BR13)" mermaidId="n:H_M_Per" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Periode Pelaksanaan PKL (BR13)" id="LBlkEab0ea3k6Kk_KUoM-77">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="288" x="1051" y="417" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Kompetensi Keahlian&#xa;(Nama Jurusan &amp; Acronym)&#xa;- Status \&quot;Belum ada Kaprog\&quot; Jika Nonaktif (BR27) -" mermaidId="n:H_M_Jur" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Kompetensi Keahlian&#xa;(Nama Jurusan &amp; Acronym)&#xa;- Status \&quot;Belum ada Kaprog\&quot; Jika Nonaktif (BR27) -" id="LBlkEab0ea3k6Kk_KUoM-78">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="432" x="569" y="397" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Master Indikator Penilaian &amp; Sub Indikator&#xa;- Scoped per Jurusan, Sub Nullable -" mermaidId="n:H_M_Penilaian" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Master Indikator Penilaian &amp; Sub Indikator&#xa;- Scoped per Jurusan, Sub Nullable -" id="LBlkEab0ea3k6Kk_KUoM-79">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="410" x="109" y="407" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="User Management&#xa;- Search &amp; Filter Bar (BR21) -&#xa;(CRUD Pengguna &amp; Reset Password Manual)&#xa;- Aksi \&quot;Nonaktifkan sebagai Kaprog\&quot; → Otomatis jadi Guru Pembimbing (BR27) -" mermaidId="n:H_Users" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="User Management&#xa;- Search &amp; Filter Bar (BR21) -&#xa;(CRUD Pengguna &amp; Reset Password Manual)&#xa;- Aksi \&quot;Nonaktifkan sebagai Kaprog\&quot; → Otomatis jadi Guru Pembimbing (BR27) -" id="LBlkEab0ea3k6Kk_KUoM-80">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-61" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="112" width="640" x="35" y="197" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Dash-&gt;H_Surat#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.58;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-81">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-62" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.58;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-63">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="4503" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Surat-&gt;H_SuratPreview#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-82">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-63" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-64">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_SuratPreview-&gt;H_SuratCetak#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.75;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-83">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-64" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.75;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-65">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="4700" y="534" />
+                <mxPoint x="4700" y="559" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Dash-&gt;H_MonSurat#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.61;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-85">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-62" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.61;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-67">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="3899" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_MonSurat-&gt;H_MonGlobal#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.74;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-86">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-67" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.74;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-68">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="4117" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_MonSurat-&gt;H_MonScoped#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.26;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-87">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-67" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.26;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-69">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="3680" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Dash-&gt;H_Excel#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.52;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-88">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-62" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.52;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-70">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2511" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Excel-&gt;H_Ex_Guru#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.85;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-89">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-70" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.85;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-71">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="3197" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Excel-&gt;H_Ex_Siswa#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.71;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-90">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-70" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.71;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-72">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2705" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Excel-&gt;H_Ex_Template#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.26;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-91">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-70" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.26;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-73">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2290" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Excel-&gt;H_Ex_AkunData#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.94;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-92">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-70" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.94;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-74">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1974" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Dash-&gt;H_Master#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.6;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-93">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-62" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.6;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-75">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="880" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Master-&gt;H_M_Prsh#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.73;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-94">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-75" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.73;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-76">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1596" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Master-&gt;H_M_Per#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.97;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-95">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-75" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.97;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-77">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1195" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Master-&gt;H_M_Jur#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.36;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-96">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-75" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0.36;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-78">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="785" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Master-&gt;H_M_Penilaian#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.79;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-97">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-75" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.79;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-79">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="314" y="344" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:H_Dash-&gt;H_Users#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.58;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-98">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-61" source="LBlkEab0ea3k6Kk_KUoM-62" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.58;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-80">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="355" y="172" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="RBAC Route Controller&#xa;(Siswa / Kaprog / Guru / Hubin)" mermaidId="n:RBAC_Router" mermaidBaseStyle="rhombus;html=1;strokeWidth=2;whiteSpace=wrap;fillColor=#FFEBEE;strokeColor=#C62828;fontColor=#78909C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="RBAC Route Controller&#xa;(Siswa / Kaprog / Guru / Hubin)" id="LBlkEab0ea3k6Kk_KUoM-99">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-1" style="rhombus;html=1;strokeWidth=2;whiteSpace=wrap;fillColor=#FFEBEE;strokeColor=#C62828;fontColor=#78909C;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="384" width="384" x="6572" y="8848" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Tidak (Lolos)" mermaidId="e:Middleware-&gt;RBAC_Router#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.32;exitY=1;entryX=1;entryY=0.47;" mermaidBaseValue="Tidak (Lolos)" id="LBlkEab0ea3k6Kk_KUoM-100">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-1" source="LBlkEab0ea3k6Kk_KUoM-5" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.32;exitY=1;entryX=1;entryY=0.47;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-99">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="11081" y="8814" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:RBAC_Router-&gt;S_Dash#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.53;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-101">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-1" source="LBlkEab0ea3k6Kk_KUoM-99" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.53;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-12">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="10421" y="9257" />
+                <mxPoint x="10421" y="9282" />
+                <mxPoint x="10421" y="9307" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:RBAC_Router-&gt;K_Dash#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.61;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-102">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-1" source="LBlkEab0ea3k6Kk_KUoM-99" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.61;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-36">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="7754" y="9257" />
+                <mxPoint x="7754" y="9282" />
+                <mxPoint x="7754" y="9307" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="reuse form (BR22)" mermaidId="e:K_Bimbingan-&gt;G_Mon#0" mermaidBaseStyle="curved=1;dashed=1;dashPattern=2 3;fixDash=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.78;entryX=1;entryY=0.39;" mermaidBaseValue="reuse form (BR22)" id="LBlkEab0ea3k6Kk_KUoM-103">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-1" source="LBlkEab0ea3k6Kk_KUoM-42" style="curved=1;dashed=1;dashPattern=2 3;fixDash=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.78;entryX=1;entryY=0.39;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-52">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="8005" y="9641" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="reuse form (BR24-BR32)" mermaidId="e:K_Bimbingan-&gt;G_Formulir#0" mermaidBaseStyle="curved=1;dashed=1;dashPattern=2 3;fixDash=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.21;exitY=1;entryX=1;entryY=0.31;" mermaidBaseValue="reuse form (BR24-BR32)" id="LBlkEab0ea3k6Kk_KUoM-104">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-1" source="LBlkEab0ea3k6Kk_KUoM-42" style="curved=1;dashed=1;dashPattern=2 3;fixDash=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.21;exitY=1;entryX=1;entryY=0.31;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-53">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="6848" y="9641" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:RBAC_Router-&gt;G_Dash#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.59;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-105">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-1" source="LBlkEab0ea3k6Kk_KUoM-99" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.59;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-54">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="5552" y="9257" />
+                <mxPoint x="5552" y="9282" />
+                <mxPoint x="5552" y="9307" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:RBAC_Router-&gt;H_Dash#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.53;entryX=0.5;entryY=0;" mermaidBaseValue="" id="LBlkEab0ea3k6Kk_KUoM-106">
+          <mxCell edge="1" parent="LBlkEab0ea3k6Kk_KUoM-1" source="LBlkEab0ea3k6Kk_KUoM-99" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.53;entryX=0.5;entryY=0;rounded=0;" target="LBlkEab0ea3k6Kk_KUoM-62">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2418" y="9257" />
+                <mxPoint x="2418" y="9282" />
+                <mxPoint x="2418" y="9307" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Aksi Kirim&#xa;- Kanan Bawah, Alert Konfirmasi -&#xa;- Ubah Status jadi SuratPengantarTerbit (BR5) -" mermaidId="n:H_SuratKirim" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Aksi Kirim&#xa;- Kanan Bawah, Alert Konfirmasi -&#xa;- Ubah Status jadi SuratPengantarTerbit (BR5) -" id="LBlkEab0ea3k6Kk_KUoM-66">
+          <mxCell parent="LBlkEab0ea3k6Kk_KUoM-1" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#E1F5FE;strokeColor=#0277BD;fontColor=#01579B;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="93" width="399" x="3970" y="9881" as="geometry" />
+          </mxCell>
+        </UserObject>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
