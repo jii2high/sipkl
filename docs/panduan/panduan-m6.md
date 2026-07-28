@@ -1,84 +1,126 @@
-# Panduan Implementasi — M6: Penilaian Akhir & Selesai PKL
+# Panduan M6 — Penilaian Akhir & Selesai PKL
 
-**Referensi:** `PRD.md` §5 (poin 8–10), §6.1, §6.3, §8 (BR13, BR24–BR29, BR32) | `TRD.md` §3.2, §4.3, §5.1, §9, §12 | `milestone.md` M6
+Cakupan: upload Laporan Akhir PKL, Formulir Penilaian yang gated (BR32), kalkulasi Nilai Akhir otomatis (BR28), auto Selesai PKL (BR13).
 
----
+## 1. Migration
 
-## 0. Prasyarat
+```php
+// formulir_penilaian
+Schema::create('formulir_penilaian', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('pengajuan_id')->constrained('pengajuan_pkl')->cascadeOnDelete();
+    $table->foreignId('guru_pembimbing_id')->constrained('users');
+    $table->unsignedTinyInteger('sakit')->default(0);
+    $table->unsignedTinyInteger('izin')->default(0);
+    $table->unsignedTinyInteger('alpa')->default(0);
+    $table->text('catatan_guru_pembimbing')->nullable();
+    $table->string('nama_pembimbing_industri')->nullable();
+    $table->decimal('nilai_akhir', 5, 2)->nullable(); // dihitung otomatis, bukan input manual
+    $table->timestamps();
+});
 
-- [ ] Checklist M5 sudah lulus semua.
-- [ ] Seeder `indikator_penilaian` + `section_penilaian` dari M2/M9 mencakup **minimal satu jurusan dengan sub-indikator** dan **minimal satu jurusan tanpa sub-indikator** — dibutuhkan untuk menguji BR28 di dua skenario di milestone ini.
+// nilai_penilaian — leaf level, terikat ke indikator ATAU section (salah satu)
+Schema::create('nilai_penilaian', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('formulir_penilaian_id')->constrained('formulir_penilaian')->cascadeOnDelete();
+    $table->foreignId('indikator_penilaian_id')->nullable()->constrained('indikator_penilaian');
+    $table->foreignId('section_penilaian_id')->nullable()->constrained('section_penilaian');
+    $table->decimal('nilai', 5, 2);
+    $table->char('predikat', 2); // K/C/B/SB, dihitung dari skala fixed BR25
+    $table->timestamps();
+});
+```
 
-## 1. Tujuan Milestone
+## 2. Upload Laporan Akhir → buka gate (BR32)
 
-Membangun alur penilaian akhir sampai penutupan status PKL siswa.
+```php
+// app/Http/Controllers/Siswa/LaporanAkhirController.php
+public function store(Request $request, PengajuanPkl $pengajuan)
+{
+    $this->authorize('update', $pengajuan);
 
-## 2. Urutan Eksekusi Modul/Fitur
+    $pengajuan->addMediaFromRequest('laporan_akhir')->toMediaCollection('laporan_akhir');
+    $pengajuan->update(['laporan_akhir_uploaded_at' => now()]);
 
-### 2.1 Upload Laporan Akhir PKL (Siswa)
-- Tabel `laporan_akhir_pkl`.
-- Ini jadi **gate** pembuka Formulir Penilaian (2.2) — pastikan status upload tercatat dengan jelas (mis. timestamp upload) karena akan dicek di Policy modul berikutnya.
-- Permission: `laporan-akhir.upload` (siswa).
-- Controller: `Siswa/LaporanAkhirController.php`.
+    // notifikasi ke Guru Pembimbing: Formulir Penilaian sekarang bisa diisi
+    $pengajuan->penugasan->guruPembimbing->notify(new FormulirPenilaianTerbuka($pengajuan));
+}
+```
+Gate-nya cukup kolom `laporan_akhir_uploaded_at` (nullable timestamp) di `pengajuan_pkl` — bukan state terpisah di state machine, karena ini independen dari alur `PengajuanState` (BR32 catatan v1.2: gate eksplisit, bukan bagian dari transisi status utama).
 
-Smoke test: siswa upload Laporan Akhir, file tersimpan dan tercatat.
+## 3. Formulir Penilaian — gated + skala predikat fixed (BR24, BR25)
 
-### 2.2 Formulir Penilaian PKL (Guru Pembimbing) — Gated oleh Laporan Akhir (BR32)
-- Tabel `formulir_penilaian` (`TRD.md` §3.2, 1 per siswa per periode): `siswa_id`, `periode_pkl_id`, `guru_pembimbing_id`, `sakit`, `izin`, `alpa` (jumlah hari), `catatan_guru_pembimbing`, `nama_pembimbing_industri`, `nilai_akhir` (nullable, diisi saat submit), `submitted_at` (nullable).
-- **BR25**: field wajib di formulir induk — sakit/izin/alpa, catatan Guru Pembimbing, nama Pembimbing Industri, selain nilai per indikator.
-- **BR32**: formulir baru terbuka & bisa diakses Guru Pembimbing **setelah** Laporan Akhir diupload siswa (gate eksplisit, cek lewat Policy `PenilaianPolicy`). Ini **berbeda** dari Laporan Kunjungan (M5) yang bisa diisi berkala sepanjang periode — Formulir Penilaian **hanya diisi sekali** menjelang sidang.
-- State machine (`TRD.md` §4.3):
-  ```
-  Laporan Akhir belum diupload → Formulir tidak dapat diakses
-  Laporan Akhir sudah diupload → Formulir terbuka (submitted_at masih NULL)
-  Formulir sudah submit (submitted_at terisi) → read-only
-  ```
-- **BR12** (dari M5): Guru Pembimbing hanya bisa isi untuk siswa yang eksplisit di-assign kepadanya.
-- Permission: `penilaian.isi` (guru_pembimbing untuk siswa assigned; +kaprog via self-assign), `penilaian.lihat` (guru_pembimbing, kaprog scoped, **siswa** — read-only untuk nilai sendiri).
-- Controller: `GuruPembimbing/PenilaianController.php`.
+```php
+// app/Http/Controllers/GuruPembimbing/FormulirPenilaianController.php
+public function create(PengajuanPkl $pengajuan)
+{
+    abort_unless($pengajuan->laporan_akhir_uploaded_at, 403, 'Laporan Akhir PKL belum diupload siswa.');
 
-Smoke test: Formulir tidak bisa diakses sebelum Laporan Akhir diupload; setelah diupload, formulir terbuka untuk diisi Guru Pembimbing yang assigned.
+    $indikatorUmum = IndikatorPenilaian::where('kategori', 'umum')->with('sections')->get();
+    $indikatorTeknis = IndikatorPenilaian::where('kategori', 'teknis_kejuruan')
+        ->where('kompetensi_keahlian_id', $pengajuan->siswa->kompetensi_keahlian_id)
+        ->with('sections')
+        ->get();
 
-### 2.3 Input Nilai per Indikator/Section
-- Tabel `nilai` (`TRD.md` §3.2): `formulir_penilaian_id`, `indikator_penilaian_id` (nullable), `section_penilaian_id` (nullable) — **mutually exclusive**: satu baris nilai menunjuk ke **salah satu** (leaf di level Indikator **atau** leaf di level Section, sesuai BR28), `nilai` (0–100), `predikat` (computed).
-- Kategori Umum & Teknis Kejuruan (dari M2) sama-sama muncul di form penilaian ini.
-- **BR29**: skala predikat **fixed**, sama untuk seluruh jurusan, **tidak bisa dikustomisasi**: K (<70), C (70–80), B (81–90), SB (91–100). Hitung `predikat` sebagai computed field dari `nilai`.
+    return Inertia::render('guru-pembimbing/penilaian/form', compact('pengajuan', 'indikatorUmum', 'indikatorTeknis'));
+}
+```
+Helper skala predikat (BR25), dipakai tiap kali `nilai_penilaian` disimpan:
+```php
+// app/Support/SkalaPredikat.php
+class SkalaPredikat
+{
+    public static function dari(float $nilai): string
+    {
+        return match (true) {
+            $nilai < 70 => 'K',
+            $nilai <= 80 => 'C',
+            $nilai <= 90 => 'B',
+            default => 'SB',
+        };
+    }
+}
+```
 
-Smoke test: input nilai tersimpan benar per leaf (Indikator atau Section, tidak dua-duanya), predikat terhitung sesuai skala fixed.
+## 4. Kalkulasi Nilai Akhir otomatis (BR28)
 
-### 2.4 Kalkulasi Nilai Akhir Otomatis (BR28)
-- **BR28**: Nilai Akhir = rata-rata seluruh nilai **leaf** yang terisi. Leaf = Section (jika Indikator tsb punya Section), atau Indikator itu sendiri (jika Indikator tsb **tidak** punya Section).
-- **Wajib** diuji di dua skenario (sesuai seeder di prasyarat §0):
-  1. Jurusan dengan sub-indikator — leaf yang dihitung adalah level Section.
-  2. Jurusan tanpa sub-indikator — leaf yang dihitung adalah level Indikator langsung.
-- **Concurrency (`TRD.md` §12)**: kalkulasi ini dibungkus DB transaction untuk menghindari race condition (mis. submit ganda).
+Rata-rata dari leaf yang **terisi** aja, bukan seluruh indikator di master (karena section nullable per jurusan — BR24):
+```php
+// app/Actions/Penilaian/HitungNilaiAkhir.php
+class HitungNilaiAkhir
+{
+    public function handle(FormulirPenilaian $formulir): void
+    {
+        $rataRata = $formulir->nilaiPenilaian()->avg('nilai');
+        $formulir->update(['nilai_akhir' => round($rataRata, 2)]);
+    }
+}
+```
+Panggil action ini di akhir `store()`/`update()` formulir, setelah semua baris `nilai_penilaian` disimpan — jangan hitung on-the-fly di frontend, biar sumber kebenarannya di backend.
 
-Smoke test:
-- [ ] Nilai Akhir terhitung benar untuk kasus jurusan dengan sub-indikator.
-- [ ] Nilai Akhir terhitung benar untuk kasus jurusan tanpa sub-indikator.
+## 5. Auto Selesai PKL (BR13)
 
-### 2.5 Auto Status Selesai PKL (BR13)
-- **BR13**: status **Selesai PKL** aktif otomatis pada siswa setelah Nilai Akhir terisi (hasil submit Formulir Penilaian) — **tidak ada** aksi manual tambahan.
-- Saat submit: set `submitted_at`, hitung & simpan `nilai_akhir` (2.4), lalu update `pengajuan_pkl.status` → `selesai_pkl` sebagai efek samping otomatis dalam transaksi yang sama.
-- **Formulir hanya bisa disubmit sekali** — setelah `submitted_at` terisi, formulir jadi read-only, tidak bisa diisi ulang bebas.
-- Catat perubahan status ini juga di `pengajuan_pkl_histories` (infra dari M3).
-- Trigger notifikasi: Formulir Penilaian terbuka (ke Guru Pembimbing, saat Laporan Akhir diupload) dan Selesai PKL (ke Siswa, saat submit).
+Dua syarat harus ketemu sekaligus: periode berakhir DAN laporan akhir sudah diupload. Paling aman lewat scheduled command, bukan cuma dicek pas ada request masuk (karena syarat "periode berakhir" bisa kejadian kapan aja tanpa ada yang buka aplikasi):
+```php
+// app/Console/Commands/TandaiSelesaiPkl.php
+class TandaiSelesaiPkl extends Command
+{
+    protected $signature = 'pkl:tandai-selesai';
 
-Smoke test:
-- [ ] Formulir hanya bisa disubmit sekali (tidak bisa diisi ulang bebas setelah `submitted_at` terisi).
-- [ ] Status siswa otomatis berubah jadi Selesai PKL setelah submit penilaian, tanpa aksi manual tambahan.
+    public function handle(): void
+    {
+        PengajuanPkl::whereState('status', ResmiPkl::class)
+            ->whereNotNull('laporan_akhir_uploaded_at')
+            ->whereHas('periode', fn ($q) => $q->where('tanggal_selesai', '<', now()))
+            ->each(fn ($pengajuan) => $pengajuan->status->transitionTo(SelesaiPkl::class));
+    }
+}
+```
+Daftarin ke scheduler (`routes/console.php`, jalan harian). Tambah juga transisi baru ini ke `PengajuanState::config()` (`allowTransition(ResmiPkl::class, SelesaiPkl::class)`), reuse config yang sama dari M3/M4, jangan bikin baru.
 
-### 2.6 Notifikasi Terkait Penilaian
-Tambahkan trigger baru ke infra notifikasi M3:
-- Laporan Akhir diupload → Formulir Penilaian terbuka (ke Guru Pembimbing).
-- Formulir Penilaian submit → Selesai PKL (ke Siswa).
-- Siswa juga bisa lihat Nilai Akhir setelah Selesai PKL (permission `penilaian.lihat`, read-only untuk siswa).
-
-## 3. Checklist Testing Akhir Sesi M6
-
-- [ ] Formulir Penilaian benar-benar terkunci sebelum Laporan Akhir diupload siswa.
-- [ ] Formulir hanya bisa disubmit sekali (tidak bisa diisi ulang bebas).
-- [ ] Nilai Akhir terhitung benar untuk kasus jurusan dengan sub-indikator maupun tanpa sub-indikator.
-- [ ] Status siswa otomatis berubah jadi Selesai PKL setelah submit penilaian.
-
-**Semua item di atas harus lulus sebelum M7 dimulai. Ini juga milestone fitur terakhir — tidak ada fitur baru lagi setelah M6, M7 murni deployment & UAT.**
+## Checkpoint akhir M6
+- Upload Laporan Akhir langsung bikin Formulir Penilaian kebuka buat Guru Pembimbing terkait (coba akses sebelum upload, harus ketolak 403).
+- Formulir Penilaian nampilin indikator Umum + Teknis Kejuruan sesuai jurusan siswa yang benar, section yang nullable gak muncul kalau emang gak ada.
+- Simpan nilai per indikator/section otomatis dapat predikat yang benar sesuai skala BR25 (tes di batas: 69, 70, 80, 81, 90, 91).
+- Nilai Akhir di Formulir keitung otomatis dari rata-rata leaf yang keisi aja, coba dengan jurusan yang punya section vs yang enggak.
+- Command `pkl:tandai-selesai` cuma nyentuh pengajuan yang periode-nya udah lewat DAN laporan akhirnya udah masuk — coba data yang cuma penuhin salah satu syarat, harus tetap `ResmiPkl`.

@@ -1,76 +1,113 @@
-# Panduan Implementasi — M4: Persuratan
+# Panduan M4 — Persuratan
 
-**Referensi:** `PRD.md` §5 (poin 3–4), §8 (BR7, BR16–BR20) | `TRD.md` §3.2, §4.2, §6, §7, §8 | `milestone.md` M4
+Cakupan: generate PDF, bundling per perusahaan, preview + Cetak/Kirim terpisah, lock upload balasan (BR20), auto Resmi PKL (BR7).
 
----
+## 1. Migration
 
-## 0. Prasyarat
+```php
+// surat_pengantar
+Schema::create('surat_pengantar', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('perusahaan_id')->constrained('perusahaan');
+    $table->foreignId('periode_id')->constrained('periode_pkl');
+    $table->string('nomor_surat')->unique();
+    $table->date('tanggal_terbit');
+    $table->foreignId('generated_by')->constrained('users');
+    $table->timestamps();
+});
 
-- [ ] Checklist M3 sudah lulus semua. Status `disetujui` pada `pengajuan_pkl` sudah bisa dicapai lewat alur verifikasi Kaprog. Infra `pengajuan_pkl_histories` dan notifikasi (Laravel DB Notification + Sonner) dari M3 sudah siap dipakai ulang.
+// pivot — 1 surat pengantar bisa nampung banyak pengajuan (maks 6 siswa)
+Schema::create('surat_pengantar_pengajuan', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('surat_pengantar_id')->constrained('surat_pengantar')->cascadeOnDelete();
+    $table->foreignId('pengajuan_id')->constrained('pengajuan_pkl')->cascadeOnDelete();
+});
+```
+File PDF-nya sendiri disimpan lewat spatie/laravel-medialibrary, terikat ke `surat_pengantar` (collection `file`).
 
-## 1. Tujuan Milestone
+## 2. Update state machine
 
-Membangun seluruh alur surat: dari Surat Pengantar (setelah pengajuan disetujui) sampai status Resmi PKL.
+Tambah transisi baru ke `PengajuanState::config()` dari M3 — jangan bikin file state config baru terpisah:
+```php
+->allowTransition(SiapTerbit::class, SuratPengantarTerbit::class)
+->allowTransition(SuratPengantarTerbit::class, MenungguBalasanPerusahaan::class)
+->allowTransition(MenungguBalasanPerusahaan::class, ResmiPkl::class)
+```
 
-## 2. Urutan Eksekusi Modul/Fitur
+## 3. Generate PDF (spatie/laravel-pdf)
 
-### 2.1 Generasi PDF Surat Pengantar (dengan Penomoran Surat)
-- **BR16**: Surat Pengantar hanya bisa diterbitkan Hubin setelah pengajuan berstatus `disetujui` (guard dari BR9 di M3).
-- Tabel `surat_pengantar` (`TRD.md` §3.2): `nomor_surat` (unique), `pengajuan_pkl_id`, `diterbitkan_oleh`, `file_pdf`.
-- **BR17**: nomor surat unik, digenerate **sequential per jenis surat per periode/tahun ajaran** — bukan random.
-- **Penomoran (`TRD.md` §6)**: nomor digenerate saat surat **diterbitkan** (bukan saat draft), dibungkus **DB transaction** dengan `lockForUpdate` pada counter per jenis+periode untuk menghindari nomor bentrok saat concurrent create.
-- **Generasi PDF (`TRD.md` §7)**: alur = template Blade/HTML → render PDF (pakai library PDF Laravel, mis. `barryvdh/laravel-dompdf`) → simpan ke `storage/app/surat/...` → link download/preview di UI.
-- **BR18**: dokumen surat diarsipkan di storage, bisa diunduh ulang kapan saja oleh pihak berwenang.
-- Permission: `surat.terbitkan` (hubin).
-- Controller: `Hubin/SuratController.php`.
-- Catat penerbitan surat ini juga sebagai perubahan status di `pengajuan_pkl_histories` (BR6, infra dari M3).
+```php
+use Spatie\LaravelPdf\Facades\Pdf;
 
-Smoke test:
-- [ ] PDF Surat Pengantar tergenerate dengan nomor surat unik dan format sesuai template.
-- [ ] Terbitkan 2 surat secara bersamaan (concurrent) untuk jenis+periode yang sama → tidak ada nomor bentrok (verifikasi lock bekerja).
+Pdf::view('pdf.surat-pengantar', ['suratPengantar' => $suratPengantar])
+    ->format('a4')
+    ->save(storage_path('app/temp/surat-pengantar.pdf'));
+```
+- View `resources/views/pdf/surat-pengantar.blade.php` pakai Tailwind lewat CDN/inline (spatie/laravel-pdf render via headless Chrome, jadi class Tailwind biasa jalan).
+- Kop surat, nomor surat (format BR18), daftar siswa (maks 6) diambil dari relasi `surat_pengantar_pengajuan`.
+- Nomor surat di-generate lewat helper terpusat, bukan di-hardcode di view:
+  ```php
+  // app/Support/PenomoranSurat.php
+  class PenomoranSurat
+  {
+      public static function suratPengantar(int $noUrut, int $noWilayah): string
+      {
+          $bulanRomawi = self::romawi(now()->month);
+          return "{$noUrut}/421.5/SMKN 1-Cadisdik.Wil.{$noWilayah}/{$bulanRomawi}/" . now()->year;
+      }
+  }
+  ```
 
-### 2.2 Upload Surat Balasan (Siswa) — Conditional Lock
-- Tabel `surat_balasan`.
-- **BR20**: upload Surat Balasan **terkunci** sampai Surat Pengantar untuk pengajuan tsb resmi terbit. Gate ini di frontend (tombol disabled/hidden, `TRD.md` §4.2) **dan** backend (validasi ulang di Form Request/Policy — jangan andalkan frontend saja).
-- Permission: `surat-balasan.upload` (siswa).
-- Controller: `Siswa/SuratBalasanController.php`.
+## 4. Bundling per perusahaan
 
-Smoke test:
-- [ ] Upload Surat Balasan benar-benar terkunci sebelum Surat Pengantar terbit (coba akses langsung via request manual, bukan hanya cek UI).
-- [ ] Setelah Surat Pengantar terbit, tombol upload aktif dan upload berhasil.
+```php
+// app/Http/Controllers/Hubin/SuratPengantarController.php
+public function preview(Perusahaan $perusahaan, PeriodePkl $periode)
+{
+    $pengajuanSiap = PengajuanPkl::query()
+        ->where('perusahaan_id', $perusahaan->id)
+        ->where('periode_id', $periode->id)
+        ->whereState('status', SiapTerbit::class)
+        ->get();
 
-### 2.3 Verifikasi Surat Balasan → Auto Status Resmi PKL (BR7)
-- **BR7**: status **Resmi PKL** aktif otomatis pada siswa setelah Surat Balasan yang diupload diverifikasi Hubin — **tidak ada** aksi manual tambahan untuk mengubah status ini.
-- Update `pengajuan_pkl.status` → `resmi_pkl` sebagai efek samping otomatis dari aksi verifikasi (bukan tombol status terpisah).
-- Catat perubahan ini di `pengajuan_pkl_histories`.
-- Trigger notifikasi: Surat Balasan diverifikasi → Resmi PKL (ke Siswa).
-- Permission: `surat-balasan.verifikasi` (hubin).
+    // BR3: kuota 6 siswa itu soft rule — tampilin warning, jangan di-block
+    $lewatKuota = $pengajuanSiap->count() > $perusahaan->kuota_saran;
 
-Smoke test:
-- [ ] Status siswa otomatis Resmi PKL setelah verifikasi Surat Balasan (tanpa aksi manual lain).
-- [ ] Perubahan tercatat di `pengajuan_pkl_histories`.
+    return Inertia::render('hubin/surat-pengantar/preview', compact('pengajuanSiap', 'lewatKuota'));
+}
+```
+Tombol **Cetak** (download PDF) dan **Kirim ke Siswa** (transisi status + trigger notifikasi) dipisah — Hubin bisa preview & cetak berkali-kali sebelum benar-benar "Kirim" yang mengubah state.
 
-### 2.4 Fitur Bundling & Cetak (Hubin)
-- **BR19**: preview dokumen sebelum aksi final; tombol **Cetak** dan **Kirim** **terpisah** — preview tidak otomatis memicu pengiriman.
-- Controller: `Hubin/BundlingController.php`.
-- Permission: `persuratan.bundling` (hubin).
+## 5. BR20 — lock upload Surat Balasan
 
-Smoke test:
-- [ ] Tombol Cetak dan Kirim di Bundling berfungsi independen — buka preview tidak otomatis mengirim apapun.
+Di frontend Siswa, komponen upload balasan perusahaan di-disable/hidden sampai `pengajuan->status` == `SuratPengantarTerbit` atau lanjutannya. Validasi wajib juga di backend (jangan cuma disable tombol di UI):
+```php
+public function uploadBalasan(Request $request, PengajuanPkl $pengajuan)
+{
+    abort_unless($pengajuan->status instanceof SuratPengantarTerbit, 403);
+    // ...
+}
+```
 
-### 2.5 Notifikasi Terkait Persuratan
-Tambahkan trigger baru ke infra notifikasi M3 (**jangan** bangun infra baru):
-- Surat Pengantar terbit → ke Siswa.
-- Surat Balasan diupload (opsional, sesuai kebutuhan internal) / diverifikasi → Resmi PKL → ke Siswa.
+## 6. BR7 — auto Resmi PKL
 
-Smoke test:
-- [ ] Notifikasi terkait persuratan (surat terbit, balasan diupload, dst.) muncul sesuai event yang relevan.
+Begitu file balasan perusahaan berhasil diupload, transisi otomatis tanpa approval manual:
+```php
+public function uploadBalasan(Request $request, PengajuanPkl $pengajuan)
+{
+    abort_unless($pengajuan->status instanceof SuratPengantarTerbit, 403);
 
-## 3. Checklist Testing Akhir Sesi M4
+    $pengajuan->addMediaFromRequest('file')->toMediaCollection('surat_balasan_perusahaan');
+    $pengajuan->status->transitionTo(ResmiPkl::class);
 
-- [ ] Upload Surat Balasan benar-benar terkunci sebelum Surat Pengantar terbit.
-- [ ] Status siswa otomatis Resmi PKL setelah verifikasi Surat Balasan.
-- [ ] PDF Surat Pengantar tergenerate dengan nomor surat unik dan format sesuai template.
-- [ ] Tombol Cetak dan Kirim di Bundling berfungsi independen (preview tidak auto-kirim).
+    return back();
+}
+```
 
-**Semua item di atas harus lulus sebelum M5 dimulai.**
+## Checkpoint akhir M4
+- Preview surat pengantar nampilin daftar siswa yang benar per perusahaan+periode, warning muncul kalau lewat 6 siswa (tapi tetap bisa lanjut cetak).
+- Tombol Cetak menghasilkan PDF dengan nomor surat sesuai format BR18, gak mengubah status.
+- Tombol Kirim mengubah status jadi `SuratPengantarTerbit` dan trigger notifikasi ke siswa terkait.
+- Upload balasan ditolak backend (bukan cuma UI) kalau status belum `SuratPengantarTerbit`.
+- Upload balasan sukses langsung mengubah status jadi `ResmiPkl` otomatis tanpa ada approval tambahan dari siapa pun.
+- Riwayat status (dari M3) mencatat transisi-transisi baru ini dengan benar.

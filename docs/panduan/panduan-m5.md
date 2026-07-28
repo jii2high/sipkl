@@ -1,81 +1,116 @@
-# Panduan Implementasi — M5: Pembimbingan & Kunjungan Monitoring
+# Panduan M5 — Pembimbingan & Kunjungan Monitoring
 
-**Referensi:** `PRD.md` §5 (poin 5–7), §6.2–6.3, §8 (BR10–BR12, BR22–BR23, BR30) | `TRD.md` §3.2, §4.4, §4.5, §5, §5.1 | `milestone.md` M5
+Cakupan: assignment Guru Pembimbing (eksklusif Kaprog, termasuk self-assign), Surat Tugas Monitoring Global/Scoped, Laporan Kunjungan yang gated oleh Surat Tugas.
 
----
+## 1. Migration
 
-## 0. Prasyarat
+```php
+// penugasan_pembimbing
+Schema::create('penugasan_pembimbing', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('guru_pembimbing_id')->constrained('users');
+    $table->foreignId('pengajuan_id')->constrained('pengajuan_pkl')->cascadeOnDelete();
+    $table->foreignId('assigned_by')->constrained('users'); // selalu Kaprog, termasuk self-assign
+    $table->timestamps();
+});
 
-- [ ] Checklist M4 sudah lulus semua. Siswa dengan status `resmi_pkl` sudah tersedia sebagai basis untuk assignment pembimbing.
+// surat_tugas_monitoring
+Schema::create('surat_tugas_monitoring', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('periode_id')->constrained('periode_pkl');
+    $table->enum('lingkup', ['global', 'scoped']);
+    $table->foreignId('kompetensi_keahlian_id')->nullable()->constrained('kompetensi_keahlian'); // wajib isi kalau scoped
+    $table->foreignId('diterbitkan_by')->constrained('users');
+    $table->foreignId('requested_by')->nullable()->constrained('users'); // Kaprog, khusus scoped
+    $table->timestamps();
+});
 
-## 1. Tujuan Milestone
+// kunjungan_monitoring
+Schema::create('kunjungan_monitoring', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('penugasan_id')->constrained('penugasan_pembimbing')->cascadeOnDelete();
+    $table->foreignId('surat_tugas_id')->constrained('surat_tugas_monitoring');
+    $table->date('tanggal_kunjungan');
+    $table->text('catatan')->nullable();
+    $table->timestamps();
+});
+```
+Dokumentasi foto/video kunjungan pakai medialibrary, collection `dokumentasi` terikat ke `kunjungan_monitoring`.
 
-Membangun assignment Guru Pembimbing dan alur monitoring kunjungan yang terikat pada Surat Tugas resmi.
+## 2. Assignment Guru Pembimbing (BR10)
 
-## 2. Urutan Eksekusi Modul/Fitur
+```php
+// app/Http/Controllers/Kaprog/PenugasanController.php
+public function store(Request $request, PengajuanPkl $pengajuan)
+{
+    $this->authorize('assign', $pengajuan); // Policy: Kaprog cuma boleh assign siswa jurusannya sendiri
 
-### 2.1 Assign Guru Pembimbing (Kaprog)
-- Tabel `pembimbingan` (`TRD.md` §3.2): `siswa_id`, `guru_pembimbing_id`, `assigned_by`, `status` (enum `aktif`/`diarsipkan`), `is_self_assign`.
-- UI: tabel per baris (Siswa, Perusahaan, dropdown Guru Pembimbing, tombol Simpan/Ubah).
-- **BR10**: wewenang **eksklusif** Kaprog jurusan siswa ybs — **tidak ada** hak override dari Hubin. Scoping via Policy (`PembimbinganPolicy`), bukan role check inline.
-- **BR11**: satu siswa hanya boleh punya **satu** Guru Pembimbing aktif per periode PKL. Penggantian pembimbing → assignment lama diubah jadi `status=diarsipkan` (**bukan** dihapus), assignment baru dibuat `status=aktif` (state machine di `TRD.md` §4.5).
-- Permission: `pembimbing.assign` (kaprog, scoped).
-- Controller: `Kaprog/PembimbinganController.php`.
-- Trigger notifikasi: Guru Pembimbing di-assign → ke Siswa & Guru Pembimbing.
+    $request->validate(['guru_pembimbing_id' => 'required|exists:users,id']);
 
-Smoke test:
-- [ ] Hanya Kaprog jurusan terkait yang bisa assign Guru Pembimbing untuk siswanya (coba dari Kaprog jurusan lain → ditolak).
-- [ ] Ganti pembimbing untuk siswa yang sudah punya pembimbing aktif → assignment lama berstatus `diarsipkan`, tidak hilang dari histori.
+    PenugasanPembimbing::create([
+        'guru_pembimbing_id' => $request->guru_pembimbing_id,
+        'pengajuan_id' => $pengajuan->id,
+        'assigned_by' => auth()->id(),
+    ]);
+}
+```
+- Self-assign: form assignment nampilin nama Kaprog sendiri juga sebagai opsi (dia juga punya `user_id`, cuma jabatannya kaprog) — bukan endpoint terpisah, cukup opsi normal di dropdown yang sama.
+- Section **"Bimbingan Saya"** di dashboard Kaprog cuma query `penugasan_pembimbing` where `guru_pembimbing_id = auth()->id()` — reuse komponen kunjungan & (nanti M6) formulir penilaian yang sama persis dipakai role Guru Pembimbing, jangan duplikasi component.
 
-### 2.2 Self-Assign Kaprog sebagai Pembimbing
-- **BR10** (lanjutan): Kaprog boleh self-assign dirinya sendiri sebagai Guru Pembimbing untuk siswa jurusannya.
-- **Penting (`TRD.md` §5, PRD §3 & §7)**: Kaprog **tetap satu role Spatie** (`kaprog`) — **tidak** ada role gabungan. Yang terjadi adalah penambahan permission `kunjungan.*` (dan nanti `penilaian.*` di M6) di atas role `kaprog` yang sudah ada.
-- Akses ditampilkan lewat section terpisah **"Bimbingan Saya"** di dashboard Kaprog — bukan menggabungkan UI Guru Pembimbing ke dashboard Kaprog.
-- `pembimbingan.is_self_assign = true` untuk assignment jenis ini.
+## 3. Surat Tugas Monitoring (BR22, BR23)
 
-Smoke test:
-- [ ] Kaprog self-assign muncul benar di "Bimbingan Saya" tanpa mengubah role Spatie-nya (masih `kaprog`, cek via tinker/`hasRole()`).
-- [ ] Kaprog yang self-assign bisa mengakses fitur Laporan Kunjungan (2.4) untuk siswa yang di-self-assign-nya, lewat permission tambahan — bukan lewat role baru.
+```php
+// app/Http/Controllers/Hubin/SuratTugasController.php
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'periode_id' => 'required|exists:periode_pkl,id',
+        'lingkup' => 'required|in:global,scoped',
+        'kompetensi_keahlian_id' => 'required_if:lingkup,scoped|nullable|exists:kompetensi_keahlian,id',
+    ]);
 
-### 2.3 Surat Tugas Monitoring — Global & Scoped (BR22, BR23)
-- Tabel `surat_tugas_monitoring` (`TRD.md` §3.2): `nomor_surat` (unique, sequential — sama seperti `surat_pengantar`, pola dari M4 §6), `lingkup` (enum `global`/`scoped`), `kompetensi_keahlian_id` (nullable, null jika global), `diterbitkan_oleh`, `file_pdf`.
-- **BR23**: dua lingkup —
-  - **Global**: berlaku seluruh jurusan, diinisiasi langsung oleh Hubin.
-  - **Scoped**: berlaku satu jurusan tertentu, diterbitkan Hubin **atas request eksplisit** dari Kaprog jurusan tsb.
-- Permission: `surat-tugas.terbitkan-global` (hubin), `surat-tugas.request-scoped` (kaprog, scoped), `surat-tugas.terbitkan-scoped` (hubin).
-- Controller: `Kaprog/SuratTugasRequestController.php` (request scoped), `Hubin/SuratController.php` (terbitkan global & scoped — bisa reuse controller Surat dari M4, tambahkan action baru).
-- Generasi PDF & penomoran ikuti pola yang sama seperti Surat Pengantar (M4 §6–§7).
+    $suratTugas = SuratTugasMonitoring::create([
+        ...$data,
+        'diterbitkan_by' => auth()->id(),
+        'requested_by' => $request->input('requested_by'), // null kalau inisiatif Hubin sendiri
+    ]);
 
-Smoke test:
-- [ ] Surat Tugas Scoped hanya berlaku untuk jurusan yang di-request — tidak "bocor" ke jurusan lain (verifikasi lewat gate di 2.4).
+    // generate PDF pakai pola PenomoranSurat yang sama dari M4
+}
+```
+Request scoped dari Kaprog: halaman/tombol kecil di dashboard Kaprog yang cuma bikin notifikasi ke Hubin (bukan langsung create record) — keputusan terbit tetap di tangan Hubin.
 
-### 2.4 Laporan Kunjungan Monitoring (Guru Pembimbing)
-- Tabel `laporan_kunjungan`, terikat ke `surat_tugas_monitoring`.
-- **BR22**: kunjungan hanya sah dan dapat dicatat jika ada Surat Tugas Monitoring yang **diterbitkan Hubin** dan **berstatus aktif** — gate ini wajib dicek di backend (Policy `KunjunganPolicy`), bukan hanya UI.
-- Gate detail (`TRD.md` §4.4): Surat Tugas belum terbit → tidak bisa isi; Surat Tugas terbit (Global **atau** Scoped, dan lingkupnya mencakup siswa ybs) → Laporan Kunjungan bisa diisi.
-- Diisi **berkala/dicicil** — bukan sekali submit seperti Formulir Penilaian nanti di M6.
-- **BR12**: Guru Pembimbing hanya bisa akses data siswa yang eksplisit di-assign kepadanya.
-- Permission: `kunjungan.isi` (guru_pembimbing untuk siswa assigned; +kaprog via self-assign), `kunjungan.lihat` (guru_pembimbing, kaprog scoped).
-- Controller: `GuruPembimbing/KunjunganController.php`.
+## 4. Laporan Kunjungan — gated oleh Surat Tugas (BR22)
 
-Smoke test:
-- [ ] Laporan Kunjungan tidak bisa diisi tanpa Surat Tugas Monitoring aktif (Global atau Scoped) untuk siswa/jurusan tsb.
-- [ ] Guru Pembimbing bisa isi Laporan Kunjungan berkala (lebih dari satu entri per siswa, tidak dibatasi sekali submit).
+```php
+public function store(Request $request, PenugasanPembimbing $penugasan)
+{
+    $this->authorize('kunjungan', $penugasan); // ownership: guru_pembimbing_id === auth()->id() ATAU self-assign Kaprog
 
-### 2.5 Notifikasi Assignment & Kunjungan
-Tambahkan trigger baru ke infra notifikasi M3:
-- Guru Pembimbing di-assign → ke Siswa & Guru Pembimbing (sudah disebut di 2.1).
-- Surat Tugas Monitoring terbit → ke Guru Pembimbing terkait.
+    $suratTugas = SuratTugasMonitoring::query()
+        ->where('periode_id', $penugasan->pengajuan->periode_id)
+        ->where(function ($q) use ($penugasan) {
+            $q->where('lingkup', 'global')
+              ->orWhere('kompetensi_keahlian_id', $penugasan->pengajuan->siswa->kompetensi_keahlian_id);
+        })
+        ->first();
 
-## 3. Catatan Terkait BR30 (untuk Diketahui, Bukan Fitur M5)
+    abort_unless($suratTugas, 422, 'Surat Tugas Monitoring belum diterbitkan untuk periode/jurusan ini.');
 
-**BR30**: Penggantian Guru Pembimbing (2.1) hanya untuk kasus **permanen** (resign/pindah tugas). Ketidakhadiran pembimbing di hari sidang penilaian (nanti relevan di M6) **tidak** memicu penggantian pembimbing lewat modul ini — itu diselesaikan lewat penjadwalan ulang sidang secara manual di luar sistem. Pastikan tidak membangun fitur "reschedule sidang" di M5.
+    $kunjungan = KunjunganMonitoring::create([
+        'penugasan_id' => $penugasan->id,
+        'surat_tugas_id' => $suratTugas->id,
+        'tanggal_kunjungan' => $request->tanggal_kunjungan,
+        'catatan' => $request->catatan,
+    ]);
 
-## 4. Checklist Testing Akhir Sesi M5
+    $kunjungan->addMediaFromRequest('dokumentasi')->toMediaCollection('dokumentasi');
+}
+```
 
-- [ ] Hanya Kaprog jurusan terkait yang bisa assign Guru Pembimbing untuk siswanya.
-- [ ] Kaprog self-assign muncul benar di "Bimbingan Saya" tanpa mengubah role Spatie-nya.
-- [ ] Laporan Kunjungan tidak bisa diisi tanpa Surat Tugas Monitoring aktif (Global atau Scoped).
-- [ ] Surat Tugas Scoped hanya berlaku untuk jurusan yang di-request, tidak bocor ke jurusan lain.
-
-**Semua item di atas harus lulus sebelum M6 dimulai.**
+## Checkpoint akhir M5
+- Kaprog cuma bisa assign Guru Pembimbing buat siswa jurusannya sendiri (coba lintas jurusan, harus ketolak Policy).
+- Self-assign Kaprog jadi pembimbing muncul di section "Bimbingan Saya" dan berfungsi sama persis kayak Guru Pembimbing biasa (bukan halaman/kode terpisah).
+- Hubin bisa terbitkan Surat Tugas Global (semua jurusan langsung ke-cover) dan Scoped (satu jurusan, bisa dikaitkan ke request Kaprog).
+- Guru Pembimbing gak bisa isi Laporan Kunjungan kalau Surat Tugas buat periode/jurusannya belum ada — coba isi sebelum surat terbit, harus ditolak backend.
+- Setelah surat tugas terbit, form Laporan Kunjungan bisa diisi berkali-kali sepanjang periode (bukan sekali doang).
