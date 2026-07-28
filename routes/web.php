@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Controllers\Auth\FirstLoginController;
+use App\Http\Controllers\Hubin\AkunController;
+use App\Http\Controllers\Hubin\IndikatorPenilaianController;
+use App\Http\Controllers\Hubin\KompetensiKeahlianController;
+use App\Http\Controllers\Hubin\PeriodePklController;
+use App\Http\Controllers\Hubin\PerusahaanController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -36,6 +41,41 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
 
     Route::prefix('hubin')->name('hubin.')->group(function () {
         Route::inertia('dashboard', 'hubin/dashboard')->name('dashboard');
+
+        Route::resource('perusahaan', PerusahaanController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->middleware('permission:master-data.kelola');
+        Route::resource('periode-pkl', PeriodePklController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->middleware('permission:master-data.kelola');
+        Route::resource('kompetensi-keahlian', KompetensiKeahlianController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->middleware('permission:master-data.kelola');
+        Route::resource('indikator-penilaian', IndikatorPenilaianController::class)
+            ->only(['index', 'store', 'update', 'destroy'])
+            ->middleware('permission:master-penilaian.kelola');
+
+        Route::post('indikator-penilaian/{indikatorPenilaian}/section', [IndikatorPenilaianController::class, 'storeSection'])
+            ->name('indikator-penilaian.section.store')->middleware('permission:master-penilaian.kelola');
+        Route::put('indikator-penilaian/section/{section}', [IndikatorPenilaianController::class, 'updateSection'])
+            ->name('indikator-penilaian.section.update')->middleware('permission:master-penilaian.kelola');
+        Route::delete('indikator-penilaian/section/{section}', [IndikatorPenilaianController::class, 'destroySection'])
+            ->name('indikator-penilaian.section.destroy')->middleware('permission:master-penilaian.kelola');
+
+        Route::get('kelola-akun', [AkunController::class, 'index'])->name('kelola-akun.index')
+            ->middleware('permission:akun.kelola');
+        Route::patch('kelola-akun/{guruProfile}/nonaktifkan', [AkunController::class, 'nonaktifkanKaprog'])
+            ->name('kelola-akun.nonaktifkan')->middleware('permission:akun.kelola');
+        Route::post('kelola-akun/import-guru', [AkunController::class, 'importGuru'])
+            ->name('kelola-akun.import.guru')->middleware('permission:akun.kelola');
+        Route::post('kelola-akun/import-siswa', [AkunController::class, 'importSiswa'])
+            ->name('kelola-akun.import.siswa')->middleware('permission:akun.kelola');
+        Route::get('kelola-akun/export', [AkunController::class, 'export'])
+            ->name('kelola-akun.export')->middleware('permission:akun.kelola');
+        Route::get('kelola-akun/template-guru', [AkunController::class, 'templateGuru'])
+            ->name('kelola-akun.template.guru');
+        Route::get('kelola-akun/template-siswa', [AkunController::class, 'templateSiswa'])
+            ->name('kelola-akun.template.siswa');
     });
 });
 

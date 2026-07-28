@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Database\Factories\KompetensiKeahlianFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -10,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class KompetensiKeahlian extends Model
 {
+    /** @use HasFactory<KompetensiKeahlianFactory> */
+    use HasFactory;
+
     protected $table = 'kompetensi_keahlian';
 
     protected $fillable = ['nama', 'acronym'];

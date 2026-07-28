@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Database\Factories\GuruProfileFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,6 +13,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class GuruProfile extends Model
 {
+    /** @use HasFactory<GuruProfileFactory> */
+    use HasFactory;
+
     protected $table = 'guru_profiles';
 
     protected $fillable = ['user_id', 'nip', 'jabatan', 'kompetensi_keahlian_id'];
