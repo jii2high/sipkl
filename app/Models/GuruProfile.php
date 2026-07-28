@@ -3,19 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read User $user
+ * @property-read KompetensiKeahlian|null $kompetensiKeahlian
+ */
 class GuruProfile extends Model
 {
     protected $table = 'guru_profiles';
 
     protected $fillable = ['user_id', 'nip', 'jabatan', 'kompetensi_keahlian_id'];
 
-    public function user()
+    /** @return BelongsTo<User, $this> */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function kompetensiKeahlian()
+    /** @return BelongsTo<KompetensiKeahlian, $this> */
+    public function kompetensiKeahlian(): BelongsTo
     {
         return $this->belongsTo(KompetensiKeahlian::class);
     }

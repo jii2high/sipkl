@@ -7,10 +7,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Inertia\Response;
 
 class FirstLoginController extends Controller
 {
-    public function create()
+    public function create(): Response
     {
         return inertia('auth/first-login');
     }
@@ -18,7 +19,8 @@ class FirstLoginController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $defaultPassword = $user->siswaProfile?->nis ?? $user->guruProfile?->nip;
+        $defaultPassword = $user->siswaProfile?->nis;
+        $defaultPassword ??= $user->guruProfile?->nip;
 
         $request->validate([
             'password' => [
