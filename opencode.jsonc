@@ -2,15 +2,5 @@
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
         "@dietrichgebert/ponytail"
-    ],
-    "mcp": {
-        "TestSprite": {
-            "type": "local",
-            "enabled": true,
-            "command": ["npx", "@testsprite/testsprite-mcp@latest"],
-            "environment": {
-                "API_KEY": "sk-user-wKNu1o2Z3o8MJPSpFugJcBSjrvgygdVT0CycxtSmwN5j8bXr8jaSIO_SEV2PZCAunH1NsXtgfC7ZKMlzrG67qLn5c03GBlXdepajvoNHNpH5HrOEC-KaSJEZ08uIdHyB4fk"
-            }
-        }
-    }
+    ]
 }
