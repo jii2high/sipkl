@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Hubin;
 use App\Exports\AkunExport;
 use App\Exports\GuruTemplateExport;
 use App\Exports\SiswaTemplateExport;
+use App\Http\Controllers\Controller;
 use App\Imports\GuruImport;
 use App\Imports\SiswaImport;
-use App\Http\Controllers\Controller;
 use App\Models\GuruProfile;
-use App\Models\KompetensiKeahlian;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ImportExportController extends Controller
 {
@@ -25,25 +25,25 @@ class ImportExportController extends Controller
         return Inertia::render('hubin/import-export/index');
     }
 
-    public function exportAkun(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function exportAkun(): BinaryFileResponse
     {
         $this->authorize('kelola', GuruProfile::class);
 
-        return app(Excel::class)->download(new AkunExport(), 'akun-export.xlsx');
+        return app(Excel::class)->download(new AkunExport, 'akun-export.xlsx');
     }
 
-    public function exportGuruTemplate(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function exportGuruTemplate(): BinaryFileResponse
     {
         $this->authorize('kelola', GuruProfile::class);
 
-        return app(Excel::class)->download(new GuruTemplateExport(), 'guru-template.xlsx');
+        return app(Excel::class)->download(new GuruTemplateExport, 'guru-template.xlsx');
     }
 
-    public function exportSiswaTemplate(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function exportSiswaTemplate(): BinaryFileResponse
     {
         $this->authorize('kelola', GuruProfile::class);
 
-        return app(Excel::class)->download(new SiswaTemplateExport(), 'siswa-template.xlsx');
+        return app(Excel::class)->download(new SiswaTemplateExport, 'siswa-template.xlsx');
     }
 
     public function importGuru(Request $request): RedirectResponse
@@ -54,7 +54,7 @@ class ImportExportController extends Controller
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
         ]);
 
-        $import = new GuruImport();
+        $import = new GuruImport;
         $import->import($request->file('file'));
 
         $message = 'Import guru selesai. Baris salah tidak disimpan.';
@@ -78,7 +78,7 @@ class ImportExportController extends Controller
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
         ]);
 
-        $import = new SiswaImport();
+        $import = new SiswaImport;
         $import->import($request->file('file'));
 
         $message = 'Import siswa selesai. Baris salah tidak disimpan.';

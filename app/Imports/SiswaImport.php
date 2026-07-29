@@ -7,7 +7,6 @@ use App\Models\SiswaProfile;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
@@ -16,7 +15,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Row;
 use Maatwebsite\Excel\Validators\Failure;
 
-class SiswaImport implements OnEachRow, WithHeadingRow, SkipsOnFailure
+class SiswaImport implements OnEachRow, SkipsOnFailure, WithHeadingRow
 {
     use Importable, SkipsFailures;
 
@@ -46,7 +45,7 @@ class SiswaImport implements OnEachRow, WithHeadingRow, SkipsOnFailure
                 ->orWhere('acronym', $data['kompetensi_keahlian'])
                 ->first();
 
-            if (!$kompetensi) {
+            if (! $kompetensi) {
                 $validator->errors()->add('kompetensi_keahlian', 'Kompetensi keahlian tidak ditemukan.');
             }
         });

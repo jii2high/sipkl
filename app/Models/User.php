@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -56,5 +57,11 @@ class User extends Authenticatable
     public function siswaProfile(): HasOne
     {
         return $this->hasOne(SiswaProfile::class);
+    }
+
+    /** @return HasMany<PengajuanPklHistory, $this> */
+    public function pengajuanHistories(): HasMany
+    {
+        return $this->hasMany(PengajuanPklHistory::class, 'actor_id');
     }
 }

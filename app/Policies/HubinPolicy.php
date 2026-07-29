@@ -13,6 +13,7 @@ use Illuminate\Auth\Access\Response;
 
 class HubinPolicy
 {
+    /** @var array<class-string, string> */
     private static array $permissionMap = [
         Perusahaan::class => 'master-perusahaan.kelola',
         PeriodePkl::class => 'master-periode-pkl.kelola',

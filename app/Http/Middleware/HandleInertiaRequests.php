@@ -42,6 +42,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => fn () => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'notifikasi_belum_dibaca' => fn () => $request->user()?->unreadNotifications()->count() ?? 0,
         ];
     }
 }

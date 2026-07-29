@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Hubin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GuruProfile;
-use App\Models\KompetensiKeahlian;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

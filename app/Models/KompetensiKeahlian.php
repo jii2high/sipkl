@@ -19,4 +19,10 @@ class KompetensiKeahlian extends Model
     {
         return $this->hasMany(SiswaProfile::class);
     }
+
+    /** @return HasMany<GuruProfile, $this> */
+    public function guruProfiles(): HasMany
+    {
+        return $this->hasMany(GuruProfile::class);
+    }
 }

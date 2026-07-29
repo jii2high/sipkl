@@ -12,6 +12,7 @@ class SectionPenilaianRequest extends FormRequest
         return $this->user()?->can('kelola', SectionPenilaian::class) ?? false;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

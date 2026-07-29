@@ -3,7 +3,7 @@ import { Home, FileText, User, Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { dashboard as siswaDashboard } from '@/routes/siswa';
+import siswaRoutes, { dashboard as siswaDashboard } from '@/routes/siswa';
 
 export default function SiswaLayout({ children }: { children: ReactNode }) {
     return (
@@ -24,13 +24,13 @@ export default function SiswaLayout({ children }: { children: ReactNode }) {
                                 Dashboard
                             </Link>
                             <Link
-                                href="#"
+                                href={siswaRoutes.pengajuan.index().url}
                                 className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
                             >
                                 Pengajuan PKL
                             </Link>
                             <Link
-                                href="#"
+                                href={siswaRoutes.riwayat().url}
                                 className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
                             >
                                 Riwayat PKL
@@ -52,7 +52,7 @@ export default function SiswaLayout({ children }: { children: ReactNode }) {
                     <span>Beranda</span>
                 </Link>
                 <Link
-                    href="#"
+                    href={siswaRoutes.pengajuan.index().url}
                     className="flex flex-col items-center gap-1 text-xs text-muted-foreground"
                 >
                     <FileText className="size-5" />

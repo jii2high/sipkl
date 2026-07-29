@@ -16,7 +16,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Row;
 use Maatwebsite\Excel\Validators\Failure;
 
-class GuruImport implements OnEachRow, WithHeadingRow, SkipsOnFailure
+class GuruImport implements OnEachRow, SkipsOnFailure, WithHeadingRow
 {
     use Importable, SkipsFailures;
 
@@ -43,12 +43,12 @@ class GuruImport implements OnEachRow, WithHeadingRow, SkipsOnFailure
                 $validator->errors()->add('kompetensi_keahlian', 'Kompetensi keahlian wajib untuk jabatan kaprog.');
             }
 
-            if (!empty($data['kompetensi_keahlian'])) {
+            if (! empty($data['kompetensi_keahlian'])) {
                 $kompetensi = KompetensiKeahlian::where('nama', $data['kompetensi_keahlian'])
                     ->orWhere('acronym', $data['kompetensi_keahlian'])
                     ->first();
 
-                if (!$kompetensi) {
+                if (! $kompetensi) {
                     $validator->errors()->add('kompetensi_keahlian', 'Kompetensi keahlian tidak ditemukan.');
                 }
             }
@@ -65,7 +65,7 @@ class GuruImport implements OnEachRow, WithHeadingRow, SkipsOnFailure
         }
 
         $kompetensi = null;
-        if (!empty($data['kompetensi_keahlian'])) {
+        if (! empty($data['kompetensi_keahlian'])) {
             $kompetensi = KompetensiKeahlian::where('nama', $data['kompetensi_keahlian'])
                 ->orWhere('acronym', $data['kompetensi_keahlian'])
                 ->first();

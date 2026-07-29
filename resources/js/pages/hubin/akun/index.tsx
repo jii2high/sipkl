@@ -1,7 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import SearchFilterBar from '@/components/search-filter-bar';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 
 export default function AkunIndex() {
     const { guruProfiles, filters, roles } = usePage().props as any;

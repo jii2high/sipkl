@@ -8,6 +8,8 @@ use App\Http\Controllers\Hubin\KompetensiKeahlianController;
 use App\Http\Controllers\Hubin\PeriodePklController;
 use App\Http\Controllers\Hubin\PerusahaanController;
 use App\Http\Controllers\Hubin\SectionPenilaianController;
+use App\Http\Controllers\Kaprog\VerifikasiController;
+use App\Http\Controllers\Siswa\PengajuanController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -31,10 +33,18 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
 
     Route::prefix('siswa')->name('siswa.')->group(function () {
         Route::inertia('dashboard', 'siswa/dashboard')->name('dashboard');
+        Route::get('pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
+        Route::get('pengajuan/create', [PengajuanController::class, 'create'])->name('pengajuan.create');
+        Route::post('pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
+        Route::get('riwayat', [PengajuanController::class, 'riwayat'])->name('riwayat');
     });
 
     Route::prefix('kaprog')->name('kaprog.')->group(function () {
         Route::inertia('dashboard', 'kaprog/dashboard')->name('dashboard');
+        Route::get('verifikasi', [VerifikasiController::class, 'index'])->name('verifikasi.index');
+        Route::get('verifikasi/{pengajuan}', [VerifikasiController::class, 'show'])->name('verifikasi.show');
+        Route::post('verifikasi/{pengajuan}/approve', [VerifikasiController::class, 'approve'])->name('verifikasi.approve');
+        Route::post('verifikasi/{pengajuan}/reject', [VerifikasiController::class, 'reject'])->name('verifikasi.reject');
     });
 
     Route::prefix('guru-pembimbing')->name('guru-pembimbing.')->group(function () {

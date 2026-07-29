@@ -12,6 +12,7 @@ class PeriodePklRequest extends FormRequest
         return $this->user()?->can('kelola', PeriodePkl::class) ?? false;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

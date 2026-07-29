@@ -12,6 +12,7 @@ class IndikatorPenilaianRequest extends FormRequest
         return $this->user()?->can('kelola', IndikatorPenilaian::class) ?? false;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

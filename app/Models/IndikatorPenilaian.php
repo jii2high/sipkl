@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class IndikatorPenilaian extends Model
 {
@@ -15,12 +17,14 @@ class IndikatorPenilaian extends Model
         'deskripsi',
     ];
 
-    public function kompetensiKeahlian()
+    /** @return BelongsTo<KompetensiKeahlian, $this> */
+    public function kompetensiKeahlian(): BelongsTo
     {
         return $this->belongsTo(KompetensiKeahlian::class);
     }
 
-    public function sections()
+    /** @return HasMany<SectionPenilaian, $this> */
+    public function sections(): HasMany
     {
         return $this->hasMany(SectionPenilaian::class);
     }

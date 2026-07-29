@@ -28,7 +28,7 @@ class SectionPenilaianController extends Controller
                 ->get()
                 ->map(fn ($indikator) => [
                     'value' => $indikator->id,
-                    'label' => ($indikator->kategori === 'umum' ? 'Umum' : 'Teknis Kejuruan') . ' - ' . $indikator->deskripsi,
+                    'label' => ($indikator->kategori === 'umum' ? 'Umum' : 'Teknis Kejuruan').' - '.$indikator->deskripsi,
                 ])
                 ->toArray(),
             'filters' => $request->only(['search']),

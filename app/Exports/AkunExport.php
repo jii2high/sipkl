@@ -1,17 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exports;
 
 use App\Models\GuruProfile;
 use App\Models\SiswaProfile;
-use Illuminate\Support\Collection as SupportCollection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class AkunExport implements FromCollection, WithHeadings
 {
-    public function collection(): SupportCollection
+    /**
+     * @return \Illuminate\Support\Collection<int, array<string, string|null>>
+     */
+    public function collection(): \Illuminate\Support\Collection
     {
+        /**
+         * @var list<array<string, string|null>>
+         */
         $rows = [];
 
         GuruProfile::with(['user', 'kompetensiKeahlian'])
@@ -51,9 +58,13 @@ class AkunExport implements FromCollection, WithHeadings
                 ];
             });
 
-        return new SupportCollection($rows);
+        /** @var \Illuminate\Support\Collection<int, array<string, string|null>> $collection */
+        $collection = new \Illuminate\Support\Collection($rows);
+
+        return $collection;
     }
 
+    /** @return list<string> */
     public function headings(): array
     {
         return [

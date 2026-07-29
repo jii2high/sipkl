@@ -12,6 +12,7 @@ class KompetensiKeahlianRequest extends FormRequest
         return $this->user()?->can('kelola', KompetensiKeahlian::class) ?? false;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

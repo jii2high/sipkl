@@ -5,10 +5,12 @@ namespace App\Providers;
 use App\Models\GuruProfile;
 use App\Models\IndikatorPenilaian;
 use App\Models\KompetensiKeahlian;
+use App\Models\PengajuanPkl;
 use App\Models\PeriodePkl;
 use App\Models\Perusahaan;
 use App\Models\SectionPenilaian;
 use App\Policies\HubinPolicy;
+use App\Policies\PengajuanPklPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -20,6 +22,7 @@ class AuthServiceProvider extends ServiceProvider
         IndikatorPenilaian::class => HubinPolicy::class,
         SectionPenilaian::class => HubinPolicy::class,
         GuruProfile::class => HubinPolicy::class,
+        PengajuanPkl::class => PengajuanPklPolicy::class,
     ];
 
     public function boot(): void
