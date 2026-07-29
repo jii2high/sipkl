@@ -5,12 +5,8 @@ parameters:
     level: 7
     paths:
         - app
-        - config
         - database
-        - routes
-        - tests
     tmpDir: storage/framework/cache/phpstan
     excludePaths:
         - database/migrations
-        - tests
         - vendor

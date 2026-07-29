@@ -1,9 +1,11 @@
-import { Link } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
+    Bell,
     BookOpen,
     Building2,
     Calendar,
+    ClipboardCheck,
+    FileText,
     FolderGit2,
     GraduationCap,
     LayoutGrid,
@@ -40,12 +42,38 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
-    const { auth } = usePage<{ auth: Auth }>().props;
+    const { auth, notifikasi_belum_dibaca } = usePage<{
+        auth: Auth;
+        notifikasi_belum_dibaca: number;
+    }>().props;
     const role = auth.roles?.[0];
 
     const mainNavItems: NavItem[] = [
         { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
     ];
+
+    if (role === 'siswa') {
+        mainNavItems.push(
+            {
+                title: 'Pengajuan PKL',
+                href: '/siswa/pengajuan',
+                icon: FileText,
+            },
+            {
+                title: 'Riwayat PKL',
+                href: '/siswa/riwayat',
+                icon: ClipboardCheck,
+            },
+        );
+    }
+
+    if (role === 'kaprog') {
+        mainNavItems.push({
+            title: 'Verifikasi PKL',
+            href: '/kaprog/verifikasi',
+            icon: ClipboardCheck,
+        });
+    }
 
     if (role === 'hubin') {
         mainNavItems.push(
@@ -81,6 +109,12 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
+                {notifikasi_belum_dibaca > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-2 text-sm">
+                        <Bell className="size-4" />
+                        <span>{notifikasi_belum_dibaca} notifikasi baru</span>
+                    </div>
+                )}
             </SidebarHeader>
 
             <SidebarContent>

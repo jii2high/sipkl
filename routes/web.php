@@ -6,6 +6,8 @@ use App\Http\Controllers\Hubin\IndikatorPenilaianController;
 use App\Http\Controllers\Hubin\KompetensiKeahlianController;
 use App\Http\Controllers\Hubin\PeriodePklController;
 use App\Http\Controllers\Hubin\PerusahaanController;
+use App\Http\Controllers\Kaprog\VerifikasiController;
+use App\Http\Controllers\Siswa\PengajuanController as SiswaPengajuanController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -29,10 +31,26 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
 
     Route::prefix('siswa')->name('siswa.')->group(function () {
         Route::inertia('dashboard', 'siswa/dashboard')->name('dashboard');
+        Route::get('pengajuan', [SiswaPengajuanController::class, 'index'])->name('pengajuan.index')
+            ->middleware('permission:pengajuan.ajukan');
+        Route::post('pengajuan', [SiswaPengajuanController::class, 'store'])->name('pengajuan.store')
+            ->middleware('permission:pengajuan.ajukan');
+        Route::post('pengajuan/{pengajuanPkl}/submit', [SiswaPengajuanController::class, 'submit'])->name('pengajuan.submit')
+            ->middleware('permission:pengajuan.ajukan');
+        Route::get('riwayat', [SiswaPengajuanController::class, 'riwayat'])->name('riwayat')
+            ->middleware('permission:riwayat.lihat-sendiri');
     });
 
     Route::prefix('kaprog')->name('kaprog.')->group(function () {
         Route::inertia('dashboard', 'kaprog/dashboard')->name('dashboard');
+        Route::get('verifikasi', [VerifikasiController::class, 'index'])->name('verifikasi.index')
+            ->middleware('permission:pengajuan.lihat');
+        Route::get('verifikasi/{pengajuanPkl}', [VerifikasiController::class, 'show'])->name('verifikasi.show')
+            ->middleware('permission:pengajuan.lihat');
+        Route::post('verifikasi/{pengajuanPkl}/approve', [VerifikasiController::class, 'approve'])->name('verifikasi.approve')
+            ->middleware('permission:pengajuan.setujui');
+        Route::post('verifikasi/{pengajuanPkl}/reject', [VerifikasiController::class, 'reject'])->name('verifikasi.reject')
+            ->middleware('permission:pengajuan.tolak');
     });
 
     Route::prefix('guru-pembimbing')->name('guru-pembimbing.')->group(function () {
