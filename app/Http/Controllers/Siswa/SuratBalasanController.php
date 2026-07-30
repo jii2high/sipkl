@@ -8,6 +8,7 @@ use App\Models\SuratBalasan;
 use App\Notifications\SuratBalasanDiupload;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
 class SuratBalasanController extends Controller
@@ -61,7 +62,7 @@ class SuratBalasanController extends Controller
         $pengajuan->save();
 
         // Notifikasi ke Hubin (opsional) dan konfirmasi ke siswa
-        $pengajuan->siswa->user?->notify(new SuratBalasanDiupload($pengajuan));
+        $pengajuan->siswa?->user->notify(new SuratBalasanDiupload($pengajuan));
 
         return back()->with('sukses', 'Surat balasan berhasil diunggah. Status PKL Anda kini Resmi PKL.');
     }
@@ -69,7 +70,7 @@ class SuratBalasanController extends Controller
     /**
      * Download surat balasan milik siswa.
      */
-    public function download(PengajuanPkl $pengajuan): \Illuminate\Http\Response
+    public function download(PengajuanPkl $pengajuan): Response
     {
         $this->authorize('lihatSendiri', $pengajuan);
 

@@ -15,6 +15,7 @@ class SiswaProfile extends Model
 {
     /** @use HasFactory<SiswaProfileFactory> */
     use HasFactory;
+
     protected $table = 'siswa_profiles';
 
     protected $fillable = ['user_id', 'nis', 'kelas', 'kompetensi_keahlian_id', 'alamat', 'no_telp'];

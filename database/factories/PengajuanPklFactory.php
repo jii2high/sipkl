@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\PengajuanPkl;
-use App\Models\Perusahaan;
 use App\Models\PeriodePkl;
+use App\Models\Perusahaan;
 use App\Models\SiswaProfile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

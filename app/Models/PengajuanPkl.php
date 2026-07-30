@@ -78,11 +78,13 @@ class PengajuanPkl extends Model
         return $this->hasMany(PengajuanPklHistory::class, 'pengajuan_id');
     }
 
+    /** @return BelongsToMany<SuratPengantar, $this> */
     public function suratPengantars(): BelongsToMany
     {
         return $this->belongsToMany(SuratPengantar::class, 'surat_pengantar_pengajuan', 'pengajuan_id', 'surat_pengantar_id');
     }
 
+    /** @return HasOne<SuratBalasan, $this> */
     public function suratBalasan(): HasOne
     {
         return $this->hasOne(SuratBalasan::class, 'pengajuan_id');

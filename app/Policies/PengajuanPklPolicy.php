@@ -97,4 +97,3 @@ class PengajuanPklPolicy
         return $user->hasRole('hubin') && $pengajuan->status === 'resmi_pkl';
     }
 }
-

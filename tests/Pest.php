@@ -65,6 +65,7 @@ function siswaUser(): User
         'user_id' => $user->id,
         'kompetensi_keahlian_id' => $kk->id,
     ]);
+
     return $user->unsetRelation('siswaProfile')->load('siswaProfile');
 }
 

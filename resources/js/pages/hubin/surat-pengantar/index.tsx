@@ -63,10 +63,12 @@ export default function Index({ perusahaans, periodeAktif }: any) {
                                                 'Alamat tidak tersedia'}
                                         </span>
                                         <Link
-                                            href={suratPengantarPreview({
-                                                perusahaan: p.id,
-                                                periode: periodeAktif.id,
-                                            }).url}
+                                            href={
+                                                suratPengantarPreview({
+                                                    perusahaan: p.id,
+                                                    periode: periodeAktif.id,
+                                                }).url
+                                            }
                                         >
                                             <Button variant="ghost" size="sm">
                                                 Lihat detail &rarr;

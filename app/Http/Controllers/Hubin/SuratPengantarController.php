@@ -7,6 +7,7 @@ use App\Models\PengajuanPkl;
 use App\Models\PeriodePkl;
 use App\Models\Perusahaan;
 use App\Models\SuratPengantar;
+use App\Notifications\SuratBalasanDitolak;
 use App\Notifications\SuratPengantarTerbit;
 use App\Support\PenomoranSurat;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -38,7 +39,7 @@ class SuratPengantarController extends Controller
             })
             ->withCount(['pengajuanPkls as jumlah_siap' => fn ($q) => $q
                 ->when($periode, fn ($q2) => $q2->where('periode_id', $periode->id))
-                ->where('status', 'disetujui')
+                ->where('status', 'disetujui'),
             ])
             ->get();
 
@@ -93,7 +94,7 @@ class SuratPengantarController extends Controller
 
         // Buat objek surat sementara untuk preview PDF (tidak disimpan ke DB)
         $suratSementara = new SuratPengantar([
-            'nomor_surat' => '___/421.5/SMKN 1-Cadisdik.Wil.II/___/'. now()->year,
+            'nomor_surat' => '___/421.5/SMKN 1-Cadisdik.Wil.II/___/'.now()->year,
             'tanggal_terbit' => now()->toDateString(),
         ]);
         $suratSementara->setRelation('perusahaan', $perusahaan);
@@ -156,8 +157,7 @@ class SuratPengantarController extends Controller
 
         // Notifikasi ke semua siswa terkait, update status pengajuan
         $suratPengantar->pengajuans->each(function ($pengajuan) {
-            $siswaUser = $pengajuan->siswa->user;
-            $siswaUser?->notify(new SuratPengantarTerbit($pengajuan));
+            $pengajuan->siswa?->user->notify(new SuratPengantarTerbit($pengajuan));
         });
 
         return redirect()->route('hubin.surat-pengantar.index')
@@ -231,7 +231,7 @@ class SuratPengantarController extends Controller
         });
 
         // Notifikasi ke siswa
-        $pengajuan->siswa->user?->notify(new \App\Notifications\SuratBalasanDitolak($pengajuan, $validated['catatan']));
+        $pengajuan->siswa?->user->notify(new SuratBalasanDitolak($pengajuan, $validated['catatan']));
 
         return back()->with('sukses', 'Surat balasan berhasil ditolak. Status pengajuan kembali ke Disetujui.');
     }

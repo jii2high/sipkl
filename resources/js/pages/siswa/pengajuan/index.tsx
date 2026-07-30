@@ -238,9 +238,11 @@ export default function Pengajuan({
                                     </p>
                                     <Button variant="outline" size="sm" asChild>
                                         <a
-                                            href={suratBalasanDownload({
-                                                pengajuan: pengajuan.id,
-                                            }).url}
+                                            href={
+                                                suratBalasanDownload({
+                                                    pengajuan: pengajuan.id,
+                                                }).url
+                                            }
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
