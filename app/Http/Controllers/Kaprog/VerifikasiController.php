@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Kaprog;
 use App\Http\Controllers\Controller;
 use App\Models\PengajuanPkl;
 use App\Notifications\PengajuanDiverifikasi;
-use App\States\Pengajuan\DitolakKaprog;
-use App\States\Pengajuan\SiapTerbit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -47,9 +45,8 @@ class VerifikasiController extends Controller
 
         $pengajuan->kaprog_id = (int) $request->user()->id;
         $pengajuan->verified_kaprog_at = now();
+        $pengajuan->status = 'disetujui';
         $pengajuan->save();
-
-        $pengajuan->status->transitionTo(SiapTerbit::class);
 
         $pengajuan->siswa->user->notify(new PengajuanDiverifikasi($pengajuan, 'disetujui'));
 
@@ -66,9 +63,8 @@ class VerifikasiController extends Controller
 
         $pengajuan->kaprog_id = (int) $request->user()->id;
         $pengajuan->catatan_kaprog = $validated['catatan_kaprog'];
+        $pengajuan->status = 'ditolak';
         $pengajuan->save();
-
-        $pengajuan->status->transitionTo(DitolakKaprog::class);
 
         $pengajuan->siswa->user->notify(new PengajuanDiverifikasi($pengajuan, 'ditolak'));
 

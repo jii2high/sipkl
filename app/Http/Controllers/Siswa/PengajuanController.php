@@ -8,7 +8,6 @@ use App\Models\PeriodePkl;
 use App\Models\Perusahaan;
 use App\Models\User;
 use App\Notifications\PengajuanMasukAntrian;
-use App\States\Pengajuan\DiajukanKaprog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -61,7 +60,8 @@ class PengajuanController extends Controller
     {
         $this->authorize('submit', $pengajuan);
 
-        $pengajuan->status->transitionTo(DiajukanKaprog::class);
+        $pengajuan->status = 'diajukan';
+        $pengajuan->save();
 
         $kaprogs = User::role('kaprog')
             ->whereHas('guruProfile', fn ($q) => $q->where('kompetensi_keahlian_id', $request->user()->siswaProfile->kompetensi_keahlian_id))

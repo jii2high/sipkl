@@ -3,17 +3,16 @@
 namespace App\Providers;
 
 use App\Http\Responses\LoginResponse;
-use App\Listeners\CatatRiwayatPengajuan;
 use App\Models\GuruProfile;
+use App\Models\PengajuanPkl;
 use App\Observers\GuruProfileObserver;
+use App\Observers\PengajuanPklObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
-use Spatie\ModelStates\Events\StateChanged;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,8 +32,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
 
         GuruProfile::observe(GuruProfileObserver::class);
-
-        Event::listen(StateChanged::class, CatatRiwayatPengajuan::class);
+        PengajuanPkl::observe(PengajuanPklObserver::class);
     }
 
     /**

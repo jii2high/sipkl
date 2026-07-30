@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Database\Factories\SiswaProfileFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class SiswaProfile extends Model
 {
+    /** @use HasFactory<SiswaProfileFactory> */
+    use HasFactory;
     protected $table = 'siswa_profiles';
 
     protected $fillable = ['user_id', 'nis', 'kelas', 'kompetensi_keahlian_id', 'alamat', 'no_telp'];

@@ -20,6 +20,10 @@ class PermissionSeeder extends Seeder
             'pengajuan.setujui',
             'pengajuan.tolak',
             'riwayat.lihat-sendiri',
+            'surat.terbitkan',
+            'surat-balasan.upload',
+            'surat-balasan.verifikasi',
+            'persuratan.bundling',
         ];
 
         collect($permissions)->each(fn ($p) => Permission::firstOrCreate(['name' => $p]));
@@ -28,12 +32,16 @@ class PermissionSeeder extends Seeder
             'master-data.kelola',
             'master-penilaian.kelola',
             'akun.kelola',
+            'surat.terbitkan',
+            'surat-balasan.verifikasi',
+            'persuratan.bundling',
         ]);
 
         Role::findByName('siswa')->givePermissionTo([
             'pengajuan.ajukan',
             'pengajuan.lihat-sendiri',
             'riwayat.lihat-sendiri',
+            'surat-balasan.upload',
         ]);
 
         Role::findByName('kaprog')->givePermissionTo([

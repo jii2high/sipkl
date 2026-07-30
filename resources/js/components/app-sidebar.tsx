@@ -93,6 +93,11 @@ export function AppSidebar() {
                 href: '/hubin/indikator-penilaian',
                 icon: ListChecks,
             },
+            {
+                title: 'Surat Pengantar',
+                href: '/hubin/surat-pengantar',
+                icon: FileText,
+            },
             { title: 'Kelola Akun', href: '/hubin/kelola-akun', icon: Users },
         );
     }

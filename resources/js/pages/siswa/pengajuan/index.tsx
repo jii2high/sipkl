@@ -1,7 +1,10 @@
 import { Head, useForm, router } from '@inertiajs/react';
+import { Download, Upload, FileText } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
@@ -15,12 +18,17 @@ import {
     store as pengajuanStore,
     submit as pengajuanSubmit,
 } from '@/routes/siswa/pengajuan';
+import {
+    store as suratBalasanStore,
+    download as suratBalasanDownload,
+} from '@/routes/siswa/surat-balasan';
 
 const statusBadge: Record<string, string> = {
     draft: 'bg-muted text-muted-foreground',
     diajukan: 'bg-yellow-100 text-yellow-800',
     disetujui: 'bg-green-100 text-green-800',
     ditolak: 'bg-red-100 text-red-800',
+    resmi_pkl: 'bg-blue-100 text-blue-800',
 };
 
 export default function Pengajuan({
@@ -29,6 +37,8 @@ export default function Pengajuan({
     periodeAktif,
 }: any) {
     const { data, setData, post, errors } = useForm({ perusahaan_id: '' });
+    const [uploading, setUploading] = useState(false);
+    const fileRef = useRef<HTMLInputElement>(null);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -37,8 +47,46 @@ export default function Pengajuan({
 
     function handleSubmitToKaprog() {
         if (confirm('Yakin ingin mengajukan PKL ke Kaprog?')) {
-            router.post(pengajuanSubmit({ pengajuanPkl: pengajuan.id }).url);
+            router.post(pengajuanSubmit({ pengajuan: pengajuan.id }).url);
         }
+    }
+
+    function handleUploadBalasan() {
+        const file = fileRef.current?.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        if (file.type !== 'application/pdf') {
+            alert('File harus berformat PDF.');
+
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Ukuran file maksimal 5 MB.');
+
+            return;
+        }
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        router.post(
+            suratBalasanStore({ pengajuan: pengajuan.id }).url,
+            formData,
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setUploading(false);
+
+                    if (fileRef.current) {
+                        fileRef.current.value = '';
+                    }
+                },
+            },
+        );
     }
 
     return (
@@ -144,6 +192,73 @@ export default function Pengajuan({
                                     Ajukan ke Kaprog
                                 </Button>
                             )}
+
+                            {pengajuan.status === 'disetujui' &&
+                                pengajuan.exists_surat_pengantar && (
+                                    <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-blue-800">
+                                            <FileText className="size-4" />
+                                            Upload Surat Balasan
+                                        </div>
+                                        <p className="text-xs text-blue-600">
+                                            Surat Pengantar sudah diterbitkan.
+                                            Upload Surat Balasan dari perusahaan
+                                            untuk melanjutkan ke status Resmi
+                                            PKL.
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                ref={fileRef}
+                                                type="file"
+                                                accept=".pdf,application/pdf"
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                size="sm"
+                                                onClick={handleUploadBalasan}
+                                                disabled={uploading}
+                                            >
+                                                <Upload className="mr-1 size-4" />
+                                                {uploading
+                                                    ? 'Mengupload...'
+                                                    : 'Upload'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                            {pengajuan.status === 'resmi_pkl' && (
+                                <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-blue-800">
+                                        <FileText className="size-4" />
+                                        Resmi PKL
+                                    </div>
+                                    <p className="text-xs text-blue-600">
+                                        Selamat! Status PKL Anda telah resmi.
+                                    </p>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <a
+                                            href={suratBalasanDownload({
+                                                pengajuan: pengajuan.id,
+                                            }).url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <Download className="mr-1 size-4" />
+                                            Download Surat Balasan
+                                        </a>
+                                    </Button>
+                                </div>
+                            )}
+
+                            {pengajuan.status === 'disetujui' &&
+                                !pengajuan.exists_surat_pengantar && (
+                                    <div className="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">
+                                        Menunggu Surat Pengantar diterbitkan
+                                        oleh Hubin sebelum dapat upload Surat
+                                        Balasan.
+                                    </div>
+                                )}
 
                             {pengajuan.catatan_kaprog && (
                                 <div className="rounded-lg bg-yellow-50 p-3 text-sm">

@@ -9,9 +9,6 @@ use App\Models\PeriodePkl;
 use App\Models\Perusahaan;
 use App\Models\SiswaProfile;
 use App\Models\User;
-use App\States\Pengajuan\DiajukanKaprog;
-use App\States\Pengajuan\DitolakKaprog;
-use App\States\Pengajuan\SiapTerbit;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -89,46 +86,45 @@ class DatabaseSeeder extends Seeder
             'siswa_id' => $fikri->siswaProfile->id,
             'perusahaan_id' => $cvKd->id,
             'periode_id' => $periodeAktif->id,
+            'status' => 'draft',
         ]);
 
-        // 2. Fajri — Diajukan ke Kaprog RPL (periode aktif)
-        $p1 = PengajuanPkl::create([
+        // 2. Fajri — Disetujui Kaprog RPL (periode aktif, siap terbit surat pengantar)
+        PengajuanPkl::create([
             'siswa_id' => $fajri->siswaProfile->id,
             'perusahaan_id' => $ptTm->id,
             'periode_id' => $periodeAktif->id,
+            'status' => 'disetujui',
+            'kaprog_id' => (int) $della->id,
+            'verified_kaprog_at' => now(),
         ]);
-        $p1->status->transitionTo(DiajukanKaprog::class);
 
         // 3. Bagas — Diajukan ke Kaprog TKJ (periode aktif)
-        $p2 = PengajuanPkl::create([
+        PengajuanPkl::create([
             'siswa_id' => $bagas->siswaProfile->id,
             'perusahaan_id' => $ptNs->id,
             'periode_id' => $periodeAktif->id,
+            'status' => 'diajukan',
         ]);
-        $p2->status->transitionTo(DiajukanKaprog::class);
 
-        // 4. Pedrosa — Ditolak Kaprog (periode aktif)
+        // 4. Pedrosa — Ditolak Kaprog MM (periode aktif)
         $p3 = PengajuanPkl::create([
             'siswa_id' => $pedrosa->siswaProfile->id,
             'perusahaan_id' => $ptSmk->id,
             'periode_id' => $periodeAktif->id,
+            'status' => 'ditolak',
+            'kaprog_id' => (int) $della->id,
+            'catatan_kaprog' => 'Lengkapi profil perusahaan tujuan dengan alamat yang valid.',
         ]);
-        $p3->status->transitionTo(DiajukanKaprog::class);
-        $p3->catatan_kaprog = 'Lengkapi profil perusahaan tujuan dengan alamat yang valid.';
-        $p3->kaprog_id = (int) $della->id;
-        $p3->save();
-        $p3->status->transitionTo(DitolakKaprog::class);
 
-        // 5. Fajri — SiapTerbit (periode lampau, buat uji Riwayat PKL)
-        $p4 = PengajuanPkl::create([
+        // 5. Fajri — Disetujui (periode lampau, buat uji Riwayat PKL)
+        PengajuanPkl::create([
             'siswa_id' => $fajri->siswaProfile->id,
             'perusahaan_id' => $ptTm->id,
             'periode_id' => $periodeLama->id,
+            'status' => 'disetujui',
+            'kaprog_id' => (int) $della->id,
+            'verified_kaprog_at' => now(),
         ]);
-        $p4->status->transitionTo(DiajukanKaprog::class);
-        $p4->kaprog_id = (int) $della->id;
-        $p4->verified_kaprog_at = now();
-        $p4->save();
-        $p4->status->transitionTo(SiapTerbit::class);
     }
 }

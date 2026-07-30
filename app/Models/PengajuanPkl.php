@@ -2,20 +2,18 @@
 
 namespace App\Models;
 
-use App\States\Pengajuan\PengajuanState;
 use Database\Factories\PengajuanPklFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\ModelStates\HasStates;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class PengajuanPkl extends Model implements HasMedia
+class PengajuanPkl extends Model
 {
     /** @use HasFactory<PengajuanPklFactory> */
-    use HasFactory, HasStates, InteractsWithMedia;
+    use HasFactory;
 
     protected $table = 'pengajuan_pkl';
 
@@ -33,26 +31,16 @@ class PengajuanPkl extends Model implements HasMedia
         'laporan_akhir_uploaded_at',
     ];
 
+    protected $appends = ['exists_surat_pengantar'];
+
     protected $casts = [
-        'status' => PengajuanState::class,
+        'status' => 'string',
         'kaprog_id' => 'integer',
         'hubin_id' => 'integer',
         'verified_kaprog_at' => 'datetime',
         'surat_dikirim_at' => 'datetime',
         'laporan_akhir_uploaded_at' => 'datetime',
     ];
-
-    public function registerMediaCollections(): void
-    {
-        $this->addMediaCollection('surat_balasan_perusahaan')
-            ->singleFile();
-
-        $this->addMediaCollection('laporan_akhir_pkl')
-            ->singleFile();
-
-        $this->addMediaCollection('dokumen_pendukung')
-            ->singleFile();
-    }
 
     /** @return BelongsTo<SiswaProfile, $this> */
     public function siswa(): BelongsTo
@@ -88,5 +76,20 @@ class PengajuanPkl extends Model implements HasMedia
     public function histories(): HasMany
     {
         return $this->hasMany(PengajuanPklHistory::class, 'pengajuan_id');
+    }
+
+    public function suratPengantars(): BelongsToMany
+    {
+        return $this->belongsToMany(SuratPengantar::class, 'surat_pengantar_pengajuan', 'pengajuan_id', 'surat_pengantar_id');
+    }
+
+    public function suratBalasan(): HasOne
+    {
+        return $this->hasOne(SuratBalasan::class, 'pengajuan_id');
+    }
+
+    public function getExistsSuratPengantarAttribute(): bool
+    {
+        return $this->suratPengantars()->exists();
     }
 }

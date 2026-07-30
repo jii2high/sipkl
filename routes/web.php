@@ -6,8 +6,10 @@ use App\Http\Controllers\Hubin\IndikatorPenilaianController;
 use App\Http\Controllers\Hubin\KompetensiKeahlianController;
 use App\Http\Controllers\Hubin\PeriodePklController;
 use App\Http\Controllers\Hubin\PerusahaanController;
+use App\Http\Controllers\Hubin\SuratPengantarController;
 use App\Http\Controllers\Kaprog\VerifikasiController;
 use App\Http\Controllers\Siswa\PengajuanController as SiswaPengajuanController;
+use App\Http\Controllers\Siswa\SuratBalasanController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -35,7 +37,7 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
             ->middleware('permission:pengajuan.ajukan');
         Route::post('pengajuan', [SiswaPengajuanController::class, 'store'])->name('pengajuan.store')
             ->middleware('permission:pengajuan.ajukan');
-        Route::post('pengajuan/{pengajuanPkl}/submit', [SiswaPengajuanController::class, 'submit'])->name('pengajuan.submit')
+        Route::post('pengajuan/{pengajuan}/submit', [SiswaPengajuanController::class, 'submit'])->name('pengajuan.submit')
             ->middleware('permission:pengajuan.ajukan');
         Route::get('riwayat', [SiswaPengajuanController::class, 'riwayat'])->name('riwayat')
             ->middleware('permission:riwayat.lihat-sendiri');
@@ -45,11 +47,11 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
         Route::inertia('dashboard', 'kaprog/dashboard')->name('dashboard');
         Route::get('verifikasi', [VerifikasiController::class, 'index'])->name('verifikasi.index')
             ->middleware('permission:pengajuan.lihat');
-        Route::get('verifikasi/{pengajuanPkl}', [VerifikasiController::class, 'show'])->name('verifikasi.show')
+        Route::get('verifikasi/{pengajuan}', [VerifikasiController::class, 'show'])->name('verifikasi.show')
             ->middleware('permission:pengajuan.lihat');
-        Route::post('verifikasi/{pengajuanPkl}/approve', [VerifikasiController::class, 'approve'])->name('verifikasi.approve')
+        Route::post('verifikasi/{pengajuan}/approve', [VerifikasiController::class, 'approve'])->name('verifikasi.approve')
             ->middleware('permission:pengajuan.setujui');
-        Route::post('verifikasi/{pengajuanPkl}/reject', [VerifikasiController::class, 'reject'])->name('verifikasi.reject')
+        Route::post('verifikasi/{pengajuan}/reject', [VerifikasiController::class, 'reject'])->name('verifikasi.reject')
             ->middleware('permission:pengajuan.tolak');
     });
 
@@ -94,6 +96,23 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
             ->name('kelola-akun.template.guru');
         Route::get('kelola-akun/template-siswa', [AkunController::class, 'templateSiswa'])
             ->name('kelola-akun.template.siswa');
+
+        Route::prefix('surat-pengantar')->name('surat-pengantar.')->middleware('permission:surat.terbitkan')->group(function () {
+            Route::get('/', [SuratPengantarController::class, 'index'])->name('index');
+            Route::get('{perusahaan}/{periode}', [SuratPengantarController::class, 'preview'])->name('preview');
+            Route::get('{perusahaan}/{periode}/cetak', [SuratPengantarController::class, 'cetak'])->name('cetak');
+            Route::post('{perusahaan}/{periode}/kirim', [SuratPengantarController::class, 'kirim'])->name('kirim');
+            Route::get('download/{suratPengantar}', [SuratPengantarController::class, 'download'])->name('download');
+            Route::post('{pengajuan}/tolak-balasan', [SuratPengantarController::class, 'tolakBalasan'])
+                ->name('tolak-balasan')->middleware('permission:surat-balasan.verifikasi');
+        });
+    });
+
+    Route::prefix('siswa')->name('siswa.')->group(function () {
+        Route::post('pengajuan/{pengajuan}/surat-balasan', [SuratBalasanController::class, 'store'])
+            ->name('surat-balasan.store')->middleware('permission:surat-balasan.upload');
+        Route::get('pengajuan/{pengajuan}/surat-balasan', [SuratBalasanController::class, 'download'])
+            ->name('surat-balasan.download')->middleware('permission:surat-balasan.upload');
     });
 });
 

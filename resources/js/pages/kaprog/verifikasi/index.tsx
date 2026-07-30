@@ -61,7 +61,7 @@ export default function Verifikasi({ pengajuan }: any) {
                                 <Link
                                     href={
                                         verifikasiShow({
-                                            pengajuanPkl: item.id,
+                                            pengajuan: item.id,
                                         }).url
                                     }
                                 >

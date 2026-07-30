@@ -36,7 +36,7 @@ export default function Detail({ pengajuan }: any) {
 
     function handleApprove() {
         router.post(
-            verifikasiApprove({ pengajuanPkl: pengajuan.id }).url,
+            verifikasiApprove({ pengajuan: pengajuan.id }).url,
             {},
             {
                 preserveScroll: true,
@@ -47,7 +47,7 @@ export default function Detail({ pengajuan }: any) {
 
     function handleReject(e: React.FormEvent) {
         e.preventDefault();
-        post(verifikasiReject({ pengajuanPkl: pengajuan.id }).url, {
+        post(verifikasiReject({ pengajuan: pengajuan.id }).url, {
             preserveScroll: true,
             onSuccess: () => setRejectOpen(false),
         });

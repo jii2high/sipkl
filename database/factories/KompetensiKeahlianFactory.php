@@ -13,8 +13,8 @@ class KompetensiKeahlianFactory extends Factory
     public function definition(): array
     {
         return [
-            'nama' => fake()->unique()->randomElement(['RPL', 'TKJ', 'MM', 'DKV', 'AKL']),
-            'acronym' => fake()->unique()->randomElement(['RPL', 'TKJ', 'MM', 'DKV', 'AKL']),
+            'nama' => fake()->unique()->word().' '.fake()->year(),
+            'acronym' => fake()->unique()->lexify('???'),
         ];
     }
 }

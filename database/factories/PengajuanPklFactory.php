@@ -3,6 +3,9 @@
 namespace Database\Factories;
 
 use App\Models\PengajuanPkl;
+use App\Models\Perusahaan;
+use App\Models\PeriodePkl;
+use App\Models\SiswaProfile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +21,10 @@ class PengajuanPklFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'siswa_id' => SiswaProfile::factory(),
+            'perusahaan_id' => Perusahaan::factory(),
+            'periode_id' => PeriodePkl::factory(),
+            'status' => 'draft',
         ];
     }
 }
