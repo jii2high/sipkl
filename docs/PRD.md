@@ -48,7 +48,7 @@ Role di-*derive* otomatis dari kolom `jabatan` pada `guru_profiles` melalui Obse
 - **Pengajuan PKL** — Permohonan siswa untuk melaksanakan PKL di sebuah perusahaan pada periode tertentu.
 - **Surat Pengantar** — Surat resmi sekolah ke perusahaan, diterbitkan Hubin setelah pengajuan disetujui Kaprog.
 - **Surat Balasan** — Surat balasan dari perusahaan yang diunggah siswa, terkunci sampai Surat Pengantar terbit (BR20).
-- **Resmi PKL** — Status siswa setelah Surat Balasan diverifikasi Hubin (BR7).
+- **Resmi PKL** — Status siswa setelah Surat Balasan berhasil diunggah dan lolos validasi sistem (file valid & terbaca); Hubin tetap dapat menolak balasan pasca-fakta bila dokumen ternyata tidak sesuai (BR7).
 - **Surat Tugas Monitoring** — Surat resmi dari Hubin yang menjadi syarat sah bagi Guru Pembimbing untuk melakukan kunjungan monitoring; berlingkup **Global** (seluruh jurusan) atau **Scoped** (satu jurusan, atas request Kaprog jurusan tsb).
 - **Laporan Kunjungan** — Catatan kunjungan monitoring yang diisi Guru Pembimbing secara berkala (dicicil), terikat pada Surat Tugas Monitoring yang aktif.
 - **Laporan Akhir PKL** — Dokumen akhir yang diupload siswa menjelang selesai masa PKL, menjadi syarat pembuka Formulir Penilaian.
@@ -64,7 +64,7 @@ Role di-*derive* otomatis dari kolom `jabatan` pada `guru_profiles` melalui Obse
 1. **Pengajuan** — Siswa submit form Pengajuan PKL (nama perusahaan, alamat, periode dipilih dari master Periode PKL). Tidak ada alur khusus untuk PKL ulang — submit lewat form yang sama; pengajuan periode sebelumnya otomatis masuk ke Riwayat PKL siswa (BR14).
 2. **Verifikasi Kaprog** — Kaprog jurusan terkait melihat detail pengajuan (via ghost button "Lihat detail" di list), approve/reject dilakukan di halaman detail — bukan langsung dari list (BR4).
 3. **Persuratan** — Setelah disetujui, Hubin menerbitkan Surat Pengantar (PDF, bernomor unik). Setelah Surat Pengantar terbit, upload Surat Balasan oleh siswa baru terbuka (BR20).
-4. **Resmi PKL** — Setelah Surat Balasan diverifikasi Hubin, status siswa otomatis menjadi Resmi PKL (BR7).
+4. **Resmi PKL** — Begitu Surat Balasan diunggah siswa dan lolos validasi sistem (file valid & terbaca), status siswa otomatis menjadi Resmi PKL — tanpa approval manual di jalur normal. Hubin tetap bisa menolak balasan pasca-fakta bila dokumen ternyata tidak sesuai (BR7).
 5. **Assign Guru Pembimbing** — Wewenang eksklusif Kaprog jurusan siswa tsb (BR10); Kaprog juga bisa self-assign sebagai pembimbing.
 6. **Penerbitan Surat Tugas Monitoring** — Hubin menerbitkan Surat Tugas Global (seluruh jurusan) atau Scoped (satu jurusan, atas request Kaprog jurusan tsb) (BR22, BR23).
 7. **Pembimbingan & Monitoring** — Guru Pembimbing melakukan kunjungan berdasarkan Surat Tugas Monitoring yang aktif, mengisi Laporan Kunjungan secara berkala (dicicil, tidak sekali submit).
@@ -117,7 +117,7 @@ Permission string menggunakan Bahasa Indonesia, format `<domain>.<aksi>`. Data s
 | Setujui/tolak pengajuan (`pengajuan.setujui`) | ❌ | ✅ (jurusan sendiri) | ❌ | ❌ |
 | Terbitkan Surat Pengantar (`surat.terbitkan`) | ❌ | ❌ | ❌ | ✅ |
 | Upload Surat Balasan (`surat-balasan.upload`) | ✅ (gated BR20) | ❌ | ❌ | ❌ |
-| Verifikasi Surat Balasan (`surat-balasan.verifikasi`) | ❌ | ❌ | ❌ | ✅ |
+| Tolak Surat Balasan pasca-fakta (`surat-balasan.verifikasi`) | ❌ | ❌ | ❌ | ✅ |
 | Assign Guru Pembimbing (`pembimbing.assign`) | ❌ | ✅ (jurusan sendiri, eksklusif BR10) | ❌ | ❌ |
 | Self-assign sebagai pembimbing (`kunjungan.*` via Bimbingan Saya) | ❌ | ✅ | — | ❌ |
 | Terbitkan Surat Tugas Monitoring Global (`surat-tugas.terbitkan-global`) | ❌ | ❌ | ❌ | ✅ |
@@ -150,7 +150,7 @@ Catatan: baris **Isi Laporan Kunjungan Monitoring** dan **Isi Formulir Penilaian
 | BR4 | Halaman antrean Kaprog hanya menyajikan data ringkas dan ghost button "Lihat detail →". Approve/reject pengajuan hanya dapat dilakukan dari halaman detail — tidak ada aksi cepat di list. |
 | BR5 | Tahap Hubin bersifat otomatis (tanpa gate approval manual tambahan), namun wajib menampilkan Pratinjau Surat Pengantar sebelum dicetak/dikirim. Tombol **Cetak** (tidak mengubah status) dan **Kirim** (mengubah status jadi Surat Pengantar terbit) dipisah secara eksplisit. |
 | BR6 | Penolakan oleh Kaprog wajib disertai catatan (minimal 15 karakter) dari halaman detail, mengembalikan status pengajuan agar siswa dapat mengajukan ulang (tidak final/permanen). |
-| BR7 | Verifikasi Surat Balasan Perusahaan bersifat otomatis: begitu siswa mengunggah dokumen balasan, status berubah menjadi **Resmi PKL** tanpa approval manual dari Kaprog/Hubin. |
+| BR7 | Begitu siswa mengunggah dokumen Surat Balasan dan file tersebut lolos validasi sistem (format PDF valid, file terbaca/tidak corrupt), status otomatis berubah menjadi **Resmi PKL** tanpa approval manual dari Kaprog/Hubin di jalur normal. File yang gagal validasi sistem ditolak sebelum sampai mengubah status, siswa diminta unggah ulang. Hubin tetap berwenang menolak balasan **pasca-fakta** (`surat-balasan.verifikasi`, wajib catatan ≥15 karakter, pola sama seperti BR6) bila dokumen ternyata bukan surat penerimaan yang valid meski lolos validasi sistem — status kembali ke Disetujui, siswa unggah ulang. |
 
 ### Perusahaan & Surat
 

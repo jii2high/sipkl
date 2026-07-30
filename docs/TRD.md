@@ -92,12 +92,28 @@ Font: heading **Plus Jakarta Sans**, body **Lato**. Warna primary **Royal Blue #
 |---|---|---|
 | `id` | bigint PK | |
 | `nomor_surat` | string unique | digenerate sequential per jenis+periode (BR18) |
-| `pengajuan_pkl_id` (khusus surat_pengantar) | FK | |
+| `perusahaan_id` (khusus surat_pengantar) | FK | 1 surat pengantar dibundel per perusahaan (BR8) |
+| `periode_pkl_id` (khusus surat_pengantar) | FK | |
 | `lingkup` (khusus surat_tugas_monitoring) | enum | `global`, `scoped` |
 | `kompetensi_keahlian_id` (khusus surat_tugas_monitoring, nullable) | FK | null jika lingkup global |
 | `diterbitkan_oleh` | FK → users (Hubin) | |
 | `file_pdf` | string | path arsip PDF |
 | `created_at` | timestamp | |
+
+**`surat_pengantar_pengajuan`** (pivot, khusus surat_pengantar — 1 surat memuat hingga 6 pengajuan/siswa dalam perusahaan+periode yang sama, BR3/BR8)
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| `id` | bigint PK | |
+| `surat_pengantar_id` | FK | |
+| `pengajuan_pkl_id` | FK | |
+
+**`surat_balasan`** (1 baris per pengajuan, dihapus/diganti bila Hubin menolak pasca-fakta — BR7)
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| `id` | bigint PK | |
+| `pengajuan_pkl_id` | FK, unique | |
+| `file_path` | string | kolom path biasa |
+| `created_at`, `updated_at` | timestamp | |
 
 **`pembimbingan`**
 | Kolom | Tipe | Keterangan |
@@ -219,8 +235,9 @@ ALTER TABLE nilai
 ### 4.1 Status Pengajuan PKL
 ```
 diajukan → (Kaprog approve) disetujui → (Hubin terbit Surat Pengantar) → (siswa upload Surat Balasan, BR20)
-        → (Hubin verifikasi Surat Balasan) → resmi_pkl (BR7) → ... → selesai_pkl
+        → (lolos validasi sistem: file valid & terbaca) → resmi_pkl (BR7) → ... → selesai_pkl
            (periode berakhir + laporan akhir + Formulir Penilaian submitted, BR13)
+resmi_pkl → (Hubin tolak balasan pasca-fakta, `surat-balasan.verifikasi`, wajib catatan ≥15 karakter) → disetujui → (siswa upload ulang)
 diajukan → (Kaprog reject, wajib catatan ≥15 karakter) ditolak → (siswa ajukan ulang, BR6) → diajukan
 ```
 Setiap transisi dicatat di `pengajuan_pkl_histories` (BR17).
@@ -269,7 +286,7 @@ Ada pembimbingan aktif → Kaprog ubah → pembimbingan lama.status=diarsipkan, 
 | `pengajuan.tolak` | kaprog (scoped) |
 | `surat.terbitkan` | hubin |
 | `surat-balasan.upload` | siswa |
-| `surat-balasan.verifikasi` | hubin |
+| `surat-balasan.verifikasi` | hubin (tolak balasan pasca-fakta, bukan gate approval — lihat §4.1 & BR7) |
 | `pembimbing.assign` | kaprog (scoped) |
 | `kunjungan.isi` | guru_pembimbing; +kaprog via self-assign |
 | `kunjungan.lihat` | guru_pembimbing, kaprog (scoped) |
@@ -323,7 +340,8 @@ Format penomoran surat mengikuti pola sekolah, disimpan sebagai kolom `nomor_sur
 - **Notifikasi**: Laravel Database Notification sebagai storage, ditampilkan real-time dengan toast **Sonner** di UI untuk event penting:
   - Pengajuan disetujui/ditolak (ke Siswa)
   - Surat Pengantar terbit (ke Siswa)
-  - Surat Balasan diverifikasi → Resmi PKL (ke Siswa)
+  - Surat Balasan lolos validasi sistem → Resmi PKL (ke Siswa)
+  - Surat Balasan ditolak Hubin pasca-fakta (BR7) → status kembali Disetujui, wajib upload ulang (ke Siswa)
   - Guru Pembimbing di-assign (ke Siswa & Guru Pembimbing)
   - Surat Tugas Monitoring terbit (ke Guru Pembimbing terkait)
   - Laporan Akhir diupload → Formulir Penilaian terbuka (ke Guru Pembimbing)
@@ -401,7 +419,9 @@ app/Notifications/
 | `sonner` | Toast notifikasi in-app |
 | `mysql` (driver bawaan Laravel) | Database |
 
-*Catatan: dibanding `TRD_v1_2.md`, package berikut sudah tidak dipakai di versi final ini sebagai keputusan tim: `spatie/laravel-model-states` (diganti kolom `enum` biasa + validasi di Policy/Form Request), `spatie/laravel-medialibrary` (upload file memakai kolom path biasa), dan `spatie/laravel-pdf` spesifik (diganti library PDF Laravel generik). Database juga berpindah dari rencana awal PostgreSQL ke MySQL. Silakan dikonfirmasi apakah daftar package di atas sudah lengkap/akurat untuk kondisi implementasi terkini.*
+*Catatan: dibanding `TRD_v1_2.md`, package berikut sudah tidak dipakai sebagai keputusan tim final (dikonfirmasi ulang 30 Juli 2026): `spatie/laravel-model-states` (diganti kolom `enum` biasa + validasi di Policy/Form Request), `spatie/laravel-medialibrary` (upload file memakai kolom path biasa), dan `spatie/laravel-pdf` (diganti PDF Laravel generik, `barryvdh/laravel-dompdf` atau setara — dipilih karena layout surat cukup sederhana untuk CSS dompdf, dan menghindari dependency Chromium/headless-browser di server produksi). Database juga berpindah dari rencana awal PostgreSQL ke MySQL.*
+
+*Catatan migrasi: M3 (Pengajuan & Verifikasi Awal) sempat terlanjur diimplementasikan memakai `spatie/laravel-model-states` dan `spatie/laravel-medialibrary` sebelum keputusan final ini dikonfirmasi. Tim memutuskan untuk **rework M3** ke pola final (enum + kolom path) sebelum M4 dimulai, bukan mempertahankan package lama — supaya seluruh milestone konsisten memakai satu pola yang sama.*
 
 ## 14. Import/Export Excel — Implementasi Teknis
 

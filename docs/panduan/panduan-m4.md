@@ -1,113 +1,92 @@
-# Panduan M4 — Persuratan
+# Panduan M4 — Persuratan (revisi, sesuai TRD final v1.3)
 
-Cakupan: generate PDF, bundling per perusahaan, preview + Cetak/Kirim terpisah, lock upload balasan (BR20), auto Resmi PKL (BR7).
+Cakupan: generate PDF Surat Pengantar, bundling per perusahaan, preview + Cetak/Kirim
+terpisah, lock upload balasan (BR20), auto Resmi PKL dengan validasi sistem + exception
+reject Hubin (BR7).
 
-## 1. Migration
+> Revisi dari draft sebelumnya: `spatie/laravel-model-states`, `spatie/laravel-medialibrary`,
+> dan `spatie/laravel-pdf` **tidak dipakai** (TRD §13). Status pengajuan cuma 5 nilai
+> (`diajukan`, `disetujui`, `ditolak`, `resmi_pkl`, `selesai_pkl`) — M4 tidak menambah state
+> baru. "Surat Pengantar sudah terbit" dan "Balasan sudah diupload" dicek lewat **keberadaan
+> record** (relasi), bukan lewat state tambahan.
 
-```php
-// surat_pengantar
-Schema::create('surat_pengantar', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('perusahaan_id')->constrained('perusahaan');
-    $table->foreignId('periode_id')->constrained('periode_pkl');
-    $table->string('nomor_surat')->unique();
-    $table->date('tanggal_terbit');
-    $table->foreignId('generated_by')->constrained('users');
-    $table->timestamps();
-});
+## 1. Data
 
-// pivot — 1 surat pengantar bisa nampung banyak pengajuan (maks 6 siswa)
-Schema::create('surat_pengantar_pengajuan', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('surat_pengantar_id')->constrained('surat_pengantar')->cascadeOnDelete();
-    $table->foreignId('pengajuan_id')->constrained('pengajuan_pkl')->cascadeOnDelete();
-});
-```
-File PDF-nya sendiri disimpan lewat spatie/laravel-medialibrary, terikat ke `surat_pengantar` (collection `file`).
+- Tabel `surat_pengantar`: terikat ke perusahaan + periode, nomor surat unik (format BR18),
+  tanggal terbit, siapa yang menerbitkan, path file PDF hasil generate.
+- Tabel pivot antara `surat_pengantar` dan `pengajuan_pkl` (1 surat pengantar bisa nampung
+  banyak pengajuan, maks 6 siswa per BR3 — soft rule, bukan hard block).
+- Tabel `surat_balasan`: 1 baris per pengajuan, cuma path file. Dihapus/diganti kalau Hubin
+  menolak balasan (lihat §5).
+- Kolom `status` di `pengajuan_pkl` sudah ada dari M3, M4 cuma menggerakkannya dari
+  `disetujui` ke `resmi_pkl` di titik BR7 — tidak menambah kolom status baru.
+- "Sudah punya Surat Pengantar" dan "sudah upload Surat Balasan" dicek lewat relasi (misal
+  `existsSuratPengantar`, `existsSuratBalasan`), bukan lewat nilai status.
 
-## 2. Update state machine
+## 2. Generate PDF
 
-Tambah transisi baru ke `PengajuanState::config()` dari M3 — jangan bikin file state config baru terpisah:
-```php
-->allowTransition(SiapTerbit::class, SuratPengantarTerbit::class)
-->allowTransition(SuratPengantarTerbit::class, MenungguBalasanPerusahaan::class)
-->allowTransition(MenungguBalasanPerusahaan::class, ResmiPkl::class)
-```
+- Pakai library PDF Laravel generik (mis. `barryvdh/laravel-dompdf`), render dari Blade
+  template — **bukan** `spatie/laravel-pdf`.
+- dompdf tidak menjalankan JS, jadi Tailwind lewat CDN tidak akan ke-apply di template surat.
+  Pakai CSS inline/plain untuk template ini, atau compile Tailwind ke CSS statis dulu.
+- File hasil generate disimpan sebagai path biasa di storage lokal, bukan lewat media
+  library.
+- Kop surat, nomor surat, dan daftar siswa (maks 6) diambil dari relasi pivot surat pengantar.
+- Nomor surat digenerate lewat satu helper terpusat (format BR18), bukan di-hardcode di view.
 
-## 3. Generate PDF (spatie/laravel-pdf)
+## 3. Halaman Hubin: Bundling & Cetak + Balasan Masuk
 
-```php
-use Spatie\LaravelPdf\Facades\Pdf;
+Satu halaman per perusahaan+periode, dua tab — bukan halaman approval terpisah:
 
-Pdf::view('pdf.surat-pengantar', ['suratPengantar' => $suratPengantar])
-    ->format('a4')
-    ->save(storage_path('app/temp/surat-pengantar.pdf'));
-```
-- View `resources/views/pdf/surat-pengantar.blade.php` pakai Tailwind lewat CDN/inline (spatie/laravel-pdf render via headless Chrome, jadi class Tailwind biasa jalan).
-- Kop surat, nomor surat (format BR18), daftar siswa (maks 6) diambil dari relasi `surat_pengantar_pengajuan`.
-- Nomor surat di-generate lewat helper terpusat, bukan di-hardcode di view:
-  ```php
-  // app/Support/PenomoranSurat.php
-  class PenomoranSurat
-  {
-      public static function suratPengantar(int $noUrut, int $noWilayah): string
-      {
-          $bulanRomawi = self::romawi(now()->month);
-          return "{$noUrut}/421.5/SMKN 1-Cadisdik.Wil.{$noWilayah}/{$bulanRomawi}/" . now()->year;
-      }
-  }
-  ```
+- **Tab Kirim Surat Pengantar**: daftar pengajuan berstatus `disetujui` yang belum punya
+  Surat Pengantar untuk perusahaan+periode itu. Tampilkan warning kalau jumlah siswa lewat
+  kuota saran perusahaan (BR3), tapi tetap bisa lanjut cetak/kirim.
+- **Tab Balasan Masuk**: daftar pengajuan berstatus `resmi_pkl` di perusahaan+periode itu,
+  dengan link lihat file balasan dan tombol tolak (lihat §5).
+- Tombol **Cetak** (download PDF, tidak mengubah data apa pun) dan tombol **Kirim ke Siswa**
+  (baru di titik ini record Surat Pengantar dibuat + notifikasi terkirim) harus terpisah jelas
+  — Hubin boleh preview/cetak berkali-kali sebelum benar-benar kirim.
 
-## 4. Bundling per perusahaan
+## 4. BR20 — lock upload Surat Balasan
 
-```php
-// app/Http/Controllers/Hubin/SuratPengantarController.php
-public function preview(Perusahaan $perusahaan, PeriodePkl $periode)
-{
-    $pengajuanSiap = PengajuanPkl::query()
-        ->where('perusahaan_id', $perusahaan->id)
-        ->where('periode_id', $periode->id)
-        ->whereState('status', SiapTerbit::class)
-        ->get();
+- Tombol/form upload balasan di sisi siswa disable/hidden sampai pengajuan itu punya Surat
+  Pengantar.
+- Validasi ini wajib juga ditegakkan di backend, bukan cuma disable tombol di UI — request
+  upload balasan untuk pengajuan yang belum punya Surat Pengantar harus ditolak (403).
 
-    // BR3: kuota 6 siswa itu soft rule — tampilin warning, jangan di-block
-    $lewatKuota = $pengajuanSiap->count() > $perusahaan->kuota_saran;
+## 5. BR7 — upload balasan (auto) + reject pasca-fakta oleh Hubin
 
-    return Inertia::render('hubin/surat-pengantar/preview', compact('pengajuanSiap', 'lewatKuota'));
-}
-```
-Tombol **Cetak** (download PDF) dan **Kirim ke Siswa** (transisi status + trigger notifikasi) dipisah — Hubin bisa preview & cetak berkali-kali sebelum benar-benar "Kirim" yang mengubah state.
-
-## 5. BR20 — lock upload Surat Balasan
-
-Di frontend Siswa, komponen upload balasan perusahaan di-disable/hidden sampai `pengajuan->status` == `SuratPengantarTerbit` atau lanjutannya. Validasi wajib juga di backend (jangan cuma disable tombol di UI):
-```php
-public function uploadBalasan(Request $request, PengajuanPkl $pengajuan)
-{
-    abort_unless($pengajuan->status instanceof SuratPengantarTerbit, 403);
-    // ...
-}
-```
-
-## 6. BR7 — auto Resmi PKL
-
-Begitu file balasan perusahaan berhasil diupload, transisi otomatis tanpa approval manual:
-```php
-public function uploadBalasan(Request $request, PengajuanPkl $pengajuan)
-{
-    abort_unless($pengajuan->status instanceof SuratPengantarTerbit, 403);
-
-    $pengajuan->addMediaFromRequest('file')->toMediaCollection('surat_balasan_perusahaan');
-    $pengajuan->status->transitionTo(ResmiPkl::class);
-
-    return back();
-}
-```
+- Upload balasan wajib lolos validasi file dulu (mimetype PDF, ukuran wajar, file bisa
+  dibuka/tidak corrupt) sebelum diproses.
+- Begitu lolos validasi file, status **langsung** otomatis jadi `resmi_pkl` — tidak menunggu
+  approval manual siapa pun di jalur normal. Ini beda dari asumsi lama yang mengira ada gate
+  approval Hubin; yang benar, approval Hubin itu sifatnya pasca-fakta/exception, bukan gate
+  blocking di jalur upload.
+- File corrupt/tidak valid ditolak di level validasi, siswa dapat pesan error jelas dan
+  diminta upload ulang — ini belum sampai status berubah.
+- Hubin tetap punya wewenang menolak balasan **setelah** statusnya `resmi_pkl`, khusus untuk
+  kasus dokumen ternyata bukan surat penerimaan yang valid (lolos validasi file tapi salah
+  isi). Aksi ini pakai permission `surat-balasan.verifikasi`, wajib catatan minimal 15
+  karakter (konsisten pola reject Kaprog BR6), menghapus record balasan, dan mengembalikan
+  status ke `disetujui` supaya siswa bisa upload ulang.
+- Setiap perubahan status di alur ini (upload → `resmi_pkl`, reject Hubin → `disetujui`)
+  wajib tercatat di riwayat status (infra dari M3), termasuk notifikasi ke pihak terkait.
 
 ## Checkpoint akhir M4
-- Preview surat pengantar nampilin daftar siswa yang benar per perusahaan+periode, warning muncul kalau lewat 6 siswa (tapi tetap bisa lanjut cetak).
-- Tombol Cetak menghasilkan PDF dengan nomor surat sesuai format BR18, gak mengubah status.
-- Tombol Kirim mengubah status jadi `SuratPengantarTerbit` dan trigger notifikasi ke siswa terkait.
-- Upload balasan ditolak backend (bukan cuma UI) kalau status belum `SuratPengantarTerbit`.
-- Upload balasan sukses langsung mengubah status jadi `ResmiPkl` otomatis tanpa ada approval tambahan dari siapa pun.
-- Riwayat status (dari M3) mencatat transisi-transisi baru ini dengan benar.
+
+- Tab Kirim Surat Pengantar nampilin daftar siswa yang benar per perusahaan+periode, warning
+  muncul kalau lewat 6 siswa tapi tetap bisa lanjut cetak.
+- Tombol Cetak menghasilkan PDF dengan nomor surat sesuai format BR18, tidak mengubah status
+  atau membuat record Surat Pengantar.
+- Tombol Kirim membuat record Surat Pengantar dan trigger notifikasi ke siswa terkait.
+- Upload balasan ditolak backend (bukan cuma UI) kalau Surat Pengantar belum ada untuk
+  pengajuan itu.
+- Upload balasan yang lolos validasi file langsung mengubah status jadi `resmi_pkl` otomatis,
+  tanpa approval tambahan di jalur normal.
+- Upload balasan dengan file corrupt/tidak valid ditolak validasi, siswa dapat pesan error
+  jelas, belum mengubah status.
+- Hubin bisa lihat daftar balasan masuk per perusahaan+periode di tab Balasan Masuk, dan bisa
+  menolak balasan yang ternyata salah/tidak valid (dengan catatan ≥15 karakter) — status balik
+  ke `disetujui`, siswa upload ulang.
+- Riwayat status mencatat semua transisi baru ini dengan benar, termasuk kasus reject-balasan
+  oleh Hubin.

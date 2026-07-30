@@ -83,16 +83,20 @@ Modul/fitur:
 **Tujuan:** seluruh alur surat dari Surat Pengantar sampai Resmi PKL.
 
 Modul/fitur:
-1. Generasi PDF Surat Pengantar (dengan penomoran surat).
-2. Upload Surat Balasan (Siswa) — **conditional lock**, terbuka hanya setelah Surat Pengantar terbit (BR20).
-3. Verifikasi Surat Balasan → **auto status Resmi PKL** (BR7).
-4. Fitur **Bundling & Cetak** (Hubin) — preview dokumen + tombol Cetak/Kirim terpisah.
-5. Notifikasi terkait persuratan (surat terbit, balasan diupload, dst).
+0. **Prasyarat — Rework M3**: migrasi `PengajuanState` (spatie/laravel-model-states) ke kolom `status` enum biasa + validasi Policy/Form Request; migrasi collection spatie/laravel-medialibrary (`surat_balasan_perusahaan`, `laporan_akhir_pkl`, `dokumen_pendukung`) ke kolom path biasa. Dikerjakan tuntas sebelum modul M4 di bawah dimulai, supaya M4 dst konsisten satu pola.
+1. Generasi PDF Surat Pengantar (dengan penomoran surat, pakai `barryvdh/laravel-dompdf` atau setara — bukan `spatie/laravel-pdf`).
+2. Upload Surat Balasan (Siswa) — **conditional lock**, terbuka hanya setelah Surat Pengantar terbit (BR20, dicek lewat keberadaan record `surat_pengantar`, bukan kolom status baru).
+3. Validasi sistem atas file Surat Balasan (format PDF, terbaca/tidak corrupt) → **auto status Resmi PKL** begitu lolos (BR7). Hubin tetap bisa menolak balasan pasca-fakta (`surat-balasan.verifikasi`, catatan ≥15 karakter) bila dokumen ternyata tidak sesuai — status kembali ke Disetujui.
+4. Fitur **Bundling & Cetak** (Hubin) — preview dokumen + tombol Cetak/Kirim terpisah, plus tab **Balasan Masuk** di halaman yang sama untuk aksi tolak pasca-fakta.
+5. Notifikasi terkait persuratan (surat terbit, balasan lolos validasi, balasan ditolak Hubin, dst).
 
 **Checklist testing akhir sesi M4:**
+- [ ] Rework M3 tuntas — tidak ada lagi pemanggilan `spatie/laravel-model-states` atau `spatie/laravel-medialibrary` di codebase.
 - [ ] Upload Surat Balasan benar-benar terkunci sebelum Surat Pengantar terbit.
-- [ ] Status siswa otomatis Resmi PKL setelah verifikasi Surat Balasan.
-- [ ] PDF Surat Pengantar tergenerate dengan nomor surat unik dan format sesuai template.
+- [ ] Status siswa otomatis Resmi PKL setelah Surat Balasan lolos validasi sistem (bukan setelah verifikasi manual).
+- [ ] File Surat Balasan corrupt/tidak valid ditolak validasi, belum mengubah status.
+- [ ] Hubin bisa menolak balasan pasca-fakta di tab Balasan Masuk, status kembali ke Disetujui.
+- [ ] PDF Surat Pengantar tergenerate dengan nomor surat unik dan format sesuai template (dompdf).
 - [ ] Tombol Cetak dan Kirim di Bundling berfungsi independen (preview tidak auto-kirim).
 
 ---
