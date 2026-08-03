@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard as hubinDashboard } from '@/routes/hubin';
+import SearchFilterBar from '@/components/search-filter-bar';
 
 interface JurusanItem {
     id: number;
@@ -66,6 +67,11 @@ export default function Index({ jurusan }: Props) {
                     <Button onClick={openCreate}>Tambah Jurusan</Button>
                 </div>
 
+                <SearchFilterBar
+                    baseRoute="/hubin/kompetensi-keahlian"
+                    searchPlaceholder="Cari nama..."
+                />
+                
                 <div className="bg-surface rounded-lg border">
                     <table className="w-full text-sm">
                         <thead>
