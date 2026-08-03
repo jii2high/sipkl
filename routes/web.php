@@ -62,17 +62,56 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
     Route::prefix('hubin')->name('hubin.')->group(function () {
         Route::inertia('dashboard', 'hubin/dashboard')->name('dashboard');
 
-        Route::resource('perusahaan', PerusahaanController::class)
-            ->only(['index', 'store', 'update', 'destroy'])
+        Route::get('perusahaan', [PerusahaanController::class, 'index'])
+            ->name('perusahaan.index')
             ->middleware('permission:master-data.kelola');
-        Route::resource('periode-pkl', PeriodePklController::class)
-            ->only(['index', 'store', 'update', 'destroy'])
+        Route::post('perusahaan', [PerusahaanController::class, 'store'])
+            ->name('perusahaan.store')
             ->middleware('permission:master-data.kelola');
-        Route::resource('kompetensi-keahlian', KompetensiKeahlianController::class)
-            ->only(['index', 'store', 'update', 'destroy'])
+        Route::put('perusahaan/{perusahaan}', [PerusahaanController::class, 'update'])
+            ->name('perusahaan.update')
             ->middleware('permission:master-data.kelola');
-        Route::resource('indikator-penilaian', IndikatorPenilaianController::class)
-            ->only(['index', 'store', 'update', 'destroy'])
+        Route::delete('perusahaan/{perusahaan}', [PerusahaanController::class, 'destroy'])
+            ->name('perusahaan.destroy')
+            ->middleware('permission:master-data.kelola');
+
+        Route::get('periode-pkl', [PeriodePklController::class, 'index'])
+            ->name('periode-pkl.index')
+            ->middleware('permission:master-data.kelola');
+        Route::post('periode-pkl', [PeriodePklController::class, 'store'])
+            ->name('periode-pkl.store')
+            ->middleware('permission:master-data.kelola');
+        Route::put('periode-pkl/{periodePkl}', [PeriodePklController::class, 'update'])
+            ->name('periode-pkl.update')
+            ->middleware('permission:master-data.kelola');
+        Route::delete('periode-pkl/{periodePkl}', [PeriodePklController::class, 'destroy'])
+            ->name('periode-pkl.destroy')
+            ->middleware('permission:master-data.kelola');
+
+        Route::get('kompetensi-keahlian', [KompetensiKeahlianController::class, 'index'])
+            ->name('kompetensi-keahlian.index')
+            ->middleware('permission:master-data.kelola');
+        Route::post('kompetensi-keahlian', [KompetensiKeahlianController::class, 'store'])
+            ->name('kompetensi-keahlian.store')
+            ->middleware('permission:master-data.kelola');
+        Route::put('kompetensi-keahlian/{kompetensiKeahlian}', [KompetensiKeahlianController::class, 'update'])
+            ->name('kompetensi-keahlian.update')
+            ->middleware('permission:master-data.kelola');
+        Route::delete('kompetensi-keahlian/{kompetensiKeahlian}', [KompetensiKeahlianController::class, 'destroy'])
+            ->name('kompetensi-keahlian.destroy')
+            ->middleware('permission:master-data.kelola');
+
+        Route::get('indikator-penilaian', [IndikatorPenilaianController::class, 'index'])
+            ->name('indikator-penilaian.index')
+            ->middleware('permission:master-penilaian.kelola');
+        Route::post('indikator-penilaian', [IndikatorPenilaianController::class, 'store'])
+            ->name('indikator-penilaian.store')
+            ->middleware('permission:master-penilaian.kelola');
+        Route::put('indikator-penilaian/{indikatorPenilaian}', [IndikatorPenilaianController::class, 'update'])
+            ->name('indikator-penilaian.update')
+            ->middleware('permission:master-penilaian.kelola');
+        Route::delete('indikator-penilaian/{indikatorPenilaian}', [IndikatorPenilaianController::class, 'destroy'])
+            ->name('indikator-penilaian.destroy')
             ->middleware('permission:master-penilaian.kelola');
 
         Route::post('indikator-penilaian/{indikatorPenilaian}/section', [IndikatorPenilaianController::class, 'storeSection'])
