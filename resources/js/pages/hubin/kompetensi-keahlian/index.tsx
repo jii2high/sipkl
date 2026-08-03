@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import SearchFilterBar from '@/components/search-filter-bar';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -11,7 +12,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard as hubinDashboard } from '@/routes/hubin';
-import SearchFilterBar from '@/components/search-filter-bar';
 
 interface JurusanItem {
     id: number;
@@ -71,7 +71,7 @@ export default function Index({ jurusan }: Props) {
                     baseRoute="/hubin/kompetensi-keahlian"
                     searchPlaceholder="Cari nama..."
                 />
-                
+
                 <div className="bg-surface rounded-lg border">
                     <table className="w-full text-sm">
                         <thead>
