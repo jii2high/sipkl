@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\KompetensiKeahlian;
+use App\Models\SiswaProfile;
 use App\Models\User;
 
 test('guests redirected to login', function () {
@@ -42,4 +43,19 @@ test('delete kompetensi keahlian', function () {
     $kk = KompetensiKeahlian::factory()->create();
     $this->delete(route('hubin.kompetensi-keahlian.destroy', $kk))->assertRedirect();
     $this->assertDatabaseMissing('kompetensi_keahlian', ['id' => $kk->id]);
+});
+
+test('delete blocked kompetensi keahlian flashes error toast', function () {
+    asHubin();
+    $kk = KompetensiKeahlian::factory()->create();
+    SiswaProfile::factory()->create(['kompetensi_keahlian_id' => $kk->id]);
+
+    $this->delete(route('hubin.kompetensi-keahlian.destroy', $kk))
+        ->assertRedirect(route('hubin.kompetensi-keahlian.index'))
+        ->assertSessionHas('inertia.flash_data', [
+            'toast' => [
+                'type' => 'error',
+                'message' => 'Jurusan tidak dapat dihapus karena masih memiliki siswa yang terkait.',
+            ],
+        ]);
 });

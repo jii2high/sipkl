@@ -47,7 +47,21 @@ class KompetensiKeahlianController extends Controller
 
     public function destroy(KompetensiKeahlian $kompetensiKeahlian): RedirectResponse
     {
+        if ($kompetensiKeahlian->siswaProfiles()->exists()) {
+            Inertia::flash('toast', [
+                'type' => 'error',
+                'message' => 'Jurusan tidak dapat dihapus karena masih memiliki siswa yang terkait.',
+            ]);
+
+            return redirect()->route('hubin.kompetensi-keahlian.index');
+        }
+
         $kompetensiKeahlian->delete();
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Jurusan berhasil dihapus.',
+        ]);
 
         return redirect()->route('hubin.kompetensi-keahlian.index');
     }
