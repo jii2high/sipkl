@@ -68,11 +68,11 @@ class DatabaseSeeder extends Seeder
 
         // ─── PERUSAHAAN ───────────────────────────────────────
 
-        $ptTm = Perusahaan::create(['nama' => 'PT Teknologi Maju', 'alamat' => 'Jl. Sudirman No. 123, Bekasi', 'telp' => '021-8888001', 'kuota_saran' => 5]);
-        $cvKd = Perusahaan::create(['nama' => 'CV Karya Digital', 'alamat' => 'Jl. Ahmad Yani No. 45, Bekasi', 'telp' => '021-8888002', 'kuota_saran' => 3]);
-        $ptSmk = Perusahaan::create(['nama' => 'PT Solusi Media Kreatif', 'alamat' => 'Jl. Raya Narogong Km 10, Bekasi', 'telp' => '021-8888003', 'kuota_saran' => 4]);
-        $ptNs = Perusahaan::create(['nama' => 'PT Network Solution', 'alamat' => 'Jl. Chairil Anwar No. 78, Bekasi', 'telp' => '021-8888004', 'kuota_saran' => 6]);
-        $bca = Perusahaan::create(['nama' => 'Bank BCA', 'alamat' => 'Jl. KH. Noer Ali No. 1, Bekasi', 'telp' => '021-8888005', 'kuota_saran' => 10]);
+        $ptTm = Perusahaan::create(['nama' => 'PT Teknologi Maju', 'alamat' => 'Jl. Sudirman No. 123, Bekasi', 'telp' => '021-8888001', 'email' => 'info@teknologimaju.co.id', 'kuota_saran' => 5]);
+        $cvKd = Perusahaan::create(['nama' => 'CV Karya Digital', 'alamat' => 'Jl. Ahmad Yani No. 45, Bekasi', 'telp' => '021-8888002', 'email' => 'halo@karyadigital.co.id', 'kuota_saran' => 3]);
+        $ptSmk = Perusahaan::create(['nama' => 'PT Solusi Media Kreatif', 'alamat' => 'Jl. Raya Narogong Km 10, Bekasi', 'telp' => '021-8888003', 'email' => 'contact@mediakreatif.co.id', 'kuota_saran' => 4]);
+        $ptNs = Perusahaan::create(['nama' => 'PT Network Solution', 'alamat' => 'Jl. Chairil Anwar No. 78, Bekasi', 'telp' => '021-8888004', 'email' => 'support@networksolution.co.id', 'kuota_saran' => 6]);
+        $bca = Perusahaan::create(['nama' => 'Bank BCA', 'alamat' => 'Jl. KH. Noer Ali No. 1, Bekasi', 'telp' => '021-8888005', 'email' => 'cs@bca.co.id', 'kuota_saran' => 10]);
 
         // ─── PERIODE PKL ──────────────────────────────────────
 

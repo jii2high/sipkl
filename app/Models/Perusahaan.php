@@ -12,7 +12,7 @@ class Perusahaan extends Model
     /** @use HasFactory<PerusahaanFactory> */
     use HasFactory;
 
-    protected $fillable = ['nama', 'alamat', 'telp', 'kuota_saran'];
+    protected $fillable = ['nama', 'alamat', 'telp', 'email', 'kuota_saran'];
 
     /** @return HasMany<PengajuanPkl, $this> */
     public function pengajuanPkls(): HasMany
