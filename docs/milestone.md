@@ -1,4 +1,5 @@
 # Project Timeline & Milestone
+
 ## Sistem Informasi PKL (SI-PKL) — SMKN 1 Kota Bekasi
 
 **Versi:** 1.1 (final)
@@ -22,6 +23,7 @@ Setiap milestone dibagi 3 slot: **Backend Core**, **Frontend/UI**, **Integrasi &
 **Tujuan:** fondasi database, autentikasi, dan derivasi role otomatis.
 
 Modul/fitur (dieksekusi berurutan):
+
 1. Setup project Laravel 13 + Inertia + React + Tailwind v4 + shadcn/ui.
 2. Migration & skema DB awal (users, guru_profiles, siswa_profiles, kompetensi_keahlian) + seeder dasar.
 3. Instalasi & konfigurasi Spatie `laravel-permission` (roles: siswa, kaprog, guru_pembimbing, hubin).
@@ -30,6 +32,7 @@ Modul/fitur (dieksekusi berurutan):
 6. Layout dasar sesuai `DESIGN.md` (navigasi mobile Siswa, sidebar desktop staf).
 
 **Checklist testing akhir sesi M1:**
+
 - [ ] Login tiap role berhasil dan diarahkan ke dashboard yang benar.
 - [ ] Perubahan `jabatan` di `guru_profiles` otomatis mengubah role Spatie (verifikasi manual/tinker).
 - [ ] `CheckFirstLogin` berjalan sesuai skenario (user baru vs lama).
@@ -42,6 +45,7 @@ Modul/fitur (dieksekusi berurutan):
 **Tujuan:** seluruh master data yang jadi dependency modul berikutnya, plus komponen Search & Filter Bar reusable.
 
 Modul/fitur:
+
 1. CRUD Perusahaan.
 2. CRUD Periode PKL.
 3. CRUD Kompetensi Keahlian (Jurusan) — kolom nama, acronym.
@@ -51,6 +55,7 @@ Modul/fitur:
 7. **Search & Filter Bar** — komponen global reusable, dipasang di seluruh modul list/table (BR21).
 
 **Checklist testing akhir sesi M2:**
+
 - [ ] CRUD tiap master data berjalan dengan validasi Bahasa Indonesia.
 - [ ] Aksi "Nonaktifkan sebagai Kaprog" memicu Observer M1 dan mengubah role jadi Guru Pembimbing.
 - [ ] Import/Export Excel berhasil round-trip tanpa korupsi data.
@@ -63,6 +68,7 @@ Modul/fitur:
 **Tujuan:** alur pengajuan PKL siswa sampai verifikasi Kaprog, sekaligus titik pertama infrastruktur audit trail dan notifikasi.
 
 Modul/fitur:
+
 1. Form Pengajuan PKL (Siswa).
 2. Halaman list pengajuan (Kaprog) dengan ghost button "Lihat detail".
 3. Halaman detail pengajuan — approve/reject di halaman detail (bukan di list).
@@ -71,6 +77,7 @@ Modul/fitur:
 6. Riwayat PKL siswa (termasuk pengajuan periode sebelumnya / PKL ulang, BR14).
 
 **Checklist testing akhir sesi M3:**
+
 - [ ] Siswa dapat submit pengajuan dan melihat statusnya berubah real-time.
 - [ ] Approve/reject Kaprog tercatat di `pengajuan_pkl_histories`.
 - [ ] Notifikasi in-app muncul saat status pengajuan berubah.
@@ -82,8 +89,8 @@ Modul/fitur:
 
 **Tujuan:** seluruh alur surat dari Surat Pengantar sampai Resmi PKL.
 
-Modul/fitur:
-0. **Prasyarat — Rework M3**: migrasi `PengajuanState` (spatie/laravel-model-states) ke kolom `status` enum biasa + validasi Policy/Form Request; migrasi collection spatie/laravel-medialibrary (`surat_balasan_perusahaan`, `laporan_akhir_pkl`, `dokumen_pendukung`) ke kolom path biasa. Dikerjakan tuntas sebelum modul M4 di bawah dimulai, supaya M4 dst konsisten satu pola.
+Modul/fitur: 0. **Prasyarat — Rework M3**: migrasi `PengajuanState` (spatie/laravel-model-states) ke kolom `status` enum biasa + validasi Policy/Form Request; migrasi collection spatie/laravel-medialibrary (`surat_balasan_perusahaan`, `laporan_akhir_pkl`, `dokumen_pendukung`) ke kolom path biasa. Dikerjakan tuntas sebelum modul M4 di bawah dimulai, supaya M4 dst konsisten satu pola.
+
 1. Generasi PDF Surat Pengantar (dengan penomoran surat, pakai `barryvdh/laravel-dompdf` atau setara — bukan `spatie/laravel-pdf`).
 2. Upload Surat Balasan (Siswa) — **conditional lock**, terbuka hanya setelah Surat Pengantar terbit (BR20, dicek lewat keberadaan record `surat_pengantar`, bukan kolom status baru).
 3. Validasi sistem atas file Surat Balasan (format PDF, terbaca/tidak corrupt) → **auto status Resmi PKL** begitu lolos (BR7). Hubin tetap bisa menolak balasan pasca-fakta (`surat-balasan.verifikasi`, catatan ≥15 karakter) bila dokumen ternyata tidak sesuai — status kembali ke Disetujui.
@@ -91,6 +98,7 @@ Modul/fitur:
 5. Notifikasi terkait persuratan (surat terbit, balasan lolos validasi, balasan ditolak Hubin, dst).
 
 **Checklist testing akhir sesi M4:**
+
 - [ ] Rework M3 tuntas — tidak ada lagi pemanggilan `spatie/laravel-model-states` atau `spatie/laravel-medialibrary` di codebase.
 - [ ] Upload Surat Balasan benar-benar terkunci sebelum Surat Pengantar terbit.
 - [ ] Status siswa otomatis Resmi PKL setelah Surat Balasan lolos validasi sistem (bukan setelah verifikasi manual).
@@ -106,6 +114,7 @@ Modul/fitur:
 **Tujuan:** assignment Guru Pembimbing dan alur monitoring kunjungan berbasis Surat Tugas.
 
 Modul/fitur:
+
 1. Assign Guru Pembimbing (Kaprog) — tabel per baris (Siswa, Perusahaan, dropdown Guru Pembimbing, Simpan/Ubah), wewenang eksklusif Kaprog (BR10).
 2. Self-assign Kaprog sebagai pembimbing — section "Bimbingan Saya" + permission `kunjungan.*`.
 3. Surat Tugas Monitoring — **Global** (Hubin, seluruh jurusan) dan **Scoped** (Hubin, atas request Kaprog jurusan tsb) (BR22, BR23).
@@ -113,6 +122,7 @@ Modul/fitur:
 5. Notifikasi terkait assignment dan kunjungan baru.
 
 **Checklist testing akhir sesi M5:**
+
 - [ ] Hanya Kaprog jurusan terkait yang bisa assign Guru Pembimbing untuk siswanya.
 - [ ] Kaprog self-assign muncul benar di "Bimbingan Saya" tanpa mengubah role Spatie-nya.
 - [ ] Laporan Kunjungan tidak bisa diisi tanpa Surat Tugas Monitoring aktif (Global atau Scoped).
@@ -125,6 +135,7 @@ Modul/fitur:
 **Tujuan:** alur penilaian akhir sampai penutupan status PKL siswa.
 
 Modul/fitur:
+
 1. Upload Laporan Akhir PKL (Siswa).
 2. **Formulir Penilaian PKL** (Guru Pembimbing) — gated oleh Laporan Akhir siswa (BR32), diisi sekali menjelang sidang, termasuk field sakit/izin/alpa, catatan guru pembimbing, nama pembimbing industri.
 3. Input nilai per Indikator/Section (Umum & Teknis Kejuruan) dengan skala predikat K/C/B/SB (fixed: <70/70–80/81–90/91–100).
@@ -133,6 +144,7 @@ Modul/fitur:
 6. Notifikasi terkait Formulir Penilaian terbuka dan Selesai PKL.
 
 **Checklist testing akhir sesi M6:**
+
 - [ ] Formulir Penilaian benar-benar terkunci sebelum Laporan Akhir diupload siswa.
 - [ ] Formulir hanya bisa disubmit sekali (tidak bisa diisi ulang bebas).
 - [ ] Nilai Akhir terhitung benar untuk kasus jurusan dengan sub-indikator maupun tanpa sub-indikator.
@@ -145,6 +157,7 @@ Modul/fitur:
 **Tujuan:** murni deployment dan User Acceptance Testing — **tidak ada** fitur atau komponen UI baru di milestone ini.
 
 Modul/fitur:
+
 1. Setup environment production/staging.
 2. Migration & seeding data production-ready.
 3. Regression test end-to-end seluruh alur (M1–M6) di environment staging.
@@ -153,6 +166,7 @@ Modul/fitur:
 6. Deployment ke production.
 
 **Checklist testing akhir sesi M7:**
+
 - [ ] Seluruh alur utama (pengajuan → persuratan → monitoring → penilaian → selesai) berjalan mulus di production/staging.
 - [ ] Tidak ada regresi dari fitur M1–M6.
 - [ ] Sign-off UAT dari pembimbing/pihak sekolah didapatkan.

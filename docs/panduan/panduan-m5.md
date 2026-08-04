@@ -35,6 +35,7 @@ Schema::create('kunjungan_monitoring', function (Blueprint $table) {
     $table->timestamps();
 });
 ```
+
 Dokumentasi foto/video kunjungan pakai medialibrary, collection `dokumentasi` terikat ke `kunjungan_monitoring`.
 
 ## 2. Assignment Guru Pembimbing (BR10)
@@ -54,6 +55,7 @@ public function store(Request $request, PengajuanPkl $pengajuan)
     ]);
 }
 ```
+
 - Self-assign: form assignment nampilin nama Kaprog sendiri juga sebagai opsi (dia juga punya `user_id`, cuma jabatannya kaprog) — bukan endpoint terpisah, cukup opsi normal di dropdown yang sama.
 - Section **"Bimbingan Saya"** di dashboard Kaprog cuma query `penugasan_pembimbing` where `guru_pembimbing_id = auth()->id()` — reuse komponen kunjungan & (nanti M6) formulir penilaian yang sama persis dipakai role Guru Pembimbing, jangan duplikasi component.
 
@@ -78,6 +80,7 @@ public function store(Request $request)
     // generate PDF pakai pola PenomoranSurat yang sama dari M4
 }
 ```
+
 Request scoped dari Kaprog: halaman/tombol kecil di dashboard Kaprog yang cuma bikin notifikasi ke Hubin (bukan langsung create record) — keputusan terbit tetap di tangan Hubin.
 
 ## 4. Laporan Kunjungan — gated oleh Surat Tugas (BR22)
@@ -109,6 +112,7 @@ public function store(Request $request, PenugasanPembimbing $penugasan)
 ```
 
 ## Checkpoint akhir M5
+
 - Kaprog cuma bisa assign Guru Pembimbing buat siswa jurusannya sendiri (coba lintas jurusan, harus ketolak Policy).
 - Self-assign Kaprog jadi pembimbing muncul di section "Bimbingan Saya" dan berfungsi sama persis kayak Guru Pembimbing biasa (bukan halaman/kode terpisah).
 - Hubin bisa terbitkan Surat Tugas Global (semua jurusan langsung ke-cover) dan Scoped (satu jurusan, bisa dikaitkan ke request Kaprog).

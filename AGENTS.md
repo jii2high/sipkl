@@ -29,18 +29,18 @@ AGENTS.md adalah ringkasan, bukan pengganti dokumen di `docs/`.
 
 ## Dev Commands
 
-| Action | Command |
-|---|---|
+| Action                   | Command                                                               |
+| ------------------------ | --------------------------------------------------------------------- |
 | Dev server (all at once) | `composer dev` — runs `php artisan serve` + queue + Vite concurrently |
-| Build frontend | `npm run build` or `npm run build:ssr` |
-| Lint PHP | `composer lint` (`pint --parallel`) |
-| Lint TS/JS | `npm run lint` (`eslint . --fix`) |
-| Format | `npm run format` (`prettier --write resources/`) |
-| PHPStan | `composer types:check` (`phpstan analyse`, level 7) |
-| TypeScript | `npm run types:check` (`tsc --noEmit`) |
-| Full CI check | `composer ci:check` — lint:check → format:check → types:check → test |
-| Run all tests | `composer test` (clears config, runs lint → phpstan → pest) |
-| Run tests fast | `php artisan test --compact` |
+| Build frontend           | `npm run build` or `npm run build:ssr`                                |
+| Lint PHP                 | `composer lint` (`pint --parallel`)                                   |
+| Lint TS/JS               | `npm run lint` (`eslint . --fix`)                                     |
+| Format                   | `npm run format` (`prettier --write resources/`)                      |
+| PHPStan                  | `composer types:check` (`phpstan analyse`, level 7)                   |
+| TypeScript               | `npm run types:check` (`tsc --noEmit`)                                |
+| Full CI check            | `composer ci:check` — lint:check → format:check → types:check → test  |
+| Run all tests            | `composer test` (clears config, runs lint → phpstan → pest)           |
+| Run tests fast           | `php artisan test --compact`                                          |
 
 ## Testing (Pest PHP v4)
 
@@ -85,24 +85,25 @@ AGENTS.md adalah ringkasan, bukan pengganti dokumen di `docs/`.
 
 ## Critical Business Rules (code-impacting)
 
-| # | Rule |
-|---|---|
-| BR1 | One active pengajuan per student at a time |
-| BR4 | Approve/reject ONLY from detail page, not list |
-| BR6 | Every status change logs to `pengajuan_pkl_histories` |
-| BR7 | Resmi PKL auto-triggered on Surat Balasan verify (no manual button) |
-| BR10 | Guru Pembimbing assignment is EXCLUSIVE to Kaprog |
-| BR11 | One active pembimbing per student; old record archived on replacement |
-| BR13 | Selesai PKL auto-triggered when Nilai Akhir submitted |
-| BR17 | Surat number is sequential per type per period (use `lockForUpdate()`) |
-| BR20 | Surat Balasan upload locked until Surat Pengantar published |
-| BR22 | Kunjungan requires active Surat Tugas Monitoring |
+| #    | Rule                                                                           |
+| ---- | ------------------------------------------------------------------------------ |
+| BR1  | One active pengajuan per student at a time                                     |
+| BR4  | Approve/reject ONLY from detail page, not list                                 |
+| BR6  | Every status change logs to `pengajuan_pkl_histories`                          |
+| BR7  | Resmi PKL auto-triggered on Surat Balasan verify (no manual button)            |
+| BR10 | Guru Pembimbing assignment is EXCLUSIVE to Kaprog                              |
+| BR11 | One active pembimbing per student; old record archived on replacement          |
+| BR13 | Selesai PKL auto-triggered when Nilai Akhir submitted                          |
+| BR17 | Surat number is sequential per type per period (use `lockForUpdate()`)         |
+| BR20 | Surat Balasan upload locked until Surat Pengantar published                    |
+| BR22 | Kunjungan requires active Surat Tugas Monitoring                               |
 | BR31 | Hubin "Nonaktifkan Kaprog" auto-changes role to `guru_pembimbing` via Observer |
-| BR32 | Penilaian locked until Laporan Akhir uploaded |
+| BR32 | Penilaian locked until Laporan Akhir uploaded                                  |
 
 ## Missing Packages (PRD-listed, NOT YET installed)
 
 These need `composer require` when implementing:
+
 - `spatie/laravel-permission` — RBAC
 - `barryvdh/laravel-dompdf` — PDF generation
 - `maatwebsite/excel` — Excel import/export
@@ -126,13 +127,13 @@ public function saved(GuruProfile $profile): void
 
 ## Detailed References
 
-| File | What's inside |
-|---|---|
-| `DESIGN.md` | Design system: colors, typography, shadcn components, icons, layout |
-| `docs/PRD.md` | Full product reqs, 32 BRs, RBAC matrix, use cases |
-| `docs/TRD.md` | Tech specs, full DB schema (19 tables), architecture, role derivation |
-| `docs/milestone.md` | Timeline M1–M7, per-milestone deliverables |
-| `docs/panduan/m*.md` | Per-milestone implementation guides (step-by-step) |
+| File                 | What's inside                                                         |
+| -------------------- | --------------------------------------------------------------------- |
+| `DESIGN.md`          | Design system: colors, typography, shadcn components, icons, layout   |
+| `docs/PRD.md`        | Full product reqs, 32 BRs, RBAC matrix, use cases                     |
+| `docs/TRD.md`        | Tech specs, full DB schema (19 tables), architecture, role derivation |
+| `docs/milestone.md`  | Timeline M1–M7, per-milestone deliverables                            |
+| `docs/panduan/m*.md` | Per-milestone implementation guides (step-by-step)                    |
 
 ## Repo Skills (in `.opencode/skills/`)
 
@@ -214,7 +215,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 
 - Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
 - Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
+    - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
 
 === php rules ===
 

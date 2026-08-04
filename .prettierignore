@@ -1,2 +1,8 @@
 resources/js/components/ui/*
 resources/views/mail/*
+.agents/
+.opencode/
+docs/
+
+AGENTS.md
+DESIGN.md

@@ -30,7 +30,7 @@ class IndikatorPenilaianController extends Controller
         $validated = $request->validate([
             'kategori' => 'required|in:umum,teknis_kejuruan',
             'kompetensi_keahlian_id' => 'nullable|exists:kompetensi_keahlian,id',
-            'nomor_urut' => 'required|integer|min:1',
+            'nomor_urut' => 'required|integer|min:1|max:15',
             'deskripsi' => 'required|string|max:255',
         ]);
 
@@ -44,7 +44,7 @@ class IndikatorPenilaianController extends Controller
         $validated = $request->validate([
             'kategori' => 'required|in:umum,teknis_kejuruan',
             'kompetensi_keahlian_id' => 'nullable|exists:kompetensi_keahlian,id',
-            'nomor_urut' => 'required|integer|min:1',
+            'nomor_urut' => 'required|integer|min:1|max:15',
             'deskripsi' => 'required|string|max:255',
         ]);
 
@@ -63,7 +63,7 @@ class IndikatorPenilaianController extends Controller
     public function storeSection(Request $request, IndikatorPenilaian $indikatorPenilaian): RedirectResponse
     {
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1',
+            'nomor_urut' => 'required|integer|min:1|max:15',
             'deskripsi' => 'required|string|max:255',
         ]);
 
@@ -75,7 +75,7 @@ class IndikatorPenilaianController extends Controller
     public function updateSection(Request $request, SectionPenilaian $section): RedirectResponse
     {
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1',
+            'nomor_urut' => 'required|integer|min:1|max:15',
             'deskripsi' => 'required|string|max:255',
         ]);
 
