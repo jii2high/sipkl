@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import SearchFilterBar from '@/components/search-filter-bar';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -75,6 +76,11 @@ export default function Index({ perusahaan }: Props) {
                     <h2 className="text-2xl font-semibold">Perusahaan</h2>
                     <Button onClick={openCreate}>Tambah Perusahaan</Button>
                 </div>
+
+                <SearchFilterBar
+                    baseRoute="/hubin/perusahaan"
+                    searchPlaceholder="Cari perusahaan..."
+                />
 
                 <div className="bg-surface rounded-lg border">
                     <table className="w-full text-sm">

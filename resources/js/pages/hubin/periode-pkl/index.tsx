@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import SearchFilterBar from '@/components/search-filter-bar';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -81,6 +82,11 @@ export default function Index({ periode }: Props) {
                     <Button onClick={openCreate}>Tambah Periode</Button>
                 </div>
 
+                <SearchFilterBar
+                    baseRoute="/hubin/periode-pkl"
+                    searchPlaceholder="Cari periode..."
+                />
+
                 <div className="bg-surface rounded-lg border">
                     <table className="w-full text-sm">
                         <thead>
@@ -101,10 +107,10 @@ export default function Index({ periode }: Props) {
                                     <td className="p-3 font-medium">
                                         {p.nama}
                                     </td>
-                                    <td className="p-3 text-muted-foreground">
+                                    <td className="p-3 text-foreground">
                                         {p.tanggal_mulai}
                                     </td>
-                                    <td className="p-3 text-muted-foreground">
+                                    <td className="p-3 text-foreground">
                                         {p.tanggal_selesai}
                                     </td>
                                     <td className="p-3">

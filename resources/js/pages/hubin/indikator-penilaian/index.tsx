@@ -321,12 +321,26 @@ export default function Index({ indikator, jurusan }: Props) {
                                     id="nomor_urut"
                                     type="number"
                                     value={form.nomor_urut}
-                                    onChange={(e) =>
-                                        setForm({
-                                            ...form,
-                                            nomor_urut: +e.target.value,
-                                        })
-                                    }
+                                    onChange={(e) => {
+                                        const value = +e.target.value;
+
+                                        if (value < 1) {
+                                            setForm({ ...form, nomor_urut: 1 });
+
+                                            return;
+                                        }
+
+                                        if (value > 15) {
+                                            setForm({
+                                                ...form,
+                                                nomor_urut: 15,
+                                            });
+
+                                            return;
+                                        }
+
+                                        setForm({ ...form, nomor_urut: value });
+                                    }}
                                 />
                             </div>
                             <Button onClick={submit}>
