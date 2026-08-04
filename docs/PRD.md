@@ -2,8 +2,8 @@
 
 ## Sistem Informasi PKL (SI-PKL) — SMKN 1 Kota Bekasi
 
-**Versi:** 1.3 (lengkap)
-**Tanggal:** 27 Juli 2026
+**Versi:** 1.4 (lengkap)
+**Tanggal:** 4 Agustus 2026
 **Status:** Final — siap eksekusi per modul/fitur
 
 ---
@@ -198,6 +198,7 @@ _Urutan & penomoran BR pada section ini disesuaikan dengan `PRD_v1_2.md` (dikelo
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | BR15 | Password awal akun (siswa & guru) = NIS/NIP, wajib diganti pada login pertama sebelum bisa mengakses dashboard.                                                                                                          |
 | BR16 | Import akun massal via Excel memvalidasi keunikan NIS/NIP dan kecocokan `kompetensi_keahlian` dengan master data; baris yang gagal validasi dilaporkan sebagai error per baris, tidak membatalkan seluruh proses import. |
+| BR33 | Ganti password (baik saat wajib ganti di login pertama/BR15, maupun ganti password reguler dari halaman akun) wajib melalui verifikasi OTP terlebih dahulu. Kode OTP 6 digit dikirim ke email akun sekolah pengguna (`users.email`), berlaku 10 menit, sekali pakai, maksimal 5x percobaan input sebelum kode invalid dan harus diminta ulang. Form ganti password baru dapat diakses/disubmit setelah OTP terverifikasi — mencegah pihak yang berhasil login (mis. menebak password default NIS/NIP) mengambil alih akun dengan mengganti password pemilik asli. |
 
 ### Audit & Akses
 
@@ -234,7 +235,7 @@ _Urutan & penomoran BR pada section ini disesuaikan dengan `PRD_v1_2.md` (dikelo
 
 - Tidak ada alur pembayaran/keuangan dalam sistem.
 - Tidak ada integrasi eksternal (mis. SSO, sistem akademik lain, e-meterai).
-- Notifikasi bersifat in-app (Laravel DB Notification + Sonner), bukan email/SMS/WhatsApp.
+- Notifikasi bersifat in-app (Laravel DB Notification + Sonner), bukan email/SMS/WhatsApp — **kecuali** pengiriman kode OTP untuk verifikasi ganti password (BR33), yang secara sengaja memakai channel email sebagai jalur out-of-band terpisah dari sesi login yang sedang dipakai (tujuannya security control, bukan notifikasi).
 - Tidak ada modul UI overhaul terpisah di akhir proyek — seluruh UI selesai inkremental per milestone.
 - Tidak ada role tambahan di luar 4 role yang didefinisikan (mis. Wali Kelas, Orang Tua, Kepala Sekolah).
 - Tidak ada mobile app native — akses siswa via web responsive (mobile-first).
