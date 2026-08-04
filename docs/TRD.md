@@ -2,8 +2,8 @@
 
 ## Sistem Informasi PKL (SI-PKL) — SMKN 1 Kota Bekasi
 
-**Versi:** 1.3 (lengkap)
-**Tanggal:** 27 Juli 2026
+**Versi:** 1.4 (lengkap)
+**Tanggal:** 4 Agustus 2026
 **Status:** Final — acuan implementasi per modul/fitur
 **Dokumen terkait:** `PRD.md`, `docs/milestone.md`, `DESIGN.md`
 
@@ -62,6 +62,7 @@ Font: heading **Plus Jakarta Sans**, body **Lato**. Warna primary **Royal Blue #
 | `section_penilaian`       | Sub-indikator, child dari `indikator_penilaian`, **nullable**                                      |
 | `nilai`                   | Nilai per leaf indikator/section                                                                   |
 | `notifications`           | Tabel bawaan Laravel DB Notification                                                               |
+| `otp_codes`               | Kode OTP verifikasi ganti password (BR33), terpisah dari `notifications` (channel email, bukan in-app) |
 
 ### 3.2 Skema Detail Tabel Inti
 
@@ -178,6 +179,20 @@ Font: heading **Plus Jakarta Sans**, body **Lato**. Warna primary **Royal Blue #
 | `section_penilaian_id`   | FK nullable               | diisi jika leaf di level section       |
 | `nilai`                  | decimal                   | 0–100                                  |
 | `predikat`               | enum (generated/computed) | K/C/B/SB, dihitung dari `nilai` (BR28) |
+
+**`otp_codes`**
+
+| Kolom          | Tipe               | Keterangan                                                                 |
+| -------------- | ------------------ | --------------------------------------------------------------------------- |
+| `id`           | bigint PK          |                                                                             |
+| `user_id`      | FK → users         | pemilik OTP (siswa/guru yang sedang ganti password)                       |
+| `code_hash`    | string             | kode 6 digit di-hash (`Hash::make`), bukan disimpan plaintext (BR33)       |
+| `expires_at`   | timestamp          | `created_at` + 10 menit                                                   |
+| `attempts`     | unsignedTinyInteger | default 0, increment tiap percobaan verifikasi salah, max 5 (BR33)        |
+| `verified_at`  | timestamp nullable | diisi saat verifikasi sukses; jadi penanda kode sudah dipakai (single-use) |
+| `created_at`   | timestamp          |                                                                             |
+
+Kode lama milik `user_id` yang sama otomatis diinvalidasi (soft: diabaikan lewat query terbaru, atau hard delete) saat request OTP baru dibuat, biar gak ada kode ganda aktif bersamaan.
 
 ### 3.3 Relasi Kunci
 
@@ -369,6 +384,25 @@ Format penomoran surat mengikuti pola sekolah, disimpan sebagai kolom `nomor_sur
     - Formulir Penilaian submit → Selesai PKL (ke Siswa)
 - Infra notifikasi dan audit trail dibangun sekali di M3, lalu trigger baru ditambahkan inkremental di tiap milestone berikutnya.
 
+### 8.1 OTP Verifikasi Ganti Password (BR33)
+
+Channel **email** (satu-satunya exception dari kebijakan notifikasi in-app-only), karena tujuannya security control out-of-band, bukan notifikasi.
+
+**Alur:**
+
+1. User (sudah login, baik di flow wajib ganti password first-login BR15 maupun ganti password reguler dari halaman akun) mengakses halaman ganti password.
+2. Sebelum form password baru ditampilkan/bisa disubmit, sistem mewajibkan step verifikasi OTP:
+   - `POST /password/otp/request` — generate kode 6 digit, simpan hash ke `otp_codes`, invalidasi kode lama milik user tsb, kirim via Mailable ke `users.email`. Di-throttle (`RateLimiter`, maks 3x/10 menit per user) biar gak dipakai buat spam inbox orang lain.
+   - `POST /password/otp/verify` — cek `code_hash` cocok, `expires_at` belum lewat, `attempts` < 5. Salah → increment `attempts`. Benar → set `verified_at`, dan set session flag `password_otp_verified_at` (TTL ~10 menit).
+3. Endpoint ganti password (`PUT /password`) dilindungi middleware yang cek session flag `password_otp_verified_at` masih valid — kalau tidak, redirect balik ke step 2 (request OTP baru).
+4. Setelah password berhasil diganti, session flag OTP di-clear (gak bisa dipakai reuse buat ganti password lagi tanpa OTP baru).
+
+**Keamanan tambahan:**
+
+- Kode di-hash (`Hash::make`), dicompare pakai `Hash::check`, bukan disimpan/dibandingkan plaintext.
+- Throttle di level request OTP (cegah spam) **dan** di level attempt verifikasi (cegah brute-force 6 digit dalam window 10 menit — realistis karena cuma 5x percobaan sebelum kode invalid).
+- Mailable dikirim sinkron (volume rendah, gak perlu queue di awal) — pertimbangkan queue kalau nanti dirasa perlu.
+
 ## 9. Seeder
 
 Seeder disiapkan untuk data master minimum agar sistem bisa langsung diuji tiap milestone:
@@ -440,6 +474,7 @@ app/Notifications/
 | `lucide-react`                                           | Ikon                                   |
 | `sonner`                                                 | Toast notifikasi in-app                |
 | `mysql` (driver bawaan Laravel)                          | Database                               |
+| Mail driver bawaan Laravel (`Illuminate\Mail`)            | Kirim OTP ganti password (BR33), via SMTP |
 
 _Catatan: dibanding `TRD_v1_2.md`, package berikut sudah tidak dipakai sebagai keputusan tim final (dikonfirmasi ulang 30 Juli 2026): `spatie/laravel-model-states` (diganti kolom `enum` biasa + validasi di Policy/Form Request), `spatie/laravel-medialibrary` (upload file memakai kolom path biasa), dan `spatie/laravel-pdf` (diganti PDF Laravel generik, `barryvdh/laravel-dompdf` atau setara — dipilih karena layout surat cukup sederhana untuk CSS dompdf, dan menghindari dependency Chromium/headless-browser di server produksi). Database juga berpindah dari rencana awal PostgreSQL ke MySQL._
 
