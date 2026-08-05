@@ -78,6 +78,20 @@ class PengajuanPkl extends Model
         return $this->hasMany(PengajuanPklHistory::class, 'pengajuan_id');
     }
 
+    /** @return HasMany<PenugasanPembimbing, $this> */
+    public function penugasans(): HasMany
+    {
+        return $this->hasMany(PenugasanPembimbing::class, 'pengajuan_id');
+    }
+
+    /** @return HasOne<PenugasanPembimbing, $this> */
+    public function penugasanAktif(): HasOne
+    {
+        return $this->hasOne(PenugasanPembimbing::class, 'pengajuan_id')
+            ->where('status', 'aktif')
+            ->latestOfMany();
+    }
+
     /** @return BelongsToMany<SuratPengantar, $this> */
     public function suratPengantars(): BelongsToMany
     {

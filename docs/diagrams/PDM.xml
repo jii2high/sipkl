@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <mxfile host="app.diagrams.net">
   <diagram name="Page-1" id="BFQYxvKpicLgaF4V6qtr">
     <mxGraphModel dx="21820" dy="9420" grid="0" gridSize="10" guides="0" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;erDiagram\n    users {\n        bigserial id PK\n        varchar_150 name\n        varchar_100 email UK\n        varchar_255 password\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    roles {\n        bigserial id PK\n        varchar_255 name\n        varchar_255 guard_name\n    }\n\n    model_has_roles {\n        bigint role_id PK, FK\n        varchar_255 model_type PK\n        bigint model_id PK\n    }\n\n    kompetensi_keahlian {\n        serial id PK\n        varchar_100 nama_jurusan\n        varchar_20 acronym\n    }\n\n    siswa_profiles {\n        bigint user_id PK, FK\n        varchar_20 nis UK\n        varchar_50 kelas\n        int kompetensi_keahlian_id FK\n        text alamat\n        varchar_20 no_telp\n    }\n\n    guru_profiles {\n        bigint user_id PK, FK\n        varchar_30 nip UK\n        varchar_50 jabatan\n        int kompetensi_keahlian_id FK \&quot;Nullable\&quot;\n    }\n\n    periode_pkl {\n        serial id PK\n        varchar_100 nama\n        date tanggal_mulai\n        date tanggal_selesai\n        boolean status_aktif\n    }\n\n    perusahaan {\n        bigserial id PK\n        varchar_150 nama\n        text alamat\n        varchar_20 telp\n        int kuota_saran\n    }\n\n    pengajuan_pkl {\n        bigserial id PK\n        bigint siswa_id FK\n        bigint perusahaan_id FK\n        int periode_id FK\n        varchar_50 status\n        varchar_100 nomor_pengajuan UK \&quot;Nullable, terisi saat PDF Surat Pengajuan di-generate (BR18)\&quot;\n        bigint kaprog_id FK \&quot;Nullable\&quot;\n        text catatan_kaprog\n        timestamp verified_kaprog_at\n        bigint hubin_id FK \&quot;Nullable\&quot;\n        timestamp surat_dikirim_at\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    pengajuan_pkl_histories {\n        bigserial id PK\n        bigint pengajuan_id FK\n        varchar_50 from_state\n        varchar_50 to_state\n        bigint actor_id FK\n        text catatan \&quot;Nullable\&quot;\n        timestamp created_at\n    }\n\n    surat_pengantar {\n        bigserial id PK\n        bigint perusahaan_id FK\n        int periode_id FK\n        varchar_100 nomor_surat UK\n        date tanggal_terbit\n        bigint generated_by FK\n        varchar_255 file\n    }\n\n    surat_pengantar_pengajuan {\n        bigint surat_pengantar_id PK, FK\n        bigint pengajuan_id PK, FK\n    }\n\n    dokumen_pkl {\n        bigserial id PK\n        varchar_100 model_type\n        bigint model_id\n        varchar_100 collection_name\n        varchar_255 file_name\n        varchar_50 mime_type\n        varchar_50 disk\n        timestamp created_at\n    }\n\n    penugasan_pembimbing {\n        bigserial id PK\n        bigint guru_pembimbing_id FK\n        bigint pengajuan_id FK\n        bigint assigned_by FK \&quot;Kaprog, eksklusif\&quot;\n        timestamp created_at\n    }\n\n    surat_tugas_monitoring {\n        bigserial id PK\n        varchar_20 scope \&quot;global / scoped\&quot;\n        int kompetensi_keahlian_id FK \&quot;Nullable, null jika scope=global\&quot;\n        int periode_id FK\n        bigint requested_by FK \&quot;Nullable, kaprog (null jika global)\&quot;\n        bigint generated_by FK \&quot;hubin\&quot;\n        varchar_100 nomor_surat UK\n        date tanggal_terbit\n        varchar_255 file\n        timestamp created_at\n    }\n\n    kunjungan_monitoring {\n        bigserial id PK\n        bigint penugasan_id FK\n        bigint surat_tugas_monitoring_id FK \&quot;Wajib, gate BR22\&quot;\n        date tanggal_kunjungan\n        text catatan\n        timestamp created_at\n    }\n\n    notifications {\n        uuid id PK\n        varchar_255 type\n        varchar_255 notifiable_type\n        bigint notifiable_id\n        text data\n        timestamp read_at \&quot;Nullable\&quot;\n        timestamp created_at\n    }\n\n    penilaian {\n        serial id PK\n        int kompetensi_keahlian_id FK \&quot;Nullable — NULL = Indikator Umum (global, semua jurusan)\&quot;\n        int kelompok_tujuan \&quot;1/2/3/4 — sesuai Tujuan Pembelajaran Formulir Penilaian; 3 = Teknis Kejuruan (wajib jurusan terisi)\&quot;\n        varchar_255 nama_indikator\n        int urutan\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    section_penilaian {\n        serial id PK\n        bigint penilaian_id FK\n        varchar_255 nama_sub_indikator\n        int urutan\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    formulir {\n        bigserial id PK\n        bigint penugasan_id FK \&quot;ke penugasan_pembimbing, 1x penilaian\&quot;\n        varchar_50 status \&quot;draft / submitted\&quot;\n        date tanggal_penilaian\n        varchar_150 nama_pembimbing_industri\n        int sakit \&quot;hari\&quot;\n        int izin \&quot;hari\&quot;\n        int alpa \&quot;hari, tanpa keterangan\&quot;\n        text catatan_guru_pembimbing\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    nilai {\n        bigserial id PK\n        bigint formulir_id FK\n        bigint penilaian_id FK \&quot;Wajib\&quot;\n        bigint section_penilaian_id FK \&quot;Nullable\&quot;\n        decimal skor\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    %% Relasi Auth &amp; RBAC\n    users ||--o| roles : \&quot;has via model_has_roles\&quot;\n    roles ||--o{ model_has_roles : \&quot;assigned to\&quot;\n\n    %% Relasi Profil &amp; Master\n    users ||--o| siswa_profiles : \&quot;extends to\&quot;\n    users ||--o| guru_profiles : \&quot;extends to\&quot;\n    kompetensi_keahlian ||--o{ siswa_profiles : \&quot;belongs to\&quot;\n    kompetensi_keahlian ||--o{ guru_profiles : \&quot;supervised by (Kaprog)\&quot;\n\n    %% Relasi Pengajuan Transaksional\n    siswa_profiles ||--o{ pengajuan_pkl : \&quot;submits\&quot;\n    perusahaan ||--o{ pengajuan_pkl : \&quot;targeted by\&quot;\n    periode_pkl ||--o{ pengajuan_pkl : \&quot;defines\&quot;\n    guru_profiles ||--o{ pengajuan_pkl : \&quot;verified by (Kaprog/Hubin)\&quot;\n    pengajuan_pkl ||--o{ pengajuan_pkl_histories : \&quot;audit trail (BR17)\&quot;\n    users ||--o{ pengajuan_pkl_histories : \&quot;as actor\&quot;\n\n    %% Relasi Surat Pengantar\n    perusahaan ||--o{ surat_pengantar : \&quot;addressed to\&quot;\n    periode_pkl ||--o{ surat_pengantar : \&quot;valid for\&quot;\n    guru_profiles ||--o{ surat_pengantar : \&quot;generated by (Hubin)\&quot;\n    surat_pengantar ||--o{ surat_pengantar_pengajuan : \&quot;contains\&quot;\n    pengajuan_pkl ||--o{ surat_pengantar_pengajuan : \&quot;linked to\&quot;\n\n    %% Relasi Dokumen (polymorphic via spatie/medialibrary)\n    pengajuan_pkl ||--o{ dokumen_pkl : \&quot;morph (surat_balasan, laporan_akhir)\&quot;\n    kunjungan_monitoring ||--o{ dokumen_pkl : \&quot;morph (dokumentasi_kunjungan)\&quot;\n\n    %% Relasi Pembimbingan &amp; Monitoring\n    guru_profiles ||--o{ penugasan_pembimbing : \&quot;acts as pembimbing / assigner (Kaprog, eksklusif)\&quot;\n    pengajuan_pkl ||--|| penugasan_pembimbing : \&quot;monitored via\&quot;\n    kompetensi_keahlian ||--o{ surat_tugas_monitoring : \&quot;scoped to (nullable = global)\&quot;\n    periode_pkl ||--o{ surat_tugas_monitoring : \&quot;valid for\&quot;\n    guru_profiles ||--o{ surat_tugas_monitoring : \&quot;requested by (Kaprog, nullable) / generated by (Hubin)\&quot;\n    surat_tugas_monitoring ||--o{ kunjungan_monitoring : \&quot;authorizes (gate, BR22)\&quot;\n    penugasan_pembimbing ||--o{ kunjungan_monitoring : \&quot;tracks\&quot;\n\n    %% Relasi Notifikasi\n    users ||--o{ notifications : \&quot;notifiable (polymorphic)\&quot;\n\n    %% Relasi Penilaian PKL\n    kompetensi_keahlian |o--o{ penilaian : \&quot;scoped to (nullable = Indikator Umum, global)\&quot;\n    penilaian ||--o{ section_penilaian : \&quot;has sub (nullable)\&quot;\n    penugasan_pembimbing ||--|| formulir : \&quot;generates 1x penilaian\&quot;\n    formulir ||--o{ nilai : \&quot;contains\&quot;\n    penilaian ||--o{ nilai : \&quot;referenced by\&quot;\n    section_penilaian ||--o{ nilai : \&quot;referenced by (nullable)\&quot;&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="_H3jBqJdR18BcsIvObFm-1">
+        <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;erDiagram\n    users {\n        bigserial id PK\n        varchar_150 name\n        varchar_100 email UK\n        varchar_255 password\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    roles {\n        bigserial id PK\n        varchar_255 name\n        varchar_255 guard_name\n    }\n\n    model_has_roles {\n        bigint role_id PK, FK\n        varchar_255 model_type PK\n        bigint model_id PK\n    }\n\n    kompetensi_keahlian {\n        serial id PK\n        varchar_100 nama_jurusan\n        varchar_20 acronym\n    }\n\n    siswa_profiles {\n        bigint user_id PK, FK\n        varchar_20 nis UK\n        varchar_50 kelas\n        int kompetensi_keahlian_id FK\n        text alamat\n        varchar_20 no_telp\n    }\n\n    guru_profiles {\n        bigint user_id PK, FK\n        varchar_30 nip UK\n        varchar_50 jabatan\n        int kompetensi_keahlian_id FK \&quot;Nullable\&quot;\n    }\n\n    periode_pkl {\n        serial id PK\n        varchar_100 nama\n        date tanggal_mulai\n        date tanggal_selesai\n        boolean status_aktif\n    }\n\n    perusahaan {\n        bigserial id PK\n        varchar_150 nama\n        text alamat\n        varchar_20 telp\n        int kuota_saran\n    }\n\n    pengajuan_pkl {\n        bigserial id PK\n        bigint siswa_id FK\n        bigint perusahaan_id FK\n        int periode_pkl_id FK\n        varchar_50 status\n        varchar_100 nomor_pengajuan UK \&quot;Nullable, terisi saat PDF Surat Pengajuan di-generate (BR18)\&quot;\n        bigint kaprog_id FK \&quot;Nullable\&quot;\n        text catatan_kaprog\n        timestamp verified_kaprog_at\n        bigint hubin_id FK \&quot;Nullable\&quot;\n        timestamp surat_dikirim_at\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    pengajuan_pkl_histories {\n        bigserial id PK\n        bigint pengajuan_id FK\n        varchar_50 from_state\n        varchar_50 to_state\n        bigint actor_id FK\n        text catatan \&quot;Nullable\&quot;\n        timestamp created_at\n    }\n\n    surat_pengantar {\n        bigserial id PK\n        bigint perusahaan_id FK\n        int periode_pkl_id FK\n        varchar_100 nomor_surat UK\n        date tanggal_terbit\n        bigint generated_by FK\n        varchar_255 file\n    }\n\n    surat_pengantar_pengajuan {\n        bigint surat_pengantar_id PK, FK\n        bigint pengajuan_id PK, FK\n    }\n\n    penugasan_pembimbing {\n        bigserial id PK\n        bigint guru_pembimbing_id FK\n        bigint pengajuan_id FK\n        bigint assigned_by FK \&quot;Kaprog, eksklusif\&quot;\n        varchar_20 status \&quot;aktif / nonaktif, default aktif\&quot;\n        timestamp created_at\n        timestamp ended_at \&quot;Nullable, diisi saat status jadi nonaktif\&quot;\n    }\n\n    surat_tugas_monitoring {\n        bigserial id PK\n        varchar_20 lingkup \&quot;global / scoped\&quot;\n        int kompetensi_keahlian_id FK \&quot;Nullable, null jika lingkup=global\&quot;\n        int periode_pkl_id FK\n        bigint requested_by FK \&quot;Nullable, kaprog (null jika global)\&quot;\n        bigint diterbitkan_by FK \&quot;hubin\&quot;\n        varchar_100 nomor_surat UK\n        date tanggal_terbit\n        varchar_255 file\n        enum status \&quot;aktif / nonaktif, default aktif\&quot;\n        date berlaku_hingga \&quot;Nullable, null = berlaku penuh periode\&quot;\n        timestamp created_at\n    }\n\n    kunjungan_monitoring {\n        bigserial id PK\n        bigint penugasan_id FK\n        bigint surat_tugas_id FK \&quot;Wajib, gate BR22\&quot;\n        date tanggal_kunjungan\n        text catatan\n        string dokumentasi_path \&quot;Nullable, foto/video (bisa banyak path)\&quot;\n        timestamp created_at\n    }\n\n    notifications {\n        uuid id PK\n        varchar_255 type\n        varchar_255 notifiable_type\n        bigint notifiable_id\n        text data\n        timestamp read_at \&quot;Nullable\&quot;\n        timestamp created_at\n    }\n\n    penilaian {\n        serial id PK\n        int kompetensi_keahlian_id FK \&quot;Nullable - NULL = Indikator Umum (global, semua jurusan)\&quot;\n        int kelompok_tujuan \&quot;1/2/3/4 - sesuai Tujuan Pembelajaran Formulir Penilaian; 3 = Teknis Kejuruan (wajib jurusan terisi)\&quot;\n        varchar_255 nama_indikator\n        int urutan\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    section_penilaian {\n        serial id PK\n        bigint penilaian_id FK\n        varchar_255 nama_sub_indikator\n        int urutan\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    formulir {\n        bigserial id PK\n        bigint penugasan_id FK \&quot;ke penugasan_pembimbing, 1x penilaian\&quot;\n        varchar_50 status \&quot;draft / submitted\&quot;\n        date tanggal_penilaian\n        varchar_150 nama_pembimbing_industri\n        int sakit \&quot;hari\&quot;\n        int izin \&quot;hari\&quot;\n        int alpa \&quot;hari, tanpa keterangan\&quot;\n        text catatan_guru_pembimbing\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    nilai {\n        bigserial id PK\n        bigint formulir_id FK\n        bigint penilaian_id FK \&quot;Wajib\&quot;\n        bigint section_penilaian_id FK \&quot;Nullable\&quot;\n        decimal skor\n        timestamp created_at\n        timestamp updated_at\n    }\n\n    %% Relasi Auth &amp; RBAC\n    users ||--o| roles : \&quot;has via model_has_roles\&quot;\n    roles ||--o{ model_has_roles : \&quot;assigned to\&quot;\n\n    %% Relasi Profil &amp; Master\n    users ||--o| siswa_profiles : \&quot;extends to\&quot;\n    users ||--o| guru_profiles : \&quot;extends to\&quot;\n    kompetensi_keahlian ||--o{ siswa_profiles : \&quot;belongs to\&quot;\n    kompetensi_keahlian ||--o{ guru_profiles : \&quot;supervised by (Kaprog)\&quot;\n\n    %% Relasi Pengajuan Transaksional\n    siswa_profiles ||--o{ pengajuan_pkl : \&quot;submits\&quot;\n    perusahaan ||--o{ pengajuan_pkl : \&quot;targeted by\&quot;\n    periode_pkl ||--o{ pengajuan_pkl : \&quot;defines\&quot;\n    guru_profiles ||--o{ pengajuan_pkl : \&quot;verified by (Kaprog/Hubin)\&quot;\n    pengajuan_pkl ||--o{ pengajuan_pkl_histories : \&quot;audit trail (BR17)\&quot;\n    users ||--o{ pengajuan_pkl_histories : \&quot;as actor\&quot;\n\n    %% Relasi Surat Pengantar\n    perusahaan ||--o{ surat_pengantar : \&quot;addressed to\&quot;\n    periode_pkl ||--o{ surat_pengantar : \&quot;valid for\&quot;\n    guru_profiles ||--o{ surat_pengantar : \&quot;generated by (Hubin)\&quot;\n    surat_pengantar ||--o{ surat_pengantar_pengajuan : \&quot;contains\&quot;\n    pengajuan_pkl ||--o{ surat_pengantar_pengajuan : \&quot;linked to\&quot;\n\n    %% Relasi Pembimbingan &amp; Monitoring\n    guru_profiles ||--o{ penugasan_pembimbing : \&quot;acts as pembimbing / assigner (Kaprog, eksklusif)\&quot;\n    pengajuan_pkl ||--|| penugasan_pembimbing : \&quot;monitored via (histori + aktif)\&quot;\n    kompetensi_keahlian ||--o{ surat_tugas_monitoring : \&quot;scoped to (nullable = global)\&quot;\n    periode_pkl ||--o{ surat_tugas_monitoring : \&quot;valid for\&quot;\n    guru_profiles ||--o{ surat_tugas_monitoring : \&quot;requested by (Kaprog, nullable) / generated by (Hubin)\&quot;\n    surat_tugas_monitoring ||--o{ kunjungan_monitoring : \&quot;authorizes (gate, BR22)\&quot;\n    penugasan_pembimbing ||--o{ kunjungan_monitoring : \&quot;tracks\&quot;\n\n    %% Relasi Notifikasi\n    users ||--o{ notifications : \&quot;notifiable (polymorphic)\&quot;\n\n    %% Relasi Penilaian PKL\n    kompetensi_keahlian |o--o{ penilaian : \&quot;scoped to (nullable = Indikator Umum, global)\&quot;\n    penilaian ||--o{ section_penilaian : \&quot;has sub (nullable)\&quot;\n    penugasan_pembimbing ||--|| formulir : \&quot;generates 1x penilaian\&quot;\n    formulir ||--o{ nilai : \&quot;contains\&quot;\n    penilaian ||--o{ nilai : \&quot;referenced by\&quot;\n    section_penilaian ||--o{ nilai : \&quot;referenced by (nullable)\&quot;\n&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="_H3jBqJdR18BcsIvObFm-1">
           <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
             <mxGeometry height="2558" width="4359" as="geometry" />
           </mxCell>
@@ -797,7 +797,7 @@
             <mxRectangle height="43" width="112" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-175" parent="_H3jBqJdR18BcsIvObFm-173" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="periode_id" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-175" parent="_H3jBqJdR18BcsIvObFm-173" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="periode_pkl_id" vertex="1">
           <mxGeometry height="43" width="160" x="112" as="geometry">
             <mxRectangle height="43" width="160" as="alternateBounds" />
           </mxGeometry>
@@ -1234,7 +1234,7 @@
             <mxRectangle height="43" width="112" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-270" parent="_H3jBqJdR18BcsIvObFm-268" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="periode_id" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-270" parent="_H3jBqJdR18BcsIvObFm-268" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="periode_pkl_id" vertex="1">
           <mxGeometry height="43" width="129" x="112" as="geometry">
             <mxRectangle height="43" width="129" as="alternateBounds" />
           </mxGeometry>
@@ -1357,155 +1357,6 @@
             <mxRectangle height="43" width="67" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <UserObject label="dokumen_pkl" mermaidId="n:dokumen_pkl" mermaidBaseStyle="shape=table;startSize=43;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontSize=16;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;strokeWidth=1;align=center;resizeLast=1;html=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);" mermaidBaseValue="dokumen_pkl" id="_H3jBqJdR18BcsIvObFm-297">
-          <mxCell parent="_H3jBqJdR18BcsIvObFm-1" style="shape=table;startSize=43;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontSize=16;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;strokeWidth=1;align=center;resizeLast=1;html=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);" vertex="1">
-            <mxGeometry height="387" width="298" x="3263" y="3262" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-298" parent="_H3jBqJdR18BcsIvObFm-297" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#ffffff,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
-          <mxGeometry height="43" width="298" y="43" as="geometry" />
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-299" parent="_H3jBqJdR18BcsIvObFm-298" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="bigserial" vertex="1">
-          <mxGeometry height="43" width="112" as="geometry">
-            <mxRectangle height="43" width="112" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-300" parent="_H3jBqJdR18BcsIvObFm-298" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="id" vertex="1">
-          <mxGeometry height="43" width="143" x="112" as="geometry">
-            <mxRectangle height="43" width="143" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-301" parent="_H3jBqJdR18BcsIvObFm-298" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="PK" vertex="1">
-          <mxGeometry height="43" width="43" x="255" as="geometry">
-            <mxRectangle height="43" width="43" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-302" parent="_H3jBqJdR18BcsIvObFm-297" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
-          <mxGeometry height="43" width="298" y="86" as="geometry" />
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-303" parent="_H3jBqJdR18BcsIvObFm-302" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="varchar_100" vertex="1">
-          <mxGeometry height="43" width="112" as="geometry">
-            <mxRectangle height="43" width="112" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-304" parent="_H3jBqJdR18BcsIvObFm-302" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="model_type" vertex="1">
-          <mxGeometry height="43" width="143" x="112" as="geometry">
-            <mxRectangle height="43" width="143" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-305" parent="_H3jBqJdR18BcsIvObFm-302" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
-          <mxGeometry height="43" width="43" x="255" as="geometry">
-            <mxRectangle height="43" width="43" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-306" parent="_H3jBqJdR18BcsIvObFm-297" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#ffffff,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
-          <mxGeometry height="43" width="298" y="129" as="geometry" />
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-307" parent="_H3jBqJdR18BcsIvObFm-306" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="bigint" vertex="1">
-          <mxGeometry height="43" width="112" as="geometry">
-            <mxRectangle height="43" width="112" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-308" parent="_H3jBqJdR18BcsIvObFm-306" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="model_id" vertex="1">
-          <mxGeometry height="43" width="143" x="112" as="geometry">
-            <mxRectangle height="43" width="143" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-309" parent="_H3jBqJdR18BcsIvObFm-306" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
-          <mxGeometry height="43" width="43" x="255" as="geometry">
-            <mxRectangle height="43" width="43" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-310" parent="_H3jBqJdR18BcsIvObFm-297" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
-          <mxGeometry height="43" width="298" y="172" as="geometry" />
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-311" parent="_H3jBqJdR18BcsIvObFm-310" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="varchar_100" vertex="1">
-          <mxGeometry height="43" width="112" as="geometry">
-            <mxRectangle height="43" width="112" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-312" parent="_H3jBqJdR18BcsIvObFm-310" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="collection_name" vertex="1">
-          <mxGeometry height="43" width="143" x="112" as="geometry">
-            <mxRectangle height="43" width="143" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-313" parent="_H3jBqJdR18BcsIvObFm-310" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
-          <mxGeometry height="43" width="43" x="255" as="geometry">
-            <mxRectangle height="43" width="43" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-314" parent="_H3jBqJdR18BcsIvObFm-297" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#ffffff,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
-          <mxGeometry height="43" width="298" y="215" as="geometry" />
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-315" parent="_H3jBqJdR18BcsIvObFm-314" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="varchar_255" vertex="1">
-          <mxGeometry height="43" width="112" as="geometry">
-            <mxRectangle height="43" width="112" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-316" parent="_H3jBqJdR18BcsIvObFm-314" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="file_name" vertex="1">
-          <mxGeometry height="43" width="143" x="112" as="geometry">
-            <mxRectangle height="43" width="143" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-317" parent="_H3jBqJdR18BcsIvObFm-314" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
-          <mxGeometry height="43" width="43" x="255" as="geometry">
-            <mxRectangle height="43" width="43" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-318" parent="_H3jBqJdR18BcsIvObFm-297" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
-          <mxGeometry height="43" width="298" y="258" as="geometry" />
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-319" parent="_H3jBqJdR18BcsIvObFm-318" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="varchar_50" vertex="1">
-          <mxGeometry height="43" width="112" as="geometry">
-            <mxRectangle height="43" width="112" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-320" parent="_H3jBqJdR18BcsIvObFm-318" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="mime_type" vertex="1">
-          <mxGeometry height="43" width="143" x="112" as="geometry">
-            <mxRectangle height="43" width="143" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-321" parent="_H3jBqJdR18BcsIvObFm-318" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
-          <mxGeometry height="43" width="43" x="255" as="geometry">
-            <mxRectangle height="43" width="43" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-322" parent="_H3jBqJdR18BcsIvObFm-297" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#ffffff,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
-          <mxGeometry height="43" width="298" y="301" as="geometry" />
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-323" parent="_H3jBqJdR18BcsIvObFm-322" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="varchar_50" vertex="1">
-          <mxGeometry height="43" width="112" as="geometry">
-            <mxRectangle height="43" width="112" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-324" parent="_H3jBqJdR18BcsIvObFm-322" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="disk" vertex="1">
-          <mxGeometry height="43" width="143" x="112" as="geometry">
-            <mxRectangle height="43" width="143" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-325" parent="_H3jBqJdR18BcsIvObFm-322" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
-          <mxGeometry height="43" width="43" x="255" as="geometry">
-            <mxRectangle height="43" width="43" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-326" parent="_H3jBqJdR18BcsIvObFm-297" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
-          <mxGeometry height="43" width="298" y="344" as="geometry" />
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-327" parent="_H3jBqJdR18BcsIvObFm-326" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="timestamp" vertex="1">
-          <mxGeometry height="43" width="112" as="geometry">
-            <mxRectangle height="43" width="112" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-328" parent="_H3jBqJdR18BcsIvObFm-326" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="created_at" vertex="1">
-          <mxGeometry height="43" width="143" x="112" as="geometry">
-            <mxRectangle height="43" width="143" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-329" parent="_H3jBqJdR18BcsIvObFm-326" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
-          <mxGeometry height="43" width="43" x="255" as="geometry">
-            <mxRectangle height="43" width="43" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
         <UserObject label="penugasan_pembimbing" mermaidId="n:penugasan_pembimbing" mermaidBaseStyle="shape=table;startSize=43;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontSize=16;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;strokeWidth=1;align=center;resizeLast=1;html=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);" mermaidBaseValue="penugasan_pembimbing" id="_H3jBqJdR18BcsIvObFm-330">
           <mxCell parent="_H3jBqJdR18BcsIvObFm-1" style="shape=table;startSize=43;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontSize=16;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;strokeWidth=1;align=center;resizeLast=1;html=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);" vertex="1">
             <mxGeometry height="344" width="629" x="3715" y="2204" as="geometry" />
@@ -1621,7 +1472,7 @@
             <mxRectangle height="43" width="43" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="4WBzk522uzmGzaPl-Vfk-694" parent="4WBzk522uzmGzaPl-Vfk-690" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="aktif / nonaktif, default aktif " vertex="1">
+        <mxCell id="4WBzk522uzmGzaPl-Vfk-694" parent="4WBzk522uzmGzaPl-Vfk-690" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="aktif / nonaktif, default aktif" vertex="1">
           <mxGeometry height="43" width="310" x="319" as="geometry">
             <mxRectangle height="43" width="310" as="alternateBounds" />
           </mxGeometry>
@@ -1667,14 +1518,14 @@
             <mxRectangle height="43" width="43" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-350" parent="_H3jBqJdR18BcsIvObFm-346" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="Nullable, diisi saat status jadi nonaktif " vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-350" parent="_H3jBqJdR18BcsIvObFm-346" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="Nullable, diisi saat status jadi nonaktif" vertex="1">
           <mxGeometry height="43" width="310" x="319" as="geometry">
             <mxRectangle height="43" width="310" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <UserObject label="surat_tugas_monitoring" mermaidId="n:surat_tugas_monitoring" mermaidBaseStyle="shape=table;startSize=43;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontSize=16;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;strokeWidth=1;align=center;resizeLast=1;html=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);" mermaidBaseValue="surat_tugas_monitoring" id="_H3jBqJdR18BcsIvObFm-356">
           <mxCell parent="_H3jBqJdR18BcsIvObFm-1" style="shape=table;startSize=43;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontSize=16;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;strokeWidth=1;align=center;resizeLast=1;html=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);" vertex="1">
-            <mxGeometry height="473" width="622" x="3077" y="1508" as="geometry" />
+            <mxGeometry height="559" width="622" x="3077" y="1508" as="geometry" />
           </mxCell>
         </UserObject>
         <mxCell id="_H3jBqJdR18BcsIvObFm-357" parent="_H3jBqJdR18BcsIvObFm-356" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#ffffff,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
@@ -1708,7 +1559,7 @@
             <mxRectangle height="43" width="112" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-364" parent="_H3jBqJdR18BcsIvObFm-362" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="scope" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-364" parent="_H3jBqJdR18BcsIvObFm-362" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="lingkup" vertex="1">
           <mxGeometry height="43" width="198" x="112" as="geometry">
             <mxRectangle height="43" width="198" as="alternateBounds" />
           </mxGeometry>
@@ -1741,7 +1592,7 @@
             <mxRectangle height="43" width="45" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-371" parent="_H3jBqJdR18BcsIvObFm-367" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="Nullable, null jika scope=global" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-371" parent="_H3jBqJdR18BcsIvObFm-367" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="Nullable, null jika lingkup=global" vertex="1">
           <mxGeometry height="43" width="267" x="355" as="geometry">
             <mxRectangle height="43" width="267" as="alternateBounds" />
           </mxGeometry>
@@ -1754,7 +1605,7 @@
             <mxRectangle height="43" width="112" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-374" parent="_H3jBqJdR18BcsIvObFm-372" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="periode_id" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-374" parent="_H3jBqJdR18BcsIvObFm-372" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="periode_pkl_id" vertex="1">
           <mxGeometry height="43" width="198" x="112" as="geometry">
             <mxRectangle height="43" width="198" as="alternateBounds" />
           </mxGeometry>
@@ -1800,7 +1651,7 @@
             <mxRectangle height="43" width="112" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-384" parent="_H3jBqJdR18BcsIvObFm-382" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="generated_by" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-384" parent="_H3jBqJdR18BcsIvObFm-382" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="diterbitkan_by" vertex="1">
           <mxGeometry height="43" width="198" x="112" as="geometry">
             <mxRectangle height="43" width="198" as="alternateBounds" />
           </mxGeometry>
@@ -1884,8 +1735,54 @@
             <mxRectangle height="43" width="267" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-402" parent="_H3jBqJdR18BcsIvObFm-356" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
+        <mxCell id="m5st1" parent="_H3jBqJdR18BcsIvObFm-356" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#ffffff,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
           <mxGeometry height="43" width="622" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="m5st2" parent="m5st1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="enum" vertex="1">
+          <mxGeometry height="43" width="112" as="geometry">
+            <mxRectangle height="43" width="112" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5st3" parent="m5st1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="status" vertex="1">
+          <mxGeometry height="43" width="198" x="112" as="geometry">
+            <mxRectangle height="43" width="198" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5st4" parent="m5st1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
+          <mxGeometry height="43" width="45" x="310" as="geometry">
+            <mxRectangle height="43" width="45" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5st5" parent="m5st1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="aktif / nonaktif, default aktif" vertex="1">
+          <mxGeometry height="43" width="267" x="355" as="geometry">
+            <mxRectangle height="43" width="267" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5bl1" parent="_H3jBqJdR18BcsIvObFm-356" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
+          <mxGeometry height="43" width="622" y="473" as="geometry" />
+        </mxCell>
+        <mxCell id="m5bl2" parent="m5bl1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="date" vertex="1">
+          <mxGeometry height="43" width="112" as="geometry">
+            <mxRectangle height="43" width="112" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5bl3" parent="m5bl1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="berlaku_hingga" vertex="1">
+          <mxGeometry height="43" width="198" x="112" as="geometry">
+            <mxRectangle height="43" width="198" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5bl4" parent="m5bl1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
+          <mxGeometry height="43" width="45" x="310" as="geometry">
+            <mxRectangle height="43" width="45" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5bl5" parent="m5bl1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="Nullable, null = berlaku penuh periode" vertex="1">
+          <mxGeometry height="43" width="267" x="355" as="geometry">
+            <mxRectangle height="43" width="267" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_H3jBqJdR18BcsIvObFm-402" parent="_H3jBqJdR18BcsIvObFm-356" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
+          <mxGeometry height="43" width="622" y="516" as="geometry" />
         </mxCell>
         <mxCell id="_H3jBqJdR18BcsIvObFm-403" parent="_H3jBqJdR18BcsIvObFm-402" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="timestamp" vertex="1">
           <mxGeometry height="43" width="112" as="geometry">
@@ -1909,7 +1806,7 @@
         </mxCell>
         <UserObject label="kunjungan_monitoring" mermaidId="n:kunjungan_monitoring" mermaidBaseStyle="shape=table;startSize=43;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontSize=16;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;strokeWidth=1;align=center;resizeLast=1;html=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);" mermaidBaseValue="kunjungan_monitoring" id="_H3jBqJdR18BcsIvObFm-407">
           <mxCell parent="_H3jBqJdR18BcsIvObFm-1" style="shape=table;startSize=43;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=1;fontSize=16;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;strokeWidth=1;align=center;resizeLast=1;html=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);" vertex="1">
-            <mxGeometry height="301" width="508" x="3181" y="2735" as="geometry" />
+            <mxGeometry height="344" width="508" x="3181" y="2735" as="geometry" />
           </mxCell>
         </UserObject>
         <mxCell id="_H3jBqJdR18BcsIvObFm-408" parent="_H3jBqJdR18BcsIvObFm-407" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#ffffff,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
@@ -1966,7 +1863,7 @@
             <mxRectangle height="43" width="101" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-420" parent="_H3jBqJdR18BcsIvObFm-418" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="surat_tugas_monitoring_id" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-420" parent="_H3jBqJdR18BcsIvObFm-418" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="surat_tugas_id" vertex="1">
           <mxGeometry height="43" width="216" x="101" as="geometry">
             <mxRectangle height="43" width="216" as="alternateBounds" />
           </mxGeometry>
@@ -2027,8 +1924,31 @@
             <mxRectangle height="43" width="148" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-433" parent="_H3jBqJdR18BcsIvObFm-407" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
+        <mxCell id="m5dp1" parent="_H3jBqJdR18BcsIvObFm-407" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
           <mxGeometry height="43" width="508" y="258" as="geometry" />
+        </mxCell>
+        <mxCell id="m5dp2" parent="m5dp1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="string" vertex="1">
+          <mxGeometry height="43" width="101" as="geometry">
+            <mxRectangle height="43" width="101" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5dp3" parent="m5dp1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="dokumentasi_path" vertex="1">
+          <mxGeometry height="43" width="216" x="101" as="geometry">
+            <mxRectangle height="43" width="216" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5dp4" parent="m5dp1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="" vertex="1">
+          <mxGeometry height="43" width="43" x="317" as="geometry">
+            <mxRectangle height="43" width="43" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5dp5" parent="m5dp1" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="Nullable, foto/video (bisa banyak path)" vertex="1">
+          <mxGeometry height="43" width="148" x="360" as="geometry">
+            <mxRectangle height="43" width="148" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_H3jBqJdR18BcsIvObFm-433" parent="_H3jBqJdR18BcsIvObFm-407" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=1;fillColor=light-dark(#F1F1FF,#1f2020);strokeColor=inherit;strokeWidth=1;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;top=0;left=0;right=0;bottom=0;" vertex="1">
+          <mxGeometry height="43" width="508" y="301" as="geometry" />
         </mxCell>
         <mxCell id="_H3jBqJdR18BcsIvObFm-434" parent="_H3jBqJdR18BcsIvObFm-433" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="timestamp" vertex="1">
           <mxGeometry height="43" width="101" as="geometry">
@@ -2262,7 +2182,7 @@
             <mxRectangle height="43" width="43" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-484" parent="_H3jBqJdR18BcsIvObFm-480" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="Nullable — NULL = Indikator Umum (global, semua jurusan)" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-484" parent="_H3jBqJdR18BcsIvObFm-480" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="Nullable - NULL = Indikator Umum (global, semua jurusan)" vertex="1">
           <mxGeometry height="43" width="745" x="353" as="geometry">
             <mxRectangle height="43" width="745" as="alternateBounds" />
           </mxGeometry>
@@ -2285,7 +2205,7 @@
             <mxRectangle height="43" width="43" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="_H3jBqJdR18BcsIvObFm-489" parent="_H3jBqJdR18BcsIvObFm-485" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="1/2/3/4 — sesuai Tujuan Pembelajaran Formulir Penilaian; 3 = Teknis Kejuruan (wajib jurusan terisi)" vertex="1">
+        <mxCell id="_H3jBqJdR18BcsIvObFm-489" parent="_H3jBqJdR18BcsIvObFm-485" style="shape=partialRectangle;connectable=0;fillColor=none;strokeColor=light-dark(#9370DB,#cccccc);strokeWidth=1;fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;top=1;left=1;bottom=1;right=1;align=left;spacingLeft=8;overflow=hidden;fontSize=16;" value="1/2/3/4 - sesuai Tujuan Pembelajaran Formulir Penilaian; 3 = Teknis Kejuruan (wajib jurusan terisi)" vertex="1">
           <mxGeometry height="43" width="745" x="353" as="geometry">
             <mxRectangle height="43" width="745" as="alternateBounds" />
           </mxGeometry>
@@ -3089,26 +3009,6 @@
         <UserObject label="&quot;linked to&quot;" mermaidId="e:pengajuan_pkl-&gt;surat_pengantar_pengajuan#0" mermaidBaseStyle="curved=1;startArrow=ERmandOne;startSize=14;endArrow=ERzeroToMany;endSize=14;strokeColor=light-dark(#333333,#cccccc);strokeWidth=1;html=1;fontSize=14;labelBackgroundColor=light-dark(#F8FFEC4D,#2a2a2a4D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.84;entryX=1;entryY=0.16;" mermaidBaseValue="&quot;linked to&quot;" id="_H3jBqJdR18BcsIvObFm-643">
           <mxCell edge="1" parent="_H3jBqJdR18BcsIvObFm-1" source="_H3jBqJdR18BcsIvObFm-157" style="curved=0;startArrow=ERmandOne;startSize=14;endArrow=ERzeroToMany;endSize=14;strokeColor=light-dark(#333333,#cccccc);strokeWidth=1;html=1;fontSize=14;labelBackgroundColor=light-dark(#F8FFEC4D,#2a2a2a4D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.84;entryX=1;entryY=0.16;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="_H3jBqJdR18BcsIvObFm-288">
             <mxGeometry relative="1" as="geometry" />
-          </mxCell>
-        </UserObject>
-        <UserObject label="&quot;morph (surat_balasan, laporan_akhir)&quot;" mermaidId="e:pengajuan_pkl-&gt;dokumen_pkl#0" mermaidBaseStyle="curved=1;startArrow=ERmandOne;startSize=14;endArrow=ERzeroToMany;endSize=14;strokeColor=light-dark(#333333,#cccccc);strokeWidth=1;html=1;fontSize=14;labelBackgroundColor=light-dark(#F8FFEC4D,#2a2a2a4D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.84;exitY=1;entryX=0.16;entryY=0;" mermaidBaseValue="&quot;morph (surat_balasan, laporan_akhir)&quot;" id="_H3jBqJdR18BcsIvObFm-644">
-          <mxCell edge="1" parent="_H3jBqJdR18BcsIvObFm-1" source="_H3jBqJdR18BcsIvObFm-157" style="curved=0;startArrow=ERmandOne;startSize=14;endArrow=ERzeroToMany;endSize=14;strokeColor=light-dark(#333333,#cccccc);strokeWidth=1;html=1;fontSize=14;labelBackgroundColor=light-dark(#F8FFEC4D,#2a2a2a4D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.84;exitY=1;entryX=0.16;entryY=0;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="_H3jBqJdR18BcsIvObFm-297">
-            <mxGeometry relative="1" as="geometry">
-              <Array as="points">
-                <mxPoint x="2590" y="3149" />
-                <mxPoint x="3311" y="3149" />
-              </Array>
-            </mxGeometry>
-          </mxCell>
-        </UserObject>
-        <UserObject label="&quot;morph (dokumentasi_kunjungan)&quot;" mermaidId="e:kunjungan_monitoring-&gt;dokumen_pkl#0" mermaidBaseStyle="curved=1;startArrow=ERmandOne;startSize=14;endArrow=ERzeroToMany;endSize=14;strokeColor=light-dark(#333333,#cccccc);strokeWidth=1;html=1;fontSize=14;labelBackgroundColor=light-dark(#F8FFEC4D,#2a2a2a4D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.84;entryY=0;" mermaidBaseValue="&quot;morph (dokumentasi_kunjungan)&quot;" id="_H3jBqJdR18BcsIvObFm-645">
-          <mxCell edge="1" parent="_H3jBqJdR18BcsIvObFm-1" source="_H3jBqJdR18BcsIvObFm-407" style="curved=0;startArrow=ERmandOne;startSize=14;endArrow=ERzeroToMany;endSize=14;strokeColor=light-dark(#333333,#cccccc);strokeWidth=1;html=1;fontSize=14;labelBackgroundColor=light-dark(#F8FFEC4D,#2a2a2a4D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.84;entryY=0;rounded=0;edgeStyle=orthogonalEdgeStyle;" target="_H3jBqJdR18BcsIvObFm-297">
-            <mxGeometry relative="1" as="geometry">
-              <Array as="points">
-                <mxPoint x="3435" y="3157" />
-                <mxPoint x="3513" y="3157" />
-              </Array>
-            </mxGeometry>
           </mxCell>
         </UserObject>
         <UserObject label="&quot;acts as pembimbing / assigner (Kaprog, eksklusif)&quot;" mermaidId="e:guru_profiles-&gt;penugasan_pembimbing#0" mermaidBaseStyle="curved=1;startArrow=ERmandOne;startSize=14;endArrow=ERzeroToMany;endSize=14;strokeColor=light-dark(#333333,#cccccc);strokeWidth=1;html=1;fontSize=14;labelBackgroundColor=light-dark(#F8FFEC4D,#2a2a2a4D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.84;entryX=0;entryY=0.16;" mermaidBaseValue="&quot;acts as pembimbing / assigner (Kaprog, eksklusif)&quot;" id="_H3jBqJdR18BcsIvObFm-646">

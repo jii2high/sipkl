@@ -66,6 +66,9 @@ class DatabaseSeeder extends Seeder
         $ilham = User::create(['name' => 'Muhammad Ilham Kamil', 'email' => 'kamil.muhammad@smkn1kotabekasi.sch.id', 'password' => $pw, 'email_verified_at' => now()]);
         GuruProfile::create(['user_id' => $ilham->id, 'nip' => '198801012010012004', 'jabatan' => 'hubin']);
 
+        $fajriGmail = User::create(['name' => 'Muhammad Fajri', 'email' => 'mfajri110301@gmail.com', 'password' => $pw, 'email_verified_at' => now()]);
+        GuruProfile::create(['user_id' => $fajriGmail->id, 'nip' => '198901012010012005', 'jabatan' => 'hubin']);
+
         // ─── PERUSAHAAN ───────────────────────────────────────
 
         $ptTm = Perusahaan::create(['nama' => 'PT Teknologi Maju', 'alamat' => 'Jl. Sudirman No. 123, Bekasi', 'telp' => '021-8888001', 'email' => 'info@teknologimaju.co.id', 'kuota_saran' => 5]);

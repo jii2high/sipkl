@@ -53,9 +53,9 @@ Font: heading **Plus Jakarta Sans**, body **Lato**. Warna primary **Royal Blue #
 | `pengajuan_pkl_histories` | Audit trail perubahan status pengajuan                                                             |
 | `surat_pengantar`         | Surat Pengantar, bernomor                                                                          |
 | `surat_balasan`           | Surat Balasan dari perusahaan (upload siswa)                                                       |
-| `surat_tugas_monitoring`  | Surat Tugas Monitoring, bernomor, lingkup Global/Scoped                                            |
-| `pembimbingan`            | Assignment Guru Pembimbing ↔ Siswa (termasuk histori penggantian saat guru diganti, BR30)          |
-| `laporan_kunjungan`       | Laporan kunjungan monitoring, terikat `surat_tugas_monitoring`                                     |
+| `surat_tugas_monitoring`  | Surat Tugas Monitoring, bernomor, lingkup Global/Scoped, status aktif/berlaku |
+| `penugasan_pembimbing`    | Assignment Guru Pembimbing ↔ Pengajuan siswa (termasuk histori penggantian saat guru diganti, BR30) |
+| `kunjungan_monitoring`    | Laporan kunjungan monitoring, terikat `surat_tugas_monitoring` + `penugasan_pembimbing`, dokumentasi foto/video via kolom path |
 | `laporan_akhir_pkl`       | Dokumen Laporan Akhir PKL yang diupload siswa                                                      |
 | `formulir_penilaian`      | Formulir induk penilaian akhir PKL (1 per siswa per periode)                                       |
 | `indikator_penilaian`     | Indikator penilaian; kategori Umum (`kompetensi_keahlian_id = NULL`) atau Teknis Kejuruan (scoped) |
@@ -93,17 +93,21 @@ Font: heading **Plus Jakarta Sans**, body **Lato**. Warna primary **Royal Blue #
 
 **`surat_pengantar`** / **`surat_tugas_monitoring`**
 
-| Kolom                                                              | Tipe               | Keterangan                                      |
-| ------------------------------------------------------------------ | ------------------ | ----------------------------------------------- |
-| `id`                                                               | bigint PK          |                                                 |
-| `nomor_surat`                                                      | string unique      | digenerate sequential per jenis+periode (BR18)  |
-| `perusahaan_id` (khusus surat_pengantar)                           | FK                 | 1 surat pengantar dibundel per perusahaan (BR8) |
-| `periode_pkl_id` (khusus surat_pengantar)                          | FK                 |                                                 |
-| `lingkup` (khusus surat_tugas_monitoring)                          | enum               | `global`, `scoped`                              |
-| `kompetensi_keahlian_id` (khusus surat_tugas_monitoring, nullable) | FK                 | null jika lingkup global                        |
-| `diterbitkan_oleh`                                                 | FK → users (Hubin) |                                                 |
-| `file_pdf`                                                         | string             | path arsip PDF                                  |
-| `created_at`                                                       | timestamp          |                                                 |
+| Kolom | Tipe | Keterangan |
+| --- | --- | --- |
+| `id` | bigint PK | |
+| `nomor_surat` | string unique | digenerate sequential per jenis+periode (BR18) |
+| `perusahaan_id` (khusus surat_pengantar) | FK | 1 surat pengantar dibundel per perusahaan (BR8) |
+| `periode_pkl_id` | FK | |
+| `lingkup` (khusus surat_tugas_monitoring) | enum | `global`, `scoped` |
+| `kompetensi_keahlian_id` (khusus surat_tugas_monitoring, nullable) | FK | wajib diisi jika `scoped`, null jika `global` |
+| `requested_by` (khusus surat_tugas_monitoring, nullable) | FK → users | Kaprog peminta, khusus `scoped`; null jika inisiatif Hubin |
+| `diterbitkan_by` | FK → users (Hubin) | |
+| `tanggal_terbit` | date | |
+| `status` (khusus surat_tugas_monitoring) | enum | `aktif`, `nonaktif`, default `aktif` — `nonaktif` saat dicabut Hubin |
+| `berlaku_hingga` (khusus surat_tugas_monitoring, nullable) | date | null = berlaku penuh sepanjang periode (BR22) |
+| `file` | string | path arsip PDF |
+| `created_at` | timestamp | |
 
 **`surat_pengantar_pengajuan`** (pivot, khusus surat_pengantar — 1 surat memuat hingga 6 pengajuan/siswa dalam perusahaan+periode yang sama, BR3/BR8)
 
@@ -122,17 +126,29 @@ Font: heading **Plus Jakarta Sans**, body **Lato**. Warna primary **Royal Blue #
 | `file_path`                | string     | kolom path biasa |
 | `created_at`, `updated_at` | timestamp  |                  |
 
-**`pembimbingan`**
+**`kunjungan_monitoring`**
 
-| Kolom                      | Tipe                | Keterangan                   |
-| -------------------------- | ------------------- | ---------------------------- |
-| `id`                       | bigint PK           |                              |
-| `siswa_id`                 | FK → users          |                              |
-| `guru_pembimbing_id`       | FK → users          |                              |
-| `assigned_by`              | FK → users (Kaprog) |                              |
-| `status`                   | enum                | `aktif`, `diarsipkan` (BR30) |
-| `is_self_assign`           | boolean             | true jika Kaprog self-assign |
-| `created_at`, `updated_at` | timestamp           |                              |
+| Kolom                | Tipe                      | Keterangan |
+| -------------------- | ------------------------- | ---------- |
+| `id`                 | bigint PK                 |            |
+| `penugasan_id`       | FK → penugasan_pembimbing | cascade on delete |
+| `surat_tugas_id`     | FK → surat_tugas_monitoring |          |
+| `tanggal_kunjungan`  | date                      |            |
+| `catatan`            | text nullable             |            |
+| `dokumentasi_path`   | string nullable           | path file foto/video; boleh menampung banyak path (JSON/array) |
+| `created_at`, `updated_at` | timestamp           |            |
+
+**`penugasan_pembimbing`**
+
+| Kolom | Tipe | Keterangan |
+| --- | --- | --- |
+| `id` | bigint PK | |
+| `pengajuan_id` | FK → pengajuan_pkl | cascade on delete |
+| `guru_pembimbing_id` | FK → users | |
+| `assigned_by` | FK → users (Kaprog) | eksklusif Kaprog jurusan tsb (BR10); self-assign jika `assigned_by === guru_pembimbing_id` |
+| `status` | enum | `aktif`, `nonaktif` (BR30) — assignment lama dinonaktifkan saat diganti, bukan dihapus |
+| `ended_at` | timestamp nullable | terisi saat status jadi `nonaktif` |
+| `created_at`, `updated_at` | timestamp | |
 
 **`indikator_penilaian`**
 
@@ -158,6 +174,7 @@ Font: heading **Plus Jakarta Sans**, body **Lato**. Warna primary **Royal Blue #
 | Kolom                      | Tipe               | Keterangan                                       |
 | -------------------------- | ------------------ | ------------------------------------------------ |
 | `id`                       | bigint PK          |                                                  |
+| `penugasan_id`             | FK → penugasan_pembimbing | 1 formulir = 1 penugasan (BR24)            |
 | `siswa_id`                 | FK → users         |                                                  |
 | `periode_pkl_id`           | FK                 |                                                  |
 | `guru_pembimbing_id`       | FK → users         |                                                  |
@@ -199,7 +216,8 @@ Kode lama milik `user_id` yang sama otomatis diinvalidasi (soft: diabaikan lewat
 - `guru_profiles.jabatan` → Observer → `model_has_roles` (Spatie), otomatis (tidak diset manual).
 - `pengajuan_pkl` → banyak `pengajuan_pkl_histories` (audit trail tiap perubahan status).
 - `formulir_penilaian` → banyak `nilai`, masing-masing menunjuk ke `indikator_penilaian` **atau** `section_penilaian` (mutually exclusive, sesuai leaf BR26).
-- `pembimbingan` menyimpan histori assignment (bukan overwrite) agar BR30 (arsip assignment lama saat ganti Guru Pembimbing) terpenuhi.
+- `penugasan_pembimbing` menyimpan histori assignment (bukan overwrite) agar BR30 (nonaktifkan assignment lama saat ganti Guru Pembimbing) terpenuhi.
+- `kunjungan_monitoring` terikat `penugasan_pembimbing` (siapa yang berkunjung) + `surat_tugas_monitoring` (gate keabsahan, BR22).
 
 ### 3.4 Contoh Implementasi: Predikat & Nilai Akhir (BR28)
 
@@ -290,15 +308,15 @@ Formulir sudah submit (submitted_at terisi) → read-only, memicu kalkulasi Nila
 ### 4.4 Kunjungan Monitoring (BR22, BR23)
 
 ```
-Surat Tugas Monitoring belum terbit → Guru Pembimbing tidak bisa isi Laporan Kunjungan
-Surat Tugas Monitoring terbit (Global atau Scoped, dan lingkup mencakup siswa ybs) → Laporan Kunjungan dapat diisi berkala
+Surat Tugas Monitoring belum terbit / nonaktif / lewat berlaku_hingga → Guru Pembimbing tidak bisa isi Laporan Kunjungan
+Surat Tugas Monitoring terbit & aktif (Global atau Scoped, dan lingkup mencakup siswa ybs) → Laporan Kunjungan dapat diisi berkala
 ```
 
 ### 4.5 Assignment Guru Pembimbing (BR10, BR30)
 
 ```
-Belum ada pembimbingan aktif → Kaprog assign (create pembimbingan.status=aktif)
-Ada pembimbingan aktif → Kaprog ubah → pembimbingan lama.status=diarsipkan, pembimbingan baru.status=aktif
+Belum ada penugasan aktif → Kaprog assign (create penugasan_pembimbing.status=aktif)
+Ada penugasan aktif → Kaprog ubah → penugasan lama.status=nonaktif, penugasan baru.status=aktif
 ```
 
 ## 5. RBAC — Implementasi
@@ -306,7 +324,7 @@ Ada pembimbingan aktif → Kaprog ubah → pembimbingan lama.status=diarsipkan, 
 - **Role**: `siswa`, `kaprog`, `guru_pembimbing`, `hubin` — model Spatie `HasRoles`.
 - **Derivasi otomatis**: Observer pada `guru_profiles` (event `saving`/`saved`) membaca kolom `jabatan` dan men-sync role Spatie yang bersangkutan. Role **tidak pernah** diset manual lewat UI.
 - **Kaprog non-aktif → Guru Pembimbing (BR27)**: perubahan `jabatan` (via aksi "Nonaktifkan sebagai Kaprog") memicu Observer yang sama — konsisten dengan mekanisme derivasi role di atas.
-- **Kaprog self-assign sebagai pembimbing (BR10)**: Kaprog tetap satu role Spatie (`kaprog`), namun diberi permission tambahan `kunjungan.*` dan `penilaian.*` agar bisa mengakses fitur Laporan Kunjungan/Formulir Penilaian untuk siswa yang dia self-assign. Akses ini ditampilkan lewat section terpisah "Bimbingan Saya" di dashboard Kaprog — bukan lewat role gabungan.
+- **Kaprog self-assign sebagai pembimbing (BR10)**: Kaprog tetap satu role Spatie (`kaprog`), namun saat record `penugasan_pembimbing` self-assign dibuat (deteksi: `assigned_by === guru_pembimbing_id`, tanpa kolom flag terpisah), diberi permission tambahan `kunjungan.*` dan `penilaian.*` agar bisa mengakses fitur Laporan Kunjungan/Formulir Penilaian untuk siswa yang dia self-assign. Permission ini tetap dimiliki walau penugasan nanti dinonaktifkan — pembatasan akses tetap lewat Policy (cek `status` penugasan), bukan lewat pencabutan permission. Akses ini ditampilkan lewat section terpisah "Bimbingan Saya" di dashboard Kaprog — bukan lewat role gabungan.
 - **Data scoping** (mis. Kaprog hanya melihat siswa jurusannya, Guru Pembimbing hanya siswanya) selalu lewat Policy (`PengajuanPolicy`, `PembimbinganPolicy`, `KunjunganPolicy`, `PenilaianPolicy`, dst.), bukan `if ($role === ...)`.
 
 ### 5.1 Daftar Permission Lengkap
@@ -344,19 +362,19 @@ Permission (Section 5.1) hanya gate kasar ("boleh melakukan jenis aksi ini sama 
 
 **`KunjunganPolicy@create` (BR22) — validasi kelayakan isi Laporan Kunjungan:**
 
-1. Ambil `siswa_id` dan `kompetensi_keahlian_id` dari `pembimbingan` yang direferensikan.
+1. Ambil `siswa_id` dan `kompetensi_keahlian_id` dari `penugasan_pembimbing` yang direferensikan.
 2. Ambil `periode_pkl_id` dari `pengajuan_pkl` terkait siswa tsb.
-3. Cek: ada `surat_tugas_monitoring` WHERE periode cocok DAN (`lingkup = 'global'` ATAU `kompetensi_keahlian_id` = jurusan siswa tsb) DAN surat berstatus aktif/berlaku.
+3. Cek: ada `surat_tugas_monitoring` WHERE `periode_pkl_id` cocok DAN (`lingkup = 'global'` ATAU `kompetensi_keahlian_id` = jurusan siswa tsb) DAN `status = 'aktif'` DAN (`berlaku_hingga` NULL ATAU belum lewat tanggal kunjungan).
 4. Kalau tidak ada surat yang cocok → deny (403) — jangan hanya andalkan disable tombol di frontend.
-5. Kalau ada lebih dari satu surat yang cocok → pakai yang paling baru diterbitkan sebagai acuan.
-6. Kalau lolos → izinkan create Laporan Kunjungan untuk `pembimbingan` tsb.
+5. Kalau ada lebih dari satu surat yang cocok → pakai yang paling baru diterbitkan (`tanggal_terbit` terbesar) sebagai acuan.
+6. Kalau lolos → izinkan create Laporan Kunjungan untuk `penugasan_pembimbing` tsb.
 
 **`PenilaianPolicy@update` (isi/ubah nilai pada Formulir Penilaian, BR24/BR30/BR31/BR32) — precondition berlapis:**
 
 1. Cek paling awal: `pengajuan_pkl` terkait sudah punya `laporan_akhir_pkl` ter-upload (BR32) — kalau belum, Formulir dianggap belum ter-generate → deny (403), dicek sebelum langkah 2–5 di bawah.
-2. Ambil `pembimbingan` dari `formulir_penilaian` yang direferensikan.
-3. Cek: `auth()->id() === pembimbingan.guru_pembimbing_id`.
-4. Cek: `pembimbingan.status === 'aktif'` (BR30) — tolak akses Guru Pembimbing lama kalau sudah di-reassign.
+2. Ambil `penugasan_pembimbing` dari `formulir_penilaian` yang direferensikan.
+3. Cek: `auth()->id() === penugasan_pembimbing.guru_pembimbing_id`.
+4. Cek: `penugasan_pembimbing.status === 'aktif'` (BR30) — tolak akses Guru Pembimbing lama kalau sudah di-reassign.
 5. Cek: `formulir_penilaian.submitted_at IS NULL` (BR31) — submitted bersifat final, tidak ada revisi setelah submit.
 6. Kalau salah satu gagal → deny (403). Kalau semua lolos → izinkan create/update baris `nilai` untuk formulir tsb — indikator/section yang di-load tetap harus divalidasi scoped ke `kompetensi_keahlian_id` siswa di level Form Request, bukan cuma dipercaya dari frontend; validasi minimal 1 leaf terisi per kategori applicable (BR31) juga dilakukan di Form Request saat submit.
 
@@ -379,7 +397,9 @@ Format penomoran surat mengikuti pola sekolah, disimpan sebagai kolom `nomor_sur
     - Surat Balasan lolos validasi sistem → Resmi PKL (ke Siswa)
     - Surat Balasan ditolak Hubin pasca-fakta (BR7) → status kembali Disetujui, wajib upload ulang (ke Siswa)
     - Guru Pembimbing di-assign (ke Siswa & Guru Pembimbing)
-    - Surat Tugas Monitoring terbit (ke Guru Pembimbing terkait)
+    - Request Surat Tugas Monitoring Scoped dari Kaprog (ke Hubin — berisi jurusan & periode yang diminta; data request hidup di notifikasi DB, bukan tabel terpisah)
+    - Surat Tugas Monitoring terbit (ke Guru Pembimbing terkait; khusus Scoped juga ke Kaprog peminta)
+    - Laporan Kunjungan baru (ke Siswa & Hubin)
     - Laporan Akhir diupload → Formulir Penilaian terbuka (ke Guru Pembimbing)
     - Formulir Penilaian submit → Selesai PKL (ke Siswa)
 - Infra notifikasi dan audit trail dibangun sekali di M3, lalu trigger baru ditambahkan inkremental di tiap milestone berikutnya.
@@ -476,7 +496,7 @@ app/Notifications/
 | `mysql` (driver bawaan Laravel)                          | Database                               |
 | Mail driver bawaan Laravel (`Illuminate\Mail`)            | Kirim OTP ganti password (BR33), via SMTP |
 
-_Catatan: dibanding `TRD_v1_2.md`, package berikut sudah tidak dipakai sebagai keputusan tim final (dikonfirmasi ulang 30 Juli 2026): `spatie/laravel-model-states` (diganti kolom `enum` biasa + validasi di Policy/Form Request), `spatie/laravel-medialibrary` (upload file memakai kolom path biasa), dan `spatie/laravel-pdf` (diganti PDF Laravel generik, `barryvdh/laravel-dompdf` atau setara — dipilih karena layout surat cukup sederhana untuk CSS dompdf, dan menghindari dependency Chromium/headless-browser di server produksi). Database juga berpindah dari rencana awal PostgreSQL ke MySQL._
+_Catatan: dibanding `TRD_v1_2.md`, package berikut sudah tidak dipakai sebagai keputusan tim final (dikonfirmasi ulang 30 Juli 2026): `spatie/laravel-model-states` (diganti kolom `enum` biasa + validasi di Policy/Form Request), `spatie/laravel-medialibrary` (upload file memakai kolom path biasa — termasuk dokumentasi foto/video kunjungan di M5 lewat `kunjungan_monitoring.dokumentasi_path`), dan `spatie/laravel-pdf` (diganti PDF Laravel generik, `barryvdh/laravel-dompdf` atau setara — dipilih karena layout surat cukup sederhana untuk CSS dompdf, dan menghindari dependency Chromium/headless-browser di server produksi). Database juga berpindah dari rencana awal PostgreSQL ke MySQL._
 
 _Catatan migrasi: M3 (Pengajuan & Verifikasi Awal) sempat terlanjur diimplementasikan memakai `spatie/laravel-model-states` dan `spatie/laravel-medialibrary` sebelum keputusan final ini dikonfirmasi. Tim memutuskan untuk **rework M3** ke pola final (enum + kolom path) sebelum M4 dimulai, bukan mempertahankan package lama — supaya seluruh milestone konsisten memakai satu pola yang sama._
 

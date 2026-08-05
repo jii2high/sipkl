@@ -114,16 +114,14 @@ These need `composer require` when implementing:
 // app/Observers/GuruProfileObserver.php
 public function saved(GuruProfile $profile): void
 {
-    $roleMap = [
-        'Kaprog' => 'kaprog',
-        'Guru Pembimbing' => 'guru_pembimbing',
-        'Staf Hubin' => 'hubin',
-    ];
-    if (isset($roleMap[$profile->jabatan])) {
-        $profile->user->syncRoles([$roleMap[$profile->jabatan]]);
-    }
+    $profile->user->syncRoles([$profile->jabatan]);
 }
 ```
+
+Catatan: nilai kolom `guru_profiles.jabatan` (enum DB: `kaprog`,
+`guru_pembimbing`, `hubin`) sudah identik dengan nama role Spatie, sehingga
+langsung di-sync tanpa peta. Nilai title-case ("Kaprog", "Guru Pembimbing",
+"Staf Hubin") hanya dipakai sebagai label tampilan, tidak pernah masuk ke DB.
 
 ## Detailed References
 
