@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\FirstLoginController;
+use App\Http\Controllers\Auth\PasswordOtpController;
 use App\Http\Controllers\Hubin\AkunController;
 use App\Http\Controllers\Hubin\IndikatorPenilaianController;
 use App\Http\Controllers\Hubin\KompetensiKeahlianController;
@@ -16,7 +17,13 @@ Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('auth/force-change-password', [FirstLoginController::class, 'create'])->name('password.force-change');
-    Route::post('auth/force-change-password', [FirstLoginController::class, 'store'])->name('password.force-change.update');
+    Route::post('auth/force-change-password', [FirstLoginController::class, 'store'])
+        ->middleware(['auth', 'otp.verified'])
+        ->name('password.force-change.update');
+    Route::post('/password/otp/request', [PasswordOtpController::class, 'request'])
+        ->name('password.otp.request');
+    Route::post('/password/otp/verify', [PasswordOtpController::class, 'verify'])
+        ->name('password.otp.verify');
 });
 
 Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () {

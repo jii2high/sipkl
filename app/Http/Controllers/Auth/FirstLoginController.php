@@ -35,6 +35,8 @@ class FirstLoginController extends Controller
             ],
         ]);
 
+        $request->session()->forget('password_otp_verified_at');
+
         $user->password = Hash::make($request->password);
         $user->must_change_password = false;
         $user->save();
