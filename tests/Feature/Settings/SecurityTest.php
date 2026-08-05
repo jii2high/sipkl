@@ -66,6 +66,7 @@ test('password can be updated', function () {
     $response = $this
         ->actingAs($user)
         ->from(route('security.edit'))
+        ->withSession(['password_otp_verified_at' => now()])
         ->put(route('user-password.update'), [
             'current_password' => 'password',
             'password' => 'new-password',
@@ -85,6 +86,7 @@ test('correct password must be provided to update password', function () {
     $response = $this
         ->actingAs($user)
         ->from(route('security.edit'))
+        ->withSession(['password_otp_verified_at' => now()])
         ->put(route('user-password.update'), [
             'current_password' => 'wrong-password',
             'password' => 'new-password',
