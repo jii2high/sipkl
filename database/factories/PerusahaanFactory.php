@@ -16,6 +16,7 @@ class PerusahaanFactory extends Factory
             'nama' => fake()->company(),
             'alamat' => fake()->address(),
             'telp' => fake()->phoneNumber(),
+            'email' => fake()->safeEmail(),
             'kuota_saran' => fake()->numberBetween(3, 20),
         ];
     }

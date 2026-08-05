@@ -27,7 +27,8 @@ class PerusahaanController extends Controller
             'nama' => 'required|string|max:150',
             'alamat' => 'nullable|string',
             'telp' => 'nullable|string|max:20',
-            'kuota_saran' => 'nullable|integer|min:1|max:255',
+            'email' => 'nullable|email|max:150',
+            'kuota_saran' => 'nullable|integer|min:1|max:6',
         ]);
 
         Perusahaan::create($validated);
@@ -41,7 +42,8 @@ class PerusahaanController extends Controller
             'nama' => 'required|string|max:150',
             'alamat' => 'nullable|string',
             'telp' => 'nullable|string|max:20',
-            'kuota_saran' => 'nullable|integer|min:1|max:255',
+            'email' => 'nullable|email|max:150',
+            'kuota_saran' => 'nullable|integer|min:1|max:6',
         ]);
 
         $perusahaan->update($validated);

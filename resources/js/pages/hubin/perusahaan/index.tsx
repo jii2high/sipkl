@@ -18,6 +18,7 @@ interface PerusahaanItem {
     nama: string;
     alamat: string | null;
     telp: string | null;
+    email: string | null;
     kuota_saran: number;
 }
 
@@ -32,12 +33,13 @@ export default function Index({ perusahaan }: Props) {
         nama: '',
         alamat: '',
         telp: '',
+        email: '',
         kuota_saran: 6,
     });
 
     function openCreate() {
         setEdit(null);
-        setForm({ nama: '', alamat: '', telp: '', kuota_saran: 6 });
+        setForm({ nama: '', alamat: '', telp: '', email: '', kuota_saran: 6 });
         setOpen(true);
     }
 
@@ -47,6 +49,7 @@ export default function Index({ perusahaan }: Props) {
             nama: p.nama,
             alamat: p.alamat ?? '',
             telp: p.telp ?? '',
+            email: p.email ?? '',
             kuota_saran: p.kuota_saran,
         });
         setOpen(true);
@@ -89,6 +92,7 @@ export default function Index({ perusahaan }: Props) {
                                 <th className="p-3">Nama</th>
                                 <th className="p-3">Alamat</th>
                                 <th className="p-3">Telepon</th>
+                                <th className="p-3">Email</th>
                                 <th className="p-3">Kuota</th>
                                 <th className="p-3">Aksi</th>
                             </tr>
@@ -107,6 +111,9 @@ export default function Index({ perusahaan }: Props) {
                                     </td>
                                     <td className="p-3 text-muted-foreground">
                                         {p.telp}
+                                    </td>
+                                    <td className="p-3 text-muted-foreground">
+                                        {p.email}
                                     </td>
                                     <td className="p-3">{p.kuota_saran}</td>
                                     <td className="p-3">
@@ -184,17 +191,53 @@ export default function Index({ perusahaan }: Props) {
                                 />
                             </div>
                             <div>
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={form.email}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            email: e.target.value,
+                                        })
+                                    }
+                                />
+                            </div>
+                            <div>
                                 <Label htmlFor="kuota_saran">Kuota Saran</Label>
                                 <Input
                                     id="kuota_saran"
                                     type="number"
+                                    min={1}
+                                    max={6}
                                     value={form.kuota_saran}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+                                        const value = +e.target.value;
+
+                                        if (value < 1) {
+                                            setForm({
+                                                ...form,
+                                                kuota_saran: 1,
+                                            });
+
+                                            return;
+                                        }
+
+                                        if (value > 6) {
+                                            setForm({
+                                                ...form,
+                                                kuota_saran: 6,
+                                            });
+
+                                            return;
+                                        }
+
                                         setForm({
                                             ...form,
-                                            kuota_saran: +e.target.value,
-                                        })
-                                    }
+                                            kuota_saran: value,
+                                        });
+                                    }}
                                 />
                             </div>
                             <Button onClick={submit}>

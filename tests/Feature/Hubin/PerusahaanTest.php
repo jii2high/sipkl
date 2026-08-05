@@ -22,9 +22,9 @@ test('index returns perusahaan list', function () {
 test('create perusahaan', function () {
     asHubin();
     $this->post(route('hubin.perusahaan.store'), [
-        'nama' => 'PT Maju', 'alamat' => 'Jl. Contoh 123', 'telp' => '021123456', 'kuota_saran' => 10,
+        'nama' => 'PT Maju', 'alamat' => 'Jl. Contoh 123', 'telp' => '021123456', 'email' => 'info@ptmaju.id', 'kuota_saran' => 6,
     ])->assertRedirect();
-    $this->assertDatabaseHas('perusahaans', ['nama' => 'PT Maju']);
+    $this->assertDatabaseHas('perusahaans', ['nama' => 'PT Maju', 'email' => 'info@ptmaju.id']);
 });
 
 test('create perusahaan validation', function () {
