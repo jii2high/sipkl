@@ -45,6 +45,11 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'notifikasi_belum_dibaca' => fn () => $request->user()?->unreadNotifications()->count() ?? 0,
             'notifikasi_terbaru' => fn () => $request->user()?->notifications()->latest()->take(5)->get() ?? [],
+            // flash status (mis. pesan "kode terkirim")
+            'status' => fn () => $request->session()->get('status'),
+            // status verifikasi OTP untuk frontend
+            'password_otp_verified' => fn () => $request->session()->has('password_otp_verified_at')
+                && now()->subMinutes(10)->lt($request->session()->get('password_otp_verified_at')),
         ];
     }
 }

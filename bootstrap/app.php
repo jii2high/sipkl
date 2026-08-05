@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckFirstLogin;
+use App\Http\Middleware\EnsurePasswordOtpVerified;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'role' => RoleMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'otp.verified' => EnsurePasswordOtpVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
