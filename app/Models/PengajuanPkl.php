@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class PengajuanPkl extends Model
 {
@@ -29,6 +30,7 @@ class PengajuanPkl extends Model
         'hubin_id',
         'surat_dikirim_at',
         'laporan_akhir_uploaded_at',
+        'laporan_akhir_path',
     ];
 
     protected $appends = ['exists_surat_pengantar'];
@@ -78,6 +80,20 @@ class PengajuanPkl extends Model
         return $this->hasMany(PengajuanPklHistory::class, 'pengajuan_id');
     }
 
+    /** @return HasMany<PenugasanPembimbing, $this> */
+    public function penugasans(): HasMany
+    {
+        return $this->hasMany(PenugasanPembimbing::class, 'pengajuan_id');
+    }
+
+    /** @return HasOne<PenugasanPembimbing, $this> */
+    public function penugasanAktif(): HasOne
+    {
+        return $this->hasOne(PenugasanPembimbing::class, 'pengajuan_id')
+            ->where('status', 'aktif')
+            ->latestOfMany();
+    }
+
     /** @return BelongsToMany<SuratPengantar, $this> */
     public function suratPengantars(): BelongsToMany
     {
@@ -88,6 +104,24 @@ class PengajuanPkl extends Model
     public function suratBalasan(): HasOne
     {
         return $this->hasOne(SuratBalasan::class, 'pengajuan_id');
+    }
+
+    /** @return HasOneThrough<FormulirPenilaian, PenugasanPembimbing, $this> */
+    public function formulirPenilaian(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            FormulirPenilaian::class,
+            PenugasanPembimbing::class,
+            'pengajuan_id', // FK di penugasan_pembimbing
+            'penugasan_id', // FK di formulir_penilaian
+            'id',
+            'id'
+        );
+    }
+
+    public function getLaporanAkhirUploadedAttribute(): bool
+    {
+        return $this->laporan_akhir_uploaded_at !== null;
     }
 
     public function getExistsSuratPengantarAttribute(): bool

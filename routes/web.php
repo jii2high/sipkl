@@ -2,13 +2,19 @@
 
 use App\Http\Controllers\Auth\FirstLoginController;
 use App\Http\Controllers\Auth\PasswordOtpController;
+use App\Http\Controllers\GuruPembimbing\FormulirPenilaianController;
+use App\Http\Controllers\GuruPembimbing\KunjunganController;
 use App\Http\Controllers\Hubin\AkunController;
 use App\Http\Controllers\Hubin\IndikatorPenilaianController;
 use App\Http\Controllers\Hubin\KompetensiKeahlianController;
 use App\Http\Controllers\Hubin\PeriodePklController;
 use App\Http\Controllers\Hubin\PerusahaanController;
 use App\Http\Controllers\Hubin\SuratPengantarController;
+use App\Http\Controllers\Hubin\SuratTugasController;
+use App\Http\Controllers\Kaprog\PenugasanController;
+use App\Http\Controllers\Kaprog\SuratTugasRequestController;
 use App\Http\Controllers\Kaprog\VerifikasiController;
+use App\Http\Controllers\Siswa\LaporanAkhirController;
 use App\Http\Controllers\Siswa\PengajuanController as SiswaPengajuanController;
 use App\Http\Controllers\Siswa\SuratBalasanController;
 use Illuminate\Support\Facades\Route;
@@ -60,10 +66,28 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
             ->middleware('permission:pengajuan.setujui');
         Route::post('verifikasi/{pengajuan}/reject', [VerifikasiController::class, 'reject'])->name('verifikasi.reject')
             ->middleware('permission:pengajuan.tolak');
+
+        Route::get('penugasan', [PenugasanController::class, 'index'])->name('penugasan.index')
+            ->middleware('permission:penugasan.kelola');
+        Route::post('penugasan/{pengajuan}', [PenugasanController::class, 'store'])->name('penugasan.store')
+            ->middleware('permission:penugasan.kelola');
+        Route::post('surat-tugas/request', [SuratTugasRequestController::class, 'store'])->name('surat-tugas.request')
+            ->middleware('permission:penugasan.kelola');
     });
 
     Route::prefix('guru-pembimbing')->name('guru-pembimbing.')->group(function () {
         Route::inertia('dashboard', 'guru-pembimbing/dashboard')->name('dashboard');
+        Route::get('kunjungan', [KunjunganController::class, 'index'])->name('kunjungan.index')
+            ->middleware('permission:kunjungan.lihat');
+        Route::post('kunjungan/{penugasan}', [KunjunganController::class, 'store'])->name('kunjungan.store')
+            ->middleware('permission:kunjungan.isi');
+
+        Route::get('penilaian', [FormulirPenilaianController::class, 'index'])->name('penilaian.index')
+            ->middleware('permission:penilaian.lihat');
+        Route::get('penilaian/{penugasan}', [FormulirPenilaianController::class, 'create'])->name('penilaian.create')
+            ->middleware('permission:penilaian.isi');
+        Route::post('penilaian/{penugasan}', [FormulirPenilaianController::class, 'store'])->name('penilaian.store')
+            ->middleware('permission:penilaian.isi');
     });
 
     Route::prefix('hubin')->name('hubin.')->group(function () {
@@ -152,6 +176,13 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
             Route::post('{pengajuan}/tolak-balasan', [SuratPengantarController::class, 'tolakBalasan'])
                 ->name('tolak-balasan')->middleware('permission:surat-balasan.verifikasi');
         });
+
+        Route::prefix('surat-tugas')->name('surat-tugas.')->middleware('permission:surat-tugas.kelola')->group(function () {
+            Route::get('/', [SuratTugasController::class, 'index'])->name('index');
+            Route::post('/', [SuratTugasController::class, 'store'])->name('store');
+            Route::post('{suratTugas}/nonaktif', [SuratTugasController::class, 'nonaktif'])->name('nonaktif');
+            Route::get('{suratTugas}/download', [SuratTugasController::class, 'download'])->name('download');
+        });
     });
 
     Route::prefix('siswa')->name('siswa.')->group(function () {
@@ -159,6 +190,10 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
             ->name('surat-balasan.store')->middleware('permission:surat-balasan.upload');
         Route::get('pengajuan/{pengajuan}/surat-balasan', [SuratBalasanController::class, 'download'])
             ->name('surat-balasan.download')->middleware('permission:surat-balasan.upload');
+        Route::post('pengajuan/{pengajuan}/laporan-akhir', [LaporanAkhirController::class, 'store'])
+            ->name('laporan-akhir.store')->middleware('permission:laporan-akhir.upload');
+        Route::get('pengajuan/{pengajuan}/laporan-akhir', [LaporanAkhirController::class, 'download'])
+            ->name('laporan-akhir.download')->middleware('permission:laporan-akhir.upload');
     });
 });
 

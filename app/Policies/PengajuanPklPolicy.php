@@ -66,6 +66,15 @@ class PengajuanPklPolicy
     }
 
     /**
+     * Kaprog bisa assign Guru Pembimbing — eksklusif (BR10) dan cuma siswa jurusannya sendiri.
+     */
+    public function assign(User $user, PengajuanPkl $pengajuan): bool
+    {
+        return $user->hasPermissionTo('penugasan.kelola')
+            && $user->guruProfile?->kompetensi_keahlian_id === $pengajuan->siswa->kompetensi_keahlian_id;
+    }
+
+    /**
      * Siswa bisa upload surat balasan (BR20): hanya jika ada surat pengantar
      * untuk pengajuan ini (status 'disetujui', surat pengantar sudah diterbitkan).
      */
@@ -95,5 +104,15 @@ class PengajuanPklPolicy
     public function tolakBalasan(User $user, PengajuanPkl $pengajuan): bool
     {
         return $user->hasRole('hubin') && $pengajuan->status === 'resmi_pkl';
+    }
+
+    /**
+     * Upload Laporan Akhir (BR12): siswa pemilik pengajuan, status sudah resmi_pkl.
+     */
+    public function uploadLaporanAkhir(User $user, PengajuanPkl $pengajuan): bool
+    {
+        return $user->hasPermissionTo('laporan-akhir.upload')
+            && $user->siswaProfile?->id === $pengajuan->siswa_id
+            && $pengajuan->status === 'resmi_pkl';
     }
 }

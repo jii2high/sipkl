@@ -3,6 +3,9 @@
 namespace App\Support;
 
 use App\Models\SuratPengantar;
+use App\Models\SuratTugasMonitoring;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,14 +22,30 @@ class PenomoranSurat
      */
     public static function suratPengantar(int $periodeId): string
     {
-        // Hitung jumlah surat pengantar untuk periode ini (lock for update mencegah race condition)
-        $query = SuratPengantar::where('periode_id', $periodeId);
+        return self::format(self::urutBerikutnya(SuratPengantar::where('periode_id', $periodeId)));
+    }
+
+    /**
+     * Generate nomor surat tugas monitoring berikutnya (BR18) — urutan terpisah dari surat pengantar.
+     * Dipanggil hanya di dalam DB::transaction().
+     */
+    public static function suratTugas(int $periodeId): string
+    {
+        return self::format(self::urutBerikutnya(SuratTugasMonitoring::where('periode_id', $periodeId)));
+    }
+
+    /**
+     * @template T of Model
+     *
+     * @param  Builder<T>  $query
+     */
+    private static function urutBerikutnya($query): int
+    {
         if (DB::connection()->getDriverName() !== 'sqlite') {
             $query->lockForUpdate();
         }
-        $urut = $query->count() + 1;
 
-        return self::format($urut);
+        return $query->count() + 1;
     }
 
     private static function format(int $urut): string

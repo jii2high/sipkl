@@ -14,6 +14,10 @@ import {
 } from '@/components/ui/select';
 import { dashboard as siswaDashboard } from '@/routes/siswa';
 import {
+    store as laporanAkhirStore,
+    download as laporanAkhirDownload,
+} from '@/routes/siswa/laporan-akhir';
+import {
     index as pengajuanIndex,
     store as pengajuanStore,
     submit as pengajuanSubmit,
@@ -39,6 +43,46 @@ export default function Pengajuan({
     const { data, setData, post, errors } = useForm({ perusahaan_id: '' });
     const [uploading, setUploading] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
+    const [uploadingLaporan, setUploadingLaporan] = useState(false);
+    const laporanRef = useRef<HTMLInputElement>(null);
+
+    function handleUploadLaporanAkhir() {
+        const file = laporanRef.current?.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        if (file.type !== 'application/pdf') {
+            alert('File harus berformat PDF.');
+
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert('Ukuran file maksimal 10 MB.');
+
+            return;
+        }
+
+        setUploadingLaporan(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        router.post(
+            laporanAkhirStore({ pengajuan: pengajuan.id }).url,
+            formData,
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setUploadingLaporan(false);
+
+                    if (laporanRef.current) {
+                        laporanRef.current.value = '';
+                    }
+                },
+            },
+        );
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -228,29 +272,103 @@ export default function Pengajuan({
                                 )}
 
                             {pengajuan.status === 'resmi_pkl' && (
-                                <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                                    <div className="flex items-center gap-2 text-sm font-medium text-blue-800">
-                                        <FileText className="size-4" />
-                                        Resmi PKL
-                                    </div>
-                                    <p className="text-xs text-blue-600">
-                                        Selamat! Status PKL Anda telah resmi.
-                                    </p>
-                                    <Button variant="outline" size="sm" asChild>
-                                        <a
-                                            href={
-                                                suratBalasanDownload({
-                                                    pengajuan: pengajuan.id,
-                                                }).url
-                                            }
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                <>
+                                    <div className="space-y-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-blue-800">
+                                            <FileText className="size-4" />
+                                            Resmi PKL
+                                        </div>
+                                        <p className="text-xs text-blue-600">
+                                            Selamat! Status PKL Anda telah resmi.
+                                        </p>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            asChild
                                         >
-                                            <Download className="mr-1 size-4" />
-                                            Download Surat Balasan
-                                        </a>
-                                    </Button>
-                                </div>
+                                            <a
+                                                href={
+                                                    suratBalasanDownload({
+                                                        pengajuan:
+                                                            pengajuan.id,
+                                                    }).url
+                                                }
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                <Download className="mr-1 size-4" />
+                                                Download Surat Balasan
+                                            </a>
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4">
+                                        <div className="flex items-center gap-2 text-sm font-medium text-green-800">
+                                            <FileText className="size-4" />
+                                            Laporan Akhir PKL
+                                        </div>
+                                        <p className="text-xs text-green-700">
+                                            Unggah Laporan Akhir menjelang masa
+                                            PKL berakhir. Setelah diunggah,
+                                            Guru Pembimbing dapat mengisi
+                                            Formulir Penilaian.
+                                        </p>
+                                        {pengajuan.laporan_akhir_uploaded_at ? (
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-xs text-green-700">
+                                                    Sudah diunggah pada{' '}
+                                                    {new Date(
+                                                        pengajuan.laporan_akhir_uploaded_at,
+                                                    ).toLocaleDateString(
+                                                        'id-ID',
+                                                    )}
+                                                </p>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <a
+                                                        href={
+                                                            laporanAkhirDownload(
+                                                                {
+                                                                    pengajuan:
+                                                                        pengajuan.id,
+                                                                },
+                                                            ).url
+                                                        }
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        <Download className="mr-1 size-4" />
+                                                        Download
+                                                    </a>
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <Input
+                                                    ref={laporanRef}
+                                                    type="file"
+                                                    accept=".pdf,application/pdf"
+                                                    className="flex-1"
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    onClick={
+                                                        handleUploadLaporanAkhir
+                                                    }
+                                                    disabled={uploadingLaporan}
+                                                >
+                                                    <Upload className="mr-1 size-4" />
+                                                    {uploadingLaporan
+                                                        ? 'Mengupload...'
+                                                        : 'Upload'}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
                             )}
 
                             {pengajuan.status === 'disetujui' &&

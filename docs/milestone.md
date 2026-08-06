@@ -125,7 +125,9 @@ Modul/fitur:
 
 - [ ] Hanya Kaprog jurusan terkait yang bisa assign Guru Pembimbing untuk siswanya.
 - [ ] Kaprog self-assign muncul benar di "Bimbingan Saya" tanpa mengubah role Spatie-nya.
+- [ ] Penggantian Guru Pembimbing (aksi Ubah) menonaktifkan assignment lama (BR30) — riwayat assignment tetap tersimpan, tidak dihapus.
 - [ ] Laporan Kunjungan tidak bisa diisi tanpa Surat Tugas Monitoring aktif (Global atau Scoped).
+- [ ] Surat Tugas nonaktif atau lewat `berlaku_hingga` menutup akses isi Laporan Kunjungan (ditolak backend, bukan cuma UI).
 - [ ] Surat Tugas Scoped hanya berlaku untuk jurusan yang di-request, tidak bocor ke jurusan lain.
 
 ---

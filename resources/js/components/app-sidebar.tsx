@@ -68,11 +68,18 @@ export function AppSidebar() {
     }
 
     if (role === 'kaprog') {
-        mainNavItems.push({
-            title: 'Verifikasi PKL',
-            href: '/kaprog/verifikasi',
-            icon: ClipboardCheck,
-        });
+        mainNavItems.push(
+            {
+                title: 'Verifikasi PKL',
+                href: '/kaprog/verifikasi',
+                icon: ClipboardCheck,
+            },
+            {
+                title: 'Penugasan Pembimbing',
+                href: '/kaprog/penugasan',
+                icon: Users,
+            },
+        );
     }
 
     if (role === 'hubin') {
@@ -98,7 +105,27 @@ export function AppSidebar() {
                 href: '/hubin/surat-pengantar',
                 icon: FileText,
             },
+            {
+                title: 'Surat Tugas Monitoring',
+                href: '/hubin/surat-tugas',
+                icon: ClipboardCheck,
+            },
             { title: 'Kelola Akun', href: '/hubin/kelola-akun', icon: Users },
+        );
+    }
+
+    if (role === 'guru_pembimbing') {
+        mainNavItems.push(
+            {
+                title: 'Kunjungan Monitoring',
+                href: '/guru-pembimbing/kunjungan',
+                icon: ClipboardCheck,
+            },
+            {
+                title: 'Penilaian PKL',
+                href: '/guru-pembimbing/penilaian',
+                icon: ListChecks,
+            },
         );
     }
 

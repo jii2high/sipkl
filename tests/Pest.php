@@ -33,20 +33,30 @@ pest()->extend(TestCase::class)
             'surat-balasan.upload',
             'surat-balasan.verifikasi',
             'persuratan.bundling',
+            'penugasan.kelola',
+            'surat-tugas.kelola',
+            'kunjungan.isi',
+            'kunjungan.lihat',
+            'laporan-akhir.upload',
+            'penilaian.lihat',
+            'penilaian.isi',
         ];
 
         collect($permissions)->each(fn ($p) => Permission::firstOrCreate(['name' => $p]));
 
         Role::firstOrCreate(['name' => 'siswa'])->givePermissionTo([
             'pengajuan.ajukan', 'pengajuan.lihat-sendiri', 'riwayat.lihat-sendiri', 'surat-balasan.upload',
+            'laporan-akhir.upload',
         ]);
         Role::firstOrCreate(['name' => 'kaprog'])->givePermissionTo([
-            'pengajuan.lihat', 'pengajuan.setujui', 'pengajuan.tolak',
+            'pengajuan.lihat', 'pengajuan.setujui', 'pengajuan.tolak', 'penugasan.kelola',
         ]);
-        Role::firstOrCreate(['name' => 'guru_pembimbing']);
+        Role::firstOrCreate(['name' => 'guru_pembimbing'])->givePermissionTo([
+            'kunjungan.isi', 'kunjungan.lihat', 'penilaian.lihat', 'penilaian.isi',
+        ]);
         Role::firstOrCreate(['name' => 'hubin'])->givePermissionTo([
             'master-data.kelola', 'master-penilaian.kelola', 'akun.kelola',
-            'surat.terbitkan', 'surat-balasan.verifikasi', 'persuratan.bundling',
+            'surat.terbitkan', 'surat-balasan.verifikasi', 'persuratan.bundling', 'surat-tugas.kelola',
         ]);
     })
     ->in('Feature');
@@ -76,16 +86,40 @@ function kaprogUser(): User
     $user->assignRole('kaprog');
     GuruProfile::factory()->create([
         'user_id' => $user->id,
-        'jabatan' => 'Kaprog',
+        'jabatan' => 'kaprog',
         'kompetensi_keahlian_id' => $kk->id,
     ]);
 
     return $user;
 }
 
+function guruPembimbingUser(): User
+{
+    $kk = KompetensiKeahlian::factory()->create();
+    $user = User::factory()->create();
+    $user->assignRole('guru_pembimbing');
+    GuruProfile::factory()->create([
+        'user_id' => $user->id,
+        'jabatan' => 'guru_pembimbing',
+        'kompetensi_keahlian_id' => $kk->id,
+    ]);
+
+    return $user->unsetRelation('guruProfile')->load('guruProfile');
+}
+
 function asHubin(): TestCase
 {
     return test()->actingAs(hubinUser());
+}
+
+function asKaprog(): TestCase
+{
+    return test()->actingAs(kaprogUser());
+}
+
+function asGuruPembimbing(): TestCase
+{
+    return test()->actingAs(guruPembimbingUser());
 }
 
 function asSiswa(): TestCase
