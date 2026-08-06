@@ -105,4 +105,14 @@ class PengajuanPklPolicy
     {
         return $user->hasRole('hubin') && $pengajuan->status === 'resmi_pkl';
     }
+
+    /**
+     * Upload Laporan Akhir (BR12): siswa pemilik pengajuan, status sudah resmi_pkl.
+     */
+    public function uploadLaporanAkhir(User $user, PengajuanPkl $pengajuan): bool
+    {
+        return $user->hasPermissionTo('laporan-akhir.upload')
+            && $user->siswaProfile?->id === $pengajuan->siswa_id
+            && $pengajuan->status === 'resmi_pkl';
+    }
 }

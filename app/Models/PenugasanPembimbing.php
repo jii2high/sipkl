@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property-read User $guruPembimbing
@@ -57,5 +58,11 @@ class PenugasanPembimbing extends Model
     public function kunjunganMonitorings(): HasMany
     {
         return $this->hasMany(KunjunganMonitoring::class, 'penugasan_id');
+    }
+
+    /** @return HasOne<FormulirPenilaian, $this> */
+    public function formulirPenilaian(): HasOne
+    {
+        return $this->hasOne(FormulirPenilaian::class, 'penugasan_id');
     }
 }

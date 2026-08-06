@@ -64,10 +64,10 @@ class PenugasanController extends Controller
             ]);
         });
 
-        // Self-assign (Kaprog jadi pembimbing): tetap beri akses kunjungan.
+        // Self-assign (Kaprog jadi pembimbing): tetap beri akses kunjungan & penilaian.
         // Policy tetap membatasi hanya penugasan miliknya.
         if ((int) $validated['guru_pembimbing_id'] === auth()->id()) {
-            auth()->user()->givePermissionTo(['kunjungan.isi', 'kunjungan.lihat']);
+            auth()->user()->givePermissionTo(['kunjungan.isi', 'kunjungan.lihat', 'penilaian.isi', 'penilaian.lihat']);
         }
 
         return back()->with('sukses', 'Guru pembimbing berhasil ditugaskan.');

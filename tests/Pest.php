@@ -37,18 +37,22 @@ pest()->extend(TestCase::class)
             'surat-tugas.kelola',
             'kunjungan.isi',
             'kunjungan.lihat',
+            'laporan-akhir.upload',
+            'penilaian.lihat',
+            'penilaian.isi',
         ];
 
         collect($permissions)->each(fn ($p) => Permission::firstOrCreate(['name' => $p]));
 
         Role::firstOrCreate(['name' => 'siswa'])->givePermissionTo([
             'pengajuan.ajukan', 'pengajuan.lihat-sendiri', 'riwayat.lihat-sendiri', 'surat-balasan.upload',
+            'laporan-akhir.upload',
         ]);
         Role::firstOrCreate(['name' => 'kaprog'])->givePermissionTo([
             'pengajuan.lihat', 'pengajuan.setujui', 'pengajuan.tolak', 'penugasan.kelola',
         ]);
         Role::firstOrCreate(['name' => 'guru_pembimbing'])->givePermissionTo([
-            'kunjungan.isi', 'kunjungan.lihat',
+            'kunjungan.isi', 'kunjungan.lihat', 'penilaian.lihat', 'penilaian.isi',
         ]);
         Role::firstOrCreate(['name' => 'hubin'])->givePermissionTo([
             'master-data.kelola', 'master-penilaian.kelola', 'akun.kelola',

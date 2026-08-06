@@ -115,11 +115,18 @@ export function AppSidebar() {
     }
 
     if (role === 'guru_pembimbing') {
-        mainNavItems.push({
-            title: 'Kunjungan Monitoring',
-            href: '/guru-pembimbing/kunjungan',
-            icon: ClipboardCheck,
-        });
+        mainNavItems.push(
+            {
+                title: 'Kunjungan Monitoring',
+                href: '/guru-pembimbing/kunjungan',
+                icon: ClipboardCheck,
+            },
+            {
+                title: 'Penilaian PKL',
+                href: '/guru-pembimbing/penilaian',
+                icon: ListChecks,
+            },
+        );
     }
 
     return (

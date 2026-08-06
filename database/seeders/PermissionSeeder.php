@@ -28,6 +28,9 @@ class PermissionSeeder extends Seeder
             'surat-tugas.kelola',
             'kunjungan.isi',
             'kunjungan.lihat',
+            'laporan-akhir.upload',
+            'penilaian.lihat',
+            'penilaian.isi',
         ];
 
         collect($permissions)->each(fn ($p) => Permission::firstOrCreate(['name' => $p]));
@@ -46,6 +49,7 @@ class PermissionSeeder extends Seeder
             'pengajuan.lihat-sendiri',
             'riwayat.lihat-sendiri',
             'surat-balasan.upload',
+            'laporan-akhir.upload',
         ]);
 
         Role::findByName('kaprog')->givePermissionTo([
@@ -68,6 +72,8 @@ class PermissionSeeder extends Seeder
         Role::findByName('guru_pembimbing')->givePermissionTo([
             'kunjungan.isi',
             'kunjungan.lihat',
+            'penilaian.lihat',
+            'penilaian.isi',
         ]);
     }
 }
