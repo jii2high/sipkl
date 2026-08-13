@@ -166,9 +166,7 @@ export default function FormPenilaian({
                                         <LeafInput
                                             key={`sec:${sec.id}`}
                                             label={sec.deskripsi}
-                                            value={
-                                                data.nilai[`sec:${sec.id}`]
-                                            }
+                                            value={data.nilai[`sec:${sec.id}`]}
                                             onChange={(v) =>
                                                 setData('nilai', {
                                                     ...data.nilai,
@@ -307,7 +305,10 @@ export default function FormPenilaian({
                     {kosong.length > 0 && (
                         <ul className="max-h-48 space-y-1 overflow-y-auto rounded-lg border p-3 text-sm">
                             {kosong.map((leaf) => (
-                                <li key={leaf.key} className="text-muted-foreground">
+                                <li
+                                    key={leaf.key}
+                                    className="text-muted-foreground"
+                                >
                                     • {leaf.label}
                                 </li>
                             ))}

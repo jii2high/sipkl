@@ -53,8 +53,8 @@ export default function Penilaian({ penugasans }: any) {
                                                 variant="outline"
                                                 className="text-muted-foreground"
                                             >
-                                                Terkunci (Laporan Akhir
-                                                belum ada)
+                                                Terkunci (Laporan Akhir belum
+                                                ada)
                                             </Badge>
                                         )}
                                     </CardTitle>
@@ -83,7 +83,8 @@ export default function Penilaian({ penugasans }: any) {
                                                     Nilai Akhir
                                                 </span>
                                                 <span className="text-lg font-semibold">
-                                                    {formulir.nilai_akhir ?? '-'}
+                                                    {formulir.nilai_akhir ??
+                                                        '-'}
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground">

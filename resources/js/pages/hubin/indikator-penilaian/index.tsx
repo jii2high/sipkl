@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import IndikatorTree from '@/components/indikator-tree';
-import type {IndikatorItem} from '@/components/indikator-tree';
+import type { IndikatorItem } from '@/components/indikator-tree';
 import { dashboard as hubinDashboard } from '@/routes/hubin';
 
 interface Props {

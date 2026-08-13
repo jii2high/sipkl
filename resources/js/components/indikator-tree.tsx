@@ -45,7 +45,11 @@ interface LevelKey {
 export default function IndikatorTree({ indikator, basePath }: Props) {
     const [open, setOpen] = useState(false);
     const [edit, setEdit] = useState<IndikatorItem | null>(null);
-    const [form, setForm] = useState({ nomor_urut: 1, nama: '', deskripsi: '' });
+    const [form, setForm] = useState({
+        nomor_urut: 1,
+        nama: '',
+        deskripsi: '',
+    });
 
     const [section, setSection] = useState<{
         open: boolean;
@@ -115,10 +119,7 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
         if (s.edit) {
             router.put(`${basePath}/section/${s.edit.id}`, sectionForm);
         } else if (s.indikator) {
-            router.post(
-                `${basePath}/${s.indikator.id}/section`,
-                sectionForm,
-            );
+            router.post(`${basePath}/${s.indikator.id}/section`, sectionForm);
         }
 
         setSection({ open: false, indikator: null, edit: null });
@@ -161,7 +162,13 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
         }
     }
 
-    function pindah(level: LevelKey['level'], itemId: number, siblings: { id: number }[], from: number, to: number) {
+    function pindah(
+        level: LevelKey['level'],
+        itemId: number,
+        siblings: { id: number }[],
+        from: number,
+        to: number,
+    ) {
         if (to < 0 || to >= siblings.length) {
             return;
         }
@@ -190,7 +197,9 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
                 type="button"
                 className="text-muted-foreground hover:text-foreground"
                 disabled={index === 0}
-                onClick={() => pindah(level, itemId, siblings, index, index - 1)}
+                onClick={() =>
+                    pindah(level, itemId, siblings, index, index - 1)
+                }
             >
                 <ArrowUp className="size-3.5" />
             </button>
@@ -198,7 +207,9 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
                 type="button"
                 className="text-muted-foreground hover:text-foreground"
                 disabled={index === siblings.length - 1}
-                onClick={() => pindah(level, itemId, siblings, index, index + 1)}
+                onClick={() =>
+                    pindah(level, itemId, siblings, index, index + 1)
+                }
             >
                 <ArrowDown className="size-3.5" />
             </button>
@@ -219,7 +230,10 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
                 </div>
                 <div className="space-y-3">
                     {indikator.map((i, iIdx) => (
-                        <div key={i.id} className="bg-surface rounded-lg border p-4">
+                        <div
+                            key={i.id}
+                            className="bg-surface rounded-lg border p-4"
+                        >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-start gap-3">
                                     <Panah
@@ -264,7 +278,10 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
 
                             <div className="mt-3 space-y-2 pl-0 md:pl-10">
                                 {i.sections?.map((s, sIdx) => (
-                                    <div key={s.id} className="rounded-md border bg-background p-3">
+                                    <div
+                                        key={s.id}
+                                        className="rounded-md border bg-background p-3"
+                                    >
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex items-center gap-2">
                                                 <Panah
@@ -288,7 +305,9 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => openSectionEdit(s)}
+                                                    onClick={() =>
+                                                        openSectionEdit(s)
+                                                    }
                                                 >
                                                     Edit
                                                 </Button>
@@ -296,14 +315,18 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
                                                     variant="ghost"
                                                     size="sm"
                                                     className="text-destructive"
-                                                    onClick={() => hapusSection(s.id)}
+                                                    onClick={() =>
+                                                        hapusSection(s.id)
+                                                    }
                                                 >
                                                     Hapus
                                                 </Button>
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => openSubSectionCreate(s)}
+                                                    onClick={() =>
+                                                        openSubSectionCreate(s)
+                                                    }
                                                 >
                                                     <Plus className="mr-1 size-3.5" />
                                                     Sub
@@ -313,38 +336,57 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
 
                                         {s.sub_sections?.length > 0 && (
                                             <ul className="mt-2 space-y-1 pl-8">
-                                                {s.sub_sections.map((ss, ssIdx) => (
-                                                    <li
-                                                        key={ss.id}
-                                                        className="flex items-center justify-between gap-2 text-sm text-muted-foreground"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <Panah
-                                                                level="subSection"
-                                                                itemId={s.id}
-                                                                siblings={s.sub_sections}
-                                                                index={ssIdx}
-                                                            />
-                                                            <span>
-                                                                {ss.nomor_urut}. {ss.nama}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex shrink-0 gap-1">
-                                                            <button
-                                                                className="hover:underline"
-                                                                onClick={() => openSubSectionEdit(ss)}
-                                                            >
-                                                                edit
-                                                            </button>
-                                                            <button
-                                                                className="text-destructive hover:underline"
-                                                                onClick={() => hapusSubSection(ss.id)}
-                                                            >
-                                                                hapus
-                                                            </button>
-                                                        </div>
-                                                    </li>
-                                                ))}
+                                                {s.sub_sections.map(
+                                                    (ss, ssIdx) => (
+                                                        <li
+                                                            key={ss.id}
+                                                            className="flex items-center justify-between gap-2 text-sm text-muted-foreground"
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <Panah
+                                                                    level="subSection"
+                                                                    itemId={
+                                                                        s.id
+                                                                    }
+                                                                    siblings={
+                                                                        s.sub_sections
+                                                                    }
+                                                                    index={
+                                                                        ssIdx
+                                                                    }
+                                                                />
+                                                                <span>
+                                                                    {
+                                                                        ss.nomor_urut
+                                                                    }
+                                                                    . {ss.nama}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex shrink-0 gap-1">
+                                                                <button
+                                                                    className="hover:underline"
+                                                                    onClick={() =>
+                                                                        openSubSectionEdit(
+                                                                            ss,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    edit
+                                                                </button>
+                                                                <button
+                                                                    className="text-destructive hover:underline"
+                                                                    onClick={() =>
+                                                                        hapusSubSection(
+                                                                            ss.id,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    hapus
+                                                                </button>
+                                                            </div>
+                                                        </li>
+                                                    ),
+                                                )}
                                             </ul>
                                         )}
                                     </div>
@@ -394,7 +436,8 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>
-                            {section.edit ? 'Edit' : 'Tambah'} Indikator Penilaian
+                            {section.edit ? 'Edit' : 'Tambah'} Indikator
+                            Penilaian
                         </DialogTitle>
                         <DialogDescription>
                             Level 2 — sub-kompetensi dari indikator.
@@ -441,7 +484,11 @@ function FormIndikator({
     submitLabel,
 }: {
     form: { nomor_urut: number; nama: string; deskripsi: string };
-    setForm: (v: { nomor_urut: number; nama: string; deskripsi: string }) => void;
+    setForm: (v: {
+        nomor_urut: number;
+        nama: string;
+        deskripsi: string;
+    }) => void;
     submit: () => void;
     submitLabel: string;
 }) {
@@ -457,7 +504,8 @@ function FormIndikator({
             </div>
             <div>
                 <Label htmlFor="deskripsi">
-                    Deskripsi <span className="text-muted-foreground">(opsional)</span>
+                    Deskripsi{' '}
+                    <span className="text-muted-foreground">(opsional)</span>
                 </Label>
                 <Input
                     id="deskripsi"
@@ -474,7 +522,10 @@ function FormIndikator({
                     type="number"
                     value={form.nomor_urut}
                     onChange={(e) => {
-                        const value = Math.min(Math.max(+e.target.value || 1, 1), 99);
+                        const value = Math.min(
+                            Math.max(+e.target.value || 1, 1),
+                            99,
+                        );
                         setForm({ ...form, nomor_urut: value });
                     }}
                 />

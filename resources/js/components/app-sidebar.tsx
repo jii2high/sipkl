@@ -131,7 +131,11 @@ export function AppSidebar() {
                 href: '/hubin/kelola-staff',
                 icon: GraduationCap,
             },
-            { title: 'Recycle Bin', href: '/hubin/recycle-bin', icon: FolderGit2 },
+            {
+                title: 'Recycle Bin',
+                href: '/hubin/recycle-bin',
+                icon: FolderGit2,
+            },
         );
     }
 

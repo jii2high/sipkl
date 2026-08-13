@@ -29,9 +29,8 @@ export default function Index({ perusahaans, periodeAktif }: any) {
                 {periodeAktif && (
                     <>
                         <p className="text-sm text-muted-foreground">
-                            Periode aktif:{' '}
-                            <strong>{periodeAktif.nama}</strong> — satu surat
-                            pengantar per perusahaan per jurusan.
+                            Periode aktif: <strong>{periodeAktif.nama}</strong>{' '}
+                            — satu surat pengantar per perusahaan per jurusan.
                         </p>
 
                         {perusahaans?.length === 0 && (
@@ -44,7 +43,9 @@ export default function Index({ perusahaans, periodeAktif }: any) {
                         )}
 
                         {perusahaans?.map((p: any) => (
-                            <Card key={`${p.perusahaan_id}-${p.kompetensi_keahlian_id}`}>
+                            <Card
+                                key={`${p.perusahaan_id}-${p.kompetensi_keahlian_id}`}
+                            >
                                 <CardHeader>
                                     <CardTitle className="flex items-center justify-between text-base">
                                         <span className="flex items-center gap-2">
@@ -63,16 +64,20 @@ export default function Index({ perusahaans, periodeAktif }: any) {
                                     <div className="flex items-center justify-between">
                                         <span className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <FileText className="size-4" />
-                                            Kuota saran: {p.perusahaan_kuota}{' '}
+                                            Kuota saran: {
+                                                p.perusahaan_kuota
+                                            }{' '}
                                             siswa
                                         </span>
                                         <Link
-                                            href={suratPengantarPreview({
-                                                perusahaan: p.perusahaan_id,
-                                                kompetensiKeahlian:
-                                                    p.kompetensi_keahlian_id,
-                                                periode: periodeAktif.id,
-                                            }).url}
+                                            href={
+                                                suratPengantarPreview({
+                                                    perusahaan: p.perusahaan_id,
+                                                    kompetensiKeahlian:
+                                                        p.kompetensi_keahlian_id,
+                                                    periode: periodeAktif.id,
+                                                }).url
+                                            }
                                         >
                                             <Button variant="ghost" size="sm">
                                                 Lihat detail &rarr;

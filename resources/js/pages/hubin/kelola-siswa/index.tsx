@@ -88,7 +88,7 @@ export default function KelolaSiswa({ siswa, jurusan }: Props) {
                     ]}
                 />
 
-                <div className="overflow-hidden rounded-lg border bg-surface">
+                <div className="bg-surface overflow-hidden rounded-lg border">
                     <table className="w-full text-sm">
                         <thead className="text-left text-muted-foreground">
                             <tr className="border-b">
@@ -102,7 +102,10 @@ export default function KelolaSiswa({ siswa, jurusan }: Props) {
                         </thead>
                         <tbody>
                             {siswa.data.map((s) => (
-                                <tr key={s.id} className="border-b last:border-0">
+                                <tr
+                                    key={s.id}
+                                    className="border-b last:border-0"
+                                >
                                     <td className="p-3 font-medium">
                                         {s.user.name}
                                     </td>

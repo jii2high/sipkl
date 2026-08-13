@@ -46,7 +46,7 @@ function Sektion({
                     Recycle bin kosong.
                 </p>
             ) : (
-                <div className="overflow-hidden rounded-lg border bg-surface">
+                <div className="bg-surface overflow-hidden rounded-lg border">
                     <table className="w-full text-sm">
                         <thead className="text-left text-muted-foreground">
                             <tr className="border-b">
@@ -57,7 +57,10 @@ function Sektion({
                         </thead>
                         <tbody>
                             {items.map((item) => (
-                                <tr key={item.id} className="border-b last:border-0">
+                                <tr
+                                    key={item.id}
+                                    className="border-b last:border-0"
+                                >
                                     <td className="p-3 font-medium">
                                         {item.name ?? item.nama}
                                     </td>

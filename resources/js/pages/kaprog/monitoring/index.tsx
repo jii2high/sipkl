@@ -53,7 +53,11 @@ export default function Monitoring({ drafts, terbit, periodes }: Props) {
     }
 
     function terbitkan(id: number) {
-        if (confirm('Terbitkan surat tugas ini? Nomor surat akan dibuat otomatis.')) {
+        if (
+            confirm(
+                'Terbitkan surat tugas ini? Nomor surat akan dibuat otomatis.',
+            )
+        ) {
             router.post(`/kaprog/monitoring/${id}/terbit`);
         }
     }
@@ -96,7 +100,7 @@ export default function Monitoring({ drafts, terbit, periodes }: Props) {
                             {drafts.map((d) => (
                                 <div
                                     key={d.id}
-                                    className="flex items-center justify-between rounded-lg border bg-surface p-3"
+                                    className="bg-surface flex items-center justify-between rounded-lg border p-3"
                                 >
                                     <div>
                                         <p className="font-medium">
@@ -165,7 +169,8 @@ export default function Monitoring({ drafts, terbit, periodes }: Props) {
                                             <td className="p-3">
                                                 {t.lingkup === 'global'
                                                     ? 'Semua jurusan'
-                                                    : t.kompetensi_keahlian?.nama}
+                                                    : t.kompetensi_keahlian
+                                                          ?.nama}
                                             </td>
                                             <td className="p-3">
                                                 <Badge
