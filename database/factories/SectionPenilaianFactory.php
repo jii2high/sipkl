@@ -16,7 +16,7 @@ class SectionPenilaianFactory extends Factory
         return [
             'indikator_penilaian_id' => IndikatorPenilaian::factory(),
             'nomor_urut' => fake()->numberBetween(1, 10),
-            'deskripsi' => fake()->sentence(),
+            'nama' => fake()->word(),
         ];
     }
 }

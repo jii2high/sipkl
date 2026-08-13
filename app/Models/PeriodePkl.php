@@ -6,11 +6,12 @@ use Database\Factories\PeriodePklFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PeriodePkl extends Model
 {
     /** @use HasFactory<PeriodePklFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = ['nama', 'tanggal_mulai', 'tanggal_selesai', 'status_aktif'];
 

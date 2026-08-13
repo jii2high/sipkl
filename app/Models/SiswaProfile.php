@@ -6,19 +6,21 @@ use Database\Factories\SiswaProfileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property-read User $user
  * @property-read KompetensiKeahlian|null $kompetensiKeahlian
+ * @property-read PeriodePkl|null $periode
  */
 class SiswaProfile extends Model
 {
     /** @use HasFactory<SiswaProfileFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'siswa_profiles';
 
-    protected $fillable = ['user_id', 'nis', 'kelas', 'kompetensi_keahlian_id', 'alamat', 'no_telp'];
+    protected $fillable = ['user_id', 'nis', 'periode_id', 'kompetensi_keahlian_id', 'alamat', 'no_telp'];
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
@@ -30,5 +32,11 @@ class SiswaProfile extends Model
     public function kompetensiKeahlian(): BelongsTo
     {
         return $this->belongsTo(KompetensiKeahlian::class);
+    }
+
+    /** @return BelongsTo<PeriodePkl, $this> */
+    public function periode(): BelongsTo
+    {
+        return $this->belongsTo(PeriodePkl::class);
     }
 }

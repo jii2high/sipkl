@@ -18,6 +18,7 @@ class SuratPengantar extends Model
     protected $fillable = [
         'nomor_surat',
         'perusahaan_id',
+        'kompetensi_keahlian_id',
         'periode_id',
         'tanggal_terbit',
         'generated_by',
@@ -32,6 +33,12 @@ class SuratPengantar extends Model
     public function perusahaan(): BelongsTo
     {
         return $this->belongsTo(Perusahaan::class, 'perusahaan_id');
+    }
+
+    /** @return BelongsTo<KompetensiKeahlian, $this> */
+    public function kompetensiKeahlian(): BelongsTo
+    {
+        return $this->belongsTo(KompetensiKeahlian::class, 'kompetensi_keahlian_id');
     }
 
     /** @return BelongsTo<PeriodePkl, $this> */

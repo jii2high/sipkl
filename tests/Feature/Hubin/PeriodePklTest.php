@@ -47,5 +47,5 @@ test('delete periode pkl', function () {
     asHubin();
     $p = PeriodePkl::factory()->create();
     $this->delete(route('hubin.periode-pkl.destroy', $p))->assertRedirect();
-    $this->assertDatabaseMissing('periode_pkls', ['id' => $p->id]);
+    $this->assertSoftDeleted('periode_pkls', ['id' => $p->id]);
 });

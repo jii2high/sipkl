@@ -4,14 +4,19 @@ use App\Http\Controllers\Auth\FirstLoginController;
 use App\Http\Controllers\Auth\PasswordOtpController;
 use App\Http\Controllers\GuruPembimbing\FormulirPenilaianController;
 use App\Http\Controllers\GuruPembimbing\KunjunganController;
-use App\Http\Controllers\Hubin\AkunController;
 use App\Http\Controllers\Hubin\IndikatorPenilaianController;
+use App\Http\Controllers\Hubin\KelolaSiswaController;
+use App\Http\Controllers\Hubin\KelolaStaffController;
 use App\Http\Controllers\Hubin\KompetensiKeahlianController;
 use App\Http\Controllers\Hubin\PeriodePklController;
 use App\Http\Controllers\Hubin\PerusahaanController;
+use App\Http\Controllers\Hubin\RecycleBinController;
 use App\Http\Controllers\Hubin\SuratPengantarController;
 use App\Http\Controllers\Hubin\SuratTugasController;
+use App\Http\Controllers\Kaprog\IndikatorJurusanController;
+use App\Http\Controllers\Kaprog\MonitoringController;
 use App\Http\Controllers\Kaprog\PenugasanController;
+use App\Http\Controllers\Kaprog\RiwayatVerifikasiController;
 use App\Http\Controllers\Kaprog\SuratTugasRequestController;
 use App\Http\Controllers\Kaprog\VerifikasiController;
 use App\Http\Controllers\Siswa\LaporanAkhirController;
@@ -73,6 +78,33 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
             ->middleware('permission:penugasan.kelola');
         Route::post('surat-tugas/request', [SuratTugasRequestController::class, 'store'])->name('surat-tugas.request')
             ->middleware('permission:penugasan.kelola');
+
+        // Riwayat verifikasi — tanpa tombol aksi (BR4)
+        Route::get('riwayat-verifikasi', [RiwayatVerifikasiController::class, 'index'])
+            ->name('riwayat-verifikasi.index')->middleware('permission:pengajuan.lihat');
+
+        // Indikator penilaian jurusan — EXCLUSIVE Kaprog (BR10-style)
+        Route::prefix('indikator-jurusan')->name('indikator-jurusan.')->middleware('permission:master-penilaian.kelola')->group(function () {
+            Route::get('/', [IndikatorJurusanController::class, 'index'])->name('index');
+            Route::post('/', [IndikatorJurusanController::class, 'store'])->name('store');
+            Route::put('{indikatorPenilaian}', [IndikatorJurusanController::class, 'update'])->name('update');
+            Route::delete('{indikatorPenilaian}', [IndikatorJurusanController::class, 'destroy'])->name('destroy');
+            Route::post('{indikatorPenilaian}/section', [IndikatorJurusanController::class, 'storeSection'])->name('section.store');
+            Route::put('section/{section}', [IndikatorJurusanController::class, 'updateSection'])->name('section.update');
+            Route::delete('section/{section}', [IndikatorJurusanController::class, 'destroySection'])->name('section.destroy');
+            Route::post('section/{section}/sub-section', [IndikatorJurusanController::class, 'storeSubSection'])->name('sub-section.store');
+            Route::put('sub-section/{subSection}', [IndikatorJurusanController::class, 'updateSubSection'])->name('sub-section.update');
+            Route::delete('sub-section/{subSection}', [IndikatorJurusanController::class, 'destroySubSection'])->name('sub-section.destroy');
+            Route::post('reorder', [IndikatorJurusanController::class, 'reorder'])->name('reorder');
+        });
+
+        // Monitoring bulanan — draft surat tugas scoped + ringkasan terbit
+        Route::prefix('monitoring')->name('monitoring.')->middleware('permission:surat-tugas.kelola')->group(function () {
+            Route::get('/', [MonitoringController::class, 'index'])->name('index');
+            Route::post('/', [MonitoringController::class, 'store'])->name('store');
+            Route::delete('{suratTugas}', [MonitoringController::class, 'destroy'])->name('destroy');
+            Route::post('{suratTugas}/terbit', [MonitoringController::class, 'terbit'])->name('terbit');
+        });
     });
 
     Route::prefix('guru-pembimbing')->name('guru-pembimbing.')->group(function () {
@@ -151,27 +183,47 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
             ->name('indikator-penilaian.section.update')->middleware('permission:master-penilaian.kelola');
         Route::delete('indikator-penilaian/section/{section}', [IndikatorPenilaianController::class, 'destroySection'])
             ->name('indikator-penilaian.section.destroy')->middleware('permission:master-penilaian.kelola');
+        Route::post('indikator-penilaian/section/{section}/sub-section', [IndikatorPenilaianController::class, 'storeSubSection'])
+            ->name('indikator-penilaian.sub-section.store')->middleware('permission:master-penilaian.kelola');
+        Route::put('indikator-penilaian/sub-section/{subSection}', [IndikatorPenilaianController::class, 'updateSubSection'])
+            ->name('indikator-penilaian.sub-section.update')->middleware('permission:master-penilaian.kelola');
+        Route::delete('indikator-penilaian/sub-section/{subSection}', [IndikatorPenilaianController::class, 'destroySubSection'])
+            ->name('indikator-penilaian.sub-section.destroy')->middleware('permission:master-penilaian.kelola');
+        Route::post('indikator-penilaian/reorder', [IndikatorPenilaianController::class, 'reorder'])
+            ->name('indikator-penilaian.reorder')->middleware('permission:master-penilaian.kelola');
 
-        Route::get('kelola-akun', [AkunController::class, 'index'])->name('kelola-akun.index')
+        Route::get('kelola-siswa', [KelolaSiswaController::class, 'index'])->name('kelola-siswa.index')
             ->middleware('permission:akun.kelola');
-        Route::patch('kelola-akun/{guruProfile}/nonaktifkan', [AkunController::class, 'nonaktifkanKaprog'])
-            ->name('kelola-akun.nonaktifkan')->middleware('permission:akun.kelola');
-        Route::post('kelola-akun/import-guru', [AkunController::class, 'importGuru'])
-            ->name('kelola-akun.import.guru')->middleware('permission:akun.kelola');
-        Route::post('kelola-akun/import-siswa', [AkunController::class, 'importSiswa'])
-            ->name('kelola-akun.import.siswa')->middleware('permission:akun.kelola');
-        Route::get('kelola-akun/export', [AkunController::class, 'export'])
-            ->name('kelola-akun.export')->middleware('permission:akun.kelola');
-        Route::get('kelola-akun/template-guru', [AkunController::class, 'templateGuru'])
-            ->name('kelola-akun.template.guru');
-        Route::get('kelola-akun/template-siswa', [AkunController::class, 'templateSiswa'])
-            ->name('kelola-akun.template.siswa');
+        Route::delete('kelola-siswa/{user}', [KelolaSiswaController::class, 'destroy'])
+            ->name('kelola-siswa.destroy')->middleware('permission:akun.kelola');
+        Route::post('kelola-siswa/import', [KelolaSiswaController::class, 'import'])
+            ->name('kelola-siswa.import')->middleware('permission:akun.kelola');
+        Route::get('kelola-siswa/export', [KelolaSiswaController::class, 'export'])
+            ->name('kelola-siswa.export')->middleware('permission:akun.kelola');
+        Route::get('kelola-siswa/template', [KelolaSiswaController::class, 'template'])
+            ->name('kelola-siswa.template');
+
+        Route::get('kelola-staff', [KelolaStaffController::class, 'index'])->name('kelola-staff.index')
+            ->middleware('permission:akun.kelola');
+        Route::patch('kelola-staff/{guruProfile}/nonaktifkan', [KelolaStaffController::class, 'nonaktifkanKaprog'])
+            ->name('kelola-staff.nonaktifkan')->middleware('permission:akun.kelola');
+        Route::post('kelola-staff/import', [KelolaStaffController::class, 'import'])
+            ->name('kelola-staff.import')->middleware('permission:akun.kelola');
+        Route::get('kelola-staff/template', [KelolaStaffController::class, 'template'])
+            ->name('kelola-staff.template');
+
+        Route::get('recycle-bin', [RecycleBinController::class, 'index'])->name('recycle-bin.index')
+            ->middleware('permission:akun.kelola');
+        Route::post('recycle-bin/restore', [RecycleBinController::class, 'restore'])
+            ->name('recycle-bin.restore')->middleware('permission:akun.kelola');
+        Route::delete('recycle-bin', [RecycleBinController::class, 'forceDestroy'])
+            ->name('recycle-bin.force-destroy')->middleware('permission:akun.kelola');
 
         Route::prefix('surat-pengantar')->name('surat-pengantar.')->middleware('permission:surat.terbitkan')->group(function () {
             Route::get('/', [SuratPengantarController::class, 'index'])->name('index');
-            Route::get('{perusahaan}/{periode}', [SuratPengantarController::class, 'preview'])->name('preview');
-            Route::get('{perusahaan}/{periode}/cetak', [SuratPengantarController::class, 'cetak'])->name('cetak');
-            Route::post('{perusahaan}/{periode}/kirim', [SuratPengantarController::class, 'kirim'])->name('kirim');
+            Route::get('{perusahaan}/{kompetensiKeahlian}/{periode}', [SuratPengantarController::class, 'preview'])->name('preview');
+            Route::get('{perusahaan}/{kompetensiKeahlian}/{periode}/cetak', [SuratPengantarController::class, 'cetak'])->name('cetak');
+            Route::post('{perusahaan}/{kompetensiKeahlian}/{periode}/kirim', [SuratPengantarController::class, 'kirim'])->name('kirim');
             Route::get('download/{suratPengantar}', [SuratPengantarController::class, 'download'])->name('download');
             Route::post('{pengajuan}/tolak-balasan', [SuratPengantarController::class, 'tolakBalasan'])
                 ->name('tolak-balasan')->middleware('permission:surat-balasan.verifikasi');
@@ -180,6 +232,7 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
         Route::prefix('surat-tugas')->name('surat-tugas.')->middleware('permission:surat-tugas.kelola')->group(function () {
             Route::get('/', [SuratTugasController::class, 'index'])->name('index');
             Route::post('/', [SuratTugasController::class, 'store'])->name('store');
+            Route::post('{suratTugas}/terbit', [SuratTugasController::class, 'terbit'])->name('terbit');
             Route::post('{suratTugas}/nonaktif', [SuratTugasController::class, 'nonaktif'])->name('nonaktif');
             Route::get('{suratTugas}/download', [SuratTugasController::class, 'download'])->name('download');
         });

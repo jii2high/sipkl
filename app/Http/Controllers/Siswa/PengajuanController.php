@@ -17,31 +17,48 @@ class PengajuanController extends Controller
 {
     public function index(): Response
     {
-        $siswaId = request()->user()->siswaProfile->id;
+        $siswa = request()->user()->siswaProfile;
         $periodeAktif = PeriodePkl::where('status_aktif', true)->first();
 
+        // Periode pengajuan = periode pada profil siswa; fallback ke periode aktif
+        $periodeProfil = $siswa->periode_id ? PeriodePkl::find($siswa->periode_id) : $periodeAktif;
+
         $pengajuanAktif = null;
-        if ($periodeAktif) {
+        $pengajuanDitolak = collect();
+        if ($periodeProfil) {
             $pengajuanAktif = PengajuanPkl::with(['perusahaan', 'periode', 'histories.actor'])
-                ->where('siswa_id', $siswaId)
-                ->where('periode_id', $periodeAktif->id)
+                ->where('siswa_id', $siswa->id)
+                ->where('periode_id', $periodeProfil->id)
                 ->whereNotIn('status', ['ditolak'])
                 ->first();
+
+            // List pengajuan ditolak periode ini — bisa ajukan ulang
+            $pengajuanDitolak = PengajuanPkl::with(['perusahaan', 'periode', 'histories.actor'])
+                ->where('siswa_id', $siswa->id)
+                ->where('periode_id', $periodeProfil->id)
+                ->where('status', 'ditolak')
+                ->latest()
+                ->get();
         }
 
         return Inertia::render('siswa/pengajuan/index', [
             'pengajuan' => $pengajuanAktif,
+            'pengajuanDitolak' => $pengajuanDitolak,
             'perusahaan' => Perusahaan::orderBy('nama')->get(),
-            'periodeAktif' => $periodeAktif,
+            'periode' => $periodeProfil,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $siswa = $request->user()->siswaProfile;
-        $periodeAktif = PeriodePkl::where('status_aktif', true)->firstOrFail();
 
         $this->authorize('create', PengajuanPkl::class);
+
+        // Periode pengajuan mengikuti periode pada profil siswa (sudah dipilih saat import/kelola)
+        $periode = $siswa->periode_id
+            ? PeriodePkl::where('status_aktif', true)->find($siswa->periode_id)
+            : PeriodePkl::where('status_aktif', true)->firstOrFail();
 
         $validated = $request->validate([
             'perusahaan_id' => 'required|exists:perusahaan,id',
@@ -50,7 +67,7 @@ class PengajuanController extends Controller
         $pengajuan = PengajuanPkl::create([
             'siswa_id' => $siswa->id,
             'perusahaan_id' => $validated['perusahaan_id'],
-            'periode_id' => $periodeAktif->id,
+            'periode_id' => $periode->id,
         ]);
 
         return redirect()->route('siswa.pengajuan.index');
@@ -76,12 +93,10 @@ class PengajuanController extends Controller
 
     public function riwayat(): Response
     {
-        $siswaId = request()->user()->siswaProfile->id;
-        $periodeAktif = PeriodePkl::where('status_aktif', true)->first();
+        $siswa = request()->user()->siswaProfile;
 
         $riwayat = PengajuanPkl::with(['perusahaan', 'periode', 'histories.actor'])
-            ->where('siswa_id', $siswaId)
-            ->when($periodeAktif, fn ($q) => $q->where('periode_id', '!=', $periodeAktif->id))
+            ->where('siswa_id', $siswa->id)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 

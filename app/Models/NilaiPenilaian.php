@@ -18,6 +18,7 @@ class NilaiPenilaian extends Model
         'formulir_penilaian_id',
         'indikator_penilaian_id',
         'section_penilaian_id',
+        'sub_section_penilaian_id',
         'nilai',
         'predikat',
     ];
@@ -38,5 +39,11 @@ class NilaiPenilaian extends Model
     public function sectionPenilaian(): BelongsTo
     {
         return $this->belongsTo(SectionPenilaian::class);
+    }
+
+    /** @return BelongsTo<SubSectionPenilaian, $this> */
+    public function subSectionPenilaian(): BelongsTo
+    {
+        return $this->belongsTo(SubSectionPenilaian::class);
     }
 }
