@@ -75,9 +75,24 @@ export function AppSidebar() {
                 icon: ClipboardCheck,
             },
             {
+                title: 'Riwayat Verifikasi',
+                href: '/kaprog/riwayat-verifikasi',
+                icon: ListChecks,
+            },
+            {
                 title: 'Penugasan Pembimbing',
                 href: '/kaprog/penugasan',
                 icon: Users,
+            },
+            {
+                title: 'Indikator Penilaian Jurusan',
+                href: '/kaprog/indikator-jurusan',
+                icon: GraduationCap,
+            },
+            {
+                title: 'Monitoring PKL',
+                href: '/kaprog/monitoring',
+                icon: Calendar,
             },
         );
     }
@@ -96,7 +111,7 @@ export function AppSidebar() {
                 icon: GraduationCap,
             },
             {
-                title: 'Indikator Penilaian',
+                title: 'Indikator Penilaian Umum',
                 href: '/hubin/indikator-penilaian',
                 icon: ListChecks,
             },
@@ -110,7 +125,13 @@ export function AppSidebar() {
                 href: '/hubin/surat-tugas',
                 icon: ClipboardCheck,
             },
-            { title: 'Kelola Akun', href: '/hubin/kelola-akun', icon: Users },
+            { title: 'Kelola Siswa', href: '/hubin/kelola-siswa', icon: Users },
+            {
+                title: 'Kelola Staff',
+                href: '/hubin/kelola-staff',
+                icon: GraduationCap,
+            },
+            { title: 'Recycle Bin', href: '/hubin/recycle-bin', icon: FolderGit2 },
         );
     }
 
