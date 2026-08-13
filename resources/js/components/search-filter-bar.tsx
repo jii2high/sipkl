@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { Search, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -44,22 +44,61 @@ export default function SearchFilterBar({
         },
     );
 
-    function apply() {
-        const query: Record<string, string> = {};
+    // Simpan referensi timer debounce di luar state agar tidak re-render
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-        if (search) {
-            query.search = search;
+    function apply(
+        overrideSearch?: string,
+        overrideFilters?: Record<string, string>,
+    ) {
+        const q: Record<string, string> = {};
+        const s = overrideSearch !== undefined ? overrideSearch : search;
+        const f = overrideFilters !== undefined ? overrideFilters : activeFilters;
+
+        if (s) {
+            q.search = s;
         }
 
-        Object.entries(activeFilters).forEach(([k, v]) => {
+        Object.entries(f).forEach(([k, v]) => {
             if (v) {
-                query[k] = v;
+                q[k] = v;
             }
         });
-        router.get(baseRoute, query, { preserveState: true });
+
+        router.get(baseRoute, q, { preserveState: true });
+    }
+
+    function debouncedApply(
+        newSearch: string,
+        currentFilters: Record<string, string>,
+    ) {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+
+        debounceRef.current = setTimeout(() => {
+            apply(newSearch, currentFilters);
+        }, 300);
+    }
+
+    function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const val = e.target.value;
+        setSearch(val);
+        debouncedApply(val, activeFilters);
+    }
+
+    function handleFilterChange(key: string, val: string) {
+        const newFilters = { ...activeFilters, [key]: val };
+        setActiveFilters(newFilters);
+        // Filter select: langsung apply tanpa debounce (pilihan diskrit)
+        apply(search, newFilters);
     }
 
     function reset() {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+
         setSearch('');
         setActiveFilters({});
         router.get(baseRoute, {}, { preserveState: true });
@@ -75,17 +114,14 @@ export default function SearchFilterBar({
                     className="pl-8"
                     placeholder={searchPlaceholder}
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && apply()}
+                    onChange={handleSearchChange}
                 />
             </div>
             {filters.map((f) => (
                 <Select
                     key={f.key}
                     value={activeFilters[f.key] ?? ''}
-                    onValueChange={(v) =>
-                        setActiveFilters({ ...activeFilters, [f.key]: v })
-                    }
+                    onValueChange={(v) => handleFilterChange(f.key, v)}
                 >
                     <SelectTrigger className="w-40">
                         <SelectValue placeholder={f.label} />
@@ -100,9 +136,6 @@ export default function SearchFilterBar({
                     </SelectContent>
                 </Select>
             ))}
-            <Button size="sm" onClick={apply}>
-                Cari
-            </Button>
             {hasFilters && (
                 <Button variant="ghost" size="sm" onClick={reset}>
                     <X className="mr-1 size-4" /> Reset

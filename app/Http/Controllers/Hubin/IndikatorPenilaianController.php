@@ -31,12 +31,17 @@ class IndikatorPenilaianController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        IndikatorPenilaian::create($validated + ['kompetensi_keahlian_id' => null]);
+        // Auto-assign nomor_urut = max + 1
+        $maxNo = IndikatorPenilaian::whereNull('kompetensi_keahlian_id')->max('nomor_urut') ?? 0;
+
+        IndikatorPenilaian::create($validated + [
+            'kompetensi_keahlian_id' => null,
+            'nomor_urut' => $maxNo + 1,
+        ]);
 
         return redirect()->route('hubin.indikator-penilaian.index');
     }
@@ -46,7 +51,6 @@ class IndikatorPenilaianController extends Controller
         abort_unless($indikatorPenilaian->kompetensi_keahlian_id === null, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
@@ -68,12 +72,12 @@ class IndikatorPenilaianController extends Controller
     public function storeSection(Request $request, IndikatorPenilaian $indikatorPenilaian): RedirectResponse
     {
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        $indikatorPenilaian->sections()->create($validated);
+        $maxNo = $indikatorPenilaian->sections()->max('nomor_urut') ?? 0;
+        $indikatorPenilaian->sections()->create($validated + ['nomor_urut' => $maxNo + 1]);
 
         return redirect()->route('hubin.indikator-penilaian.index');
     }
@@ -83,7 +87,6 @@ class IndikatorPenilaianController extends Controller
         abort_unless($section->indikatorPenilaian->kompetensi_keahlian_id === null, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
@@ -107,12 +110,12 @@ class IndikatorPenilaianController extends Controller
         abort_unless($section->indikatorPenilaian->kompetensi_keahlian_id === null, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        $section->subSections()->create($validated);
+        $maxNo = $section->subSections()->max('nomor_urut') ?? 0;
+        $section->subSections()->create($validated + ['nomor_urut' => $maxNo + 1]);
 
         return redirect()->route('hubin.indikator-penilaian.index');
     }
@@ -122,7 +125,6 @@ class IndikatorPenilaianController extends Controller
         abort_unless($subSection->sectionPenilaian->indikatorPenilaian->kompetensi_keahlian_id === null, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
@@ -142,29 +144,27 @@ class IndikatorPenilaianController extends Controller
     }
 
     /**
-     * Reorder level apa pun lewat payload `{ level: 'indikator|section|subSection', itemId, fromIndex, toIndex }`.
+     * Reorder level apa pun lewat payload `{ level, ids[] }` dari dnd-kit.
      */
     public function reorder(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'level' => 'required|in:indikator,section,subSection',
-            'itemId' => 'required|integer',
-            'fromIndex' => 'required|integer|min:0',
-            'toIndex' => 'required|integer|min:0',
+            'itemId' => 'nullable|integer',
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
         ]);
 
-        $siblings = match ($validated['level']) {
-            'indikator' => IndikatorPenilaian::whereNull('kompetensi_keahlian_id')->orderBy('nomor_urut')->get(),
-            'section' => SectionPenilaian::where('indikator_penilaian_id', $validated['itemId'])->orderBy('nomor_urut')->get(),
-            default => SubSectionPenilaian::where('section_penilaian_id', $validated['itemId'])->orderBy('nomor_urut')->get(),
-        };
-
-        // ponytail: pivot manual — geser item, re-number 1..n (satu query per baris).
-        $ids = $siblings->pluck('id')->all();
-        array_splice($ids, $validated['toIndex'], 0, array_splice($ids, $validated['fromIndex'], 1));
-
-        foreach (array_values($ids) as $index => $id) {
-            $siblings->firstWhere('id', $id)?->update(['nomor_urut' => $index + 1]);
+        foreach (array_values($validated['ids']) as $index => $id) {
+            match ($validated['level']) {
+                'indikator' => IndikatorPenilaian::where('id', $id)
+                    ->whereNull('kompetensi_keahlian_id')
+                    ->update(['nomor_urut' => $index + 1]),
+                'section' => SectionPenilaian::where('id', $id)
+                    ->update(['nomor_urut' => $index + 1]),
+                default => SubSectionPenilaian::where('id', $id)
+                    ->update(['nomor_urut' => $index + 1]),
+            };
         }
 
         return redirect()->route('hubin.indikator-penilaian.index');

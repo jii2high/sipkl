@@ -95,8 +95,11 @@ class PengajuanController extends Controller
     {
         $siswa = request()->user()->siswaProfile;
 
-        $riwayat = PengajuanPkl::with(['perusahaan', 'periode', 'histories.actor'])
+        // Riwayat = pengajuan yang sudah selesai (closed) dari periode non-aktif
+        $riwayat = PengajuanPkl::with(['perusahaan', 'periode'])
             ->where('siswa_id', $siswa->id)
+            ->whereIn('status', ['resmi_pkl', 'selesai_pkl'])
+            ->whereHas('periode', fn ($q) => $q->where('status_aktif', false))
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 

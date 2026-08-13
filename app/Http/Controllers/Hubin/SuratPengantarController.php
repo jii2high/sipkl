@@ -32,10 +32,11 @@ class SuratPengantarController extends Controller
 
         $periode = PeriodePkl::where('status_aktif', true)->first();
 
-        $pengajuans = PengajuanPkl::with(['perusahaan', 'siswa.kompetensiKeahlian'])
+        $search = request('search');
+
+        $pengajuans = PengajuanPkl::with(['perusahaan', 'siswa.user', 'siswa.kompetensiKeahlian'])
             ->when($periode, fn ($q) => $q->where('periode_id', $periode->id))
             ->where('status', 'disetujui')
-            ->orderByDesc('jumlah')
             ->get()
             ->groupBy(fn ($p) => $p->perusahaan_id.'-'.$p->siswa?->kompetensi_keahlian_id)
             ->map(function ($group) {
@@ -44,17 +45,30 @@ class SuratPengantarController extends Controller
                 return [
                     'perusahaan_id' => $first->perusahaan_id,
                     'perusahaan_nama' => $first->perusahaan?->nama,
+                    'perusahaan_alamat' => $first->perusahaan?->alamat,
                     'perusahaan_kuota' => $first->perusahaan?->kuota_saran,
                     'kompetensi_keahlian_id' => $first->siswa?->kompetensi_keahlian_id,
                     'kompetensi_keahlian_nama' => $first->siswa?->kompetensiKeahlian?->nama,
                     'jumlah_siap' => $group->count(),
+                    // Daftar siswa untuk dialog Lihat Detail
+                    'siswa' => $group->map(fn ($p) => [
+                        'id' => $p->siswa?->id,
+                        'nama' => $p->siswa?->user?->name,
+                        'nis' => $p->siswa?->nis,
+                    ])->values(),
                 ];
             })
+            ->when($search, fn ($col) => $col->filter(
+                fn ($item) => str_contains(strtolower($item['perusahaan_nama'] ?? ''), strtolower($search))
+                    || str_contains(strtolower($item['kompetensi_keahlian_nama'] ?? ''), strtolower($search))
+            ))
+            ->sortByDesc('jumlah_siap')
             ->values();
 
         return Inertia::render('hubin/surat-pengantar/index', [
             'perusahaans' => $pengajuans,
             'periodeAktif' => $periode,
+            'filters' => ['search' => $search],
         ]);
     }
 
