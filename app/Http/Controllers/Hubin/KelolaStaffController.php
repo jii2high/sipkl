@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Hubin;
 
-use App\Exports\AkunExport;
 use App\Exports\TemplateGuruExport;
-use App\Exports\TemplateSiswaExport;
 use App\Http\Controllers\Controller;
 use App\Imports\GuruImport;
-use App\Imports\SiswaImport;
 use App\Models\GuruProfile;
+use App\Models\KompetensiKeahlian;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,18 +14,20 @@ use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class AkunController extends Controller
+class KelolaStaffController extends Controller
 {
     public function index(): Response
     {
         $guru = GuruProfile::with('user', 'kompetensiKeahlian')
-            ->where('jabatan', 'kaprog')
             ->when(request('search'), fn ($q, $v) => $q->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$v}%")))
+            ->when(request('jabatan'), fn ($q, $v) => $q->where('jabatan', $v))
+            ->orderBy('jabatan')
             ->paginate(10)
             ->withQueryString();
 
-        return Inertia::render('hubin/kelola-akun/index', [
-            'akun' => $guru,
+        return Inertia::render('hubin/kelola-staff/index', [
+            'guru' => $guru,
+            'jurusan' => KompetensiKeahlian::orderBy('nama')->get(),
         ]);
     }
 
@@ -38,10 +38,10 @@ class AkunController extends Controller
             'kompetensi_keahlian_id' => null,
         ]);
 
-        return back();
+        return back()->with('success', 'Kaprog dinonaktifkan — role otomatis jadi Guru Pembimbing (BR31).');
     }
 
-    public function importGuru(Request $request): RedirectResponse
+    public function import(Request $request): RedirectResponse
     {
         $request->validate(['file' => 'required|mimes:xlsx,xls']);
 
@@ -55,32 +55,8 @@ class AkunController extends Controller
         return back()->with('success', 'Import guru berhasil.');
     }
 
-    public function importSiswa(Request $request): RedirectResponse
-    {
-        $request->validate(['file' => 'required|mimes:xlsx,xls']);
-
-        $import = new SiswaImport;
-        Excel::import($import, $request->file('file'));
-
-        if ($import->errors) {
-            return back()->with('importErrors', $import->errors);
-        }
-
-        return back()->with('success', 'Import siswa berhasil.');
-    }
-
-    public function export(): BinaryFileResponse
-    {
-        return Excel::download(new AkunExport, 'akun.xlsx');
-    }
-
-    public function templateGuru(): BinaryFileResponse
+    public function template(): BinaryFileResponse
     {
         return Excel::download(new TemplateGuruExport, 'template_guru.xlsx');
-    }
-
-    public function templateSiswa(): BinaryFileResponse
-    {
-        return Excel::download(new TemplateSiswaExport, 'template_siswa.xlsx');
     }
 }
