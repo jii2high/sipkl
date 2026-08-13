@@ -71,12 +71,16 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
     const [editTarget, setEditTarget] = useState<GuruItem | null>(null);
     const [form, setForm] = useState(formKosong);
     const [menyimpan, setMenyimpan] = useState(false);
-    const [duplikat, setDuplikat] = useState<{ nama: string; nip: string } | null>(null);
+    const [duplikat, setDuplikat] = useState<{
+        nama: string;
+        nip: string;
+    } | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const kaprogWarning = form.jabatan === 'kaprog' && adaKaprog && (
-        modeTambah || (editTarget && editTarget.jabatan !== 'kaprog')
-    );
+    const kaprogWarning =
+        form.jabatan === 'kaprog' &&
+        adaKaprog &&
+        (modeTambah || (editTarget && editTarget.jabatan !== 'kaprog'));
 
     function bukaTambah() {
         setModeTambah(true);
@@ -119,9 +123,17 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
         };
 
         if (modeTambah) {
-            router.post('/hubin/kelola-staff', payload, { onSuccess, onError, onFinish: () => setMenyimpan(false) });
+            router.post('/hubin/kelola-staff', payload, {
+                onSuccess,
+                onError,
+                onFinish: () => setMenyimpan(false),
+            });
         } else {
-            router.put(`/hubin/kelola-staff/${editTarget!.id}`, payload, { onSuccess, onError, onFinish: () => setMenyimpan(false) });
+            router.put(`/hubin/kelola-staff/${editTarget!.id}`, payload, {
+                onSuccess,
+                onError,
+                onFinish: () => setMenyimpan(false),
+            });
         }
     }
 
@@ -132,21 +144,25 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
     }
 
     function nonaktifkanKaprog(g: GuruItem) {
-        if (confirm(`Nonaktifkan ${g.user.name} dari jabatan Kaprog? Role otomatis jadi Guru Pembimbing.`)) {
+        if (
+            confirm(
+                `Nonaktifkan ${g.user.name} dari jabatan Kaprog? Role otomatis jadi Guru Pembimbing.`,
+            )
+        ) {
             router.patch(`/hubin/kelola-staff/${g.id}/nonaktifkan`);
         }
     }
 
-    const adaPerubahan = modeTambah || (
-        editTarget !== null && (
-            form.name !== editTarget.user.name ||
-            form.email !== editTarget.user.email ||
-            form.nip !== (editTarget.nip ?? '') ||
-            form.jabatan !== editTarget.jabatan ||
-            form.kompetensi_keahlian_id !== String(editTarget.kompetensi_keahlian_id ?? '') ||
-            form.password !== ''
-        )
-    );
+    const adaPerubahan =
+        modeTambah ||
+        (editTarget !== null &&
+            (form.name !== editTarget.user.name ||
+                form.email !== editTarget.user.email ||
+                form.nip !== (editTarget.nip ?? '') ||
+                form.jabatan !== editTarget.jabatan ||
+                form.kompetensi_keahlian_id !==
+                    String(editTarget.kompetensi_keahlian_id ?? '') ||
+                form.password !== ''));
 
     return (
         <>
@@ -168,7 +184,10 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
                             label: 'Jabatan',
                             options: [
                                 { label: 'Kaprog', value: 'kaprog' },
-                                { label: 'Guru Pembimbing', value: 'guru_pembimbing' },
+                                {
+                                    label: 'Guru Pembimbing',
+                                    value: 'guru_pembimbing',
+                                },
                                 { label: 'Staf Hubin', value: 'hubin' },
                             ],
                         },
@@ -189,37 +208,64 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
                         <tbody>
                             {guru.data.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                                    <td
+                                        colSpan={5}
+                                        className="p-6 text-center text-muted-foreground"
+                                    >
                                         Tidak ada data staff.
                                     </td>
                                 </tr>
                             )}
                             {guru.data.map((g) => (
-                                <tr key={g.id} className="border-b last:border-0">
-                                    <td className="p-3 font-mono text-sm">{g.nip ?? '-'}</td>
-                                    <td className="p-3 font-medium">{g.user.name}</td>
+                                <tr
+                                    key={g.id}
+                                    className="border-b last:border-0"
+                                >
+                                    <td className="p-3 font-mono text-sm">
+                                        {g.nip ?? '-'}
+                                    </td>
+                                    <td className="p-3 font-medium">
+                                        {g.user.name}
+                                    </td>
                                     <td className="p-3">
                                         <Badge
-                                            variant={g.jabatan === 'kaprog' ? 'default' : 'secondary'}
+                                            variant={
+                                                g.jabatan === 'kaprog'
+                                                    ? 'default'
+                                                    : 'secondary'
+                                            }
                                         >
                                             {LABEL_JABATAN[g.jabatan]}
                                         </Badge>
                                     </td>
-                                    <td className="p-3 text-muted-foreground">{g.user.email}</td>
+                                    <td className="p-3 text-muted-foreground">
+                                        {g.user.email}
+                                    </td>
                                     <td className="p-3">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                >
                                                     •••
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => bukaEdit(g)}>
-                                                    <Pencil className="mr-2 size-4" /> Edit
+                                                <DropdownMenuItem
+                                                    onClick={() => bukaEdit(g)}
+                                                >
+                                                    <Pencil className="mr-2 size-4" />{' '}
+                                                    Edit
                                                 </DropdownMenuItem>
                                                 {g.jabatan === 'kaprog' && (
-                                                    <DropdownMenuItem onClick={() => nonaktifkanKaprog(g)}>
-                                                        <UserMinus className="mr-2 size-4" /> Nonaktifkan Kaprog
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            nonaktifkanKaprog(g)
+                                                        }
+                                                    >
+                                                        <UserMinus className="mr-2 size-4" />{' '}
+                                                        Nonaktifkan Kaprog
                                                     </DropdownMenuItem>
                                                 )}
                                                 <DropdownMenuSeparator />
@@ -227,7 +273,8 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
                                                     className="text-destructive"
                                                     onClick={() => hapus(g)}
                                                 >
-                                                    <Trash2 className="mr-2 size-4" /> Hapus
+                                                    <Trash2 className="mr-2 size-4" />{' '}
+                                                    Hapus
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -259,14 +306,19 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
             <Dialog open={dialogBuka} onOpenChange={setDialogBuka}>
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>{modeTambah ? 'Tambah Staff' : 'Edit Staff'}</DialogTitle>
+                        <DialogTitle>
+                            {modeTambah ? 'Tambah Staff' : 'Edit Staff'}
+                        </DialogTitle>
                     </DialogHeader>
 
                     {/* Alert kaprog warning */}
                     {kaprogWarning && (
                         <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                             <span>⚠️</span>
-                            <span>Sudah ada Kaprog aktif. Menambah Kaprog baru akan ada dua Kaprog sekaligus.</span>
+                            <span>
+                                Sudah ada Kaprog aktif. Menambah Kaprog baru
+                                akan ada dua Kaprog sekaligus.
+                            </span>
                         </div>
                     )}
 
@@ -279,10 +331,18 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
                             </strong>
                             . Yakin ingin menimpa?
                             <div className="mt-2 flex gap-2">
-                                <Button size="sm" variant="destructive" onClick={() => simpan(true)}>
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => simpan(true)}
+                                >
                                     Ya, Timpa
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => setDuplikat(null)}>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setDuplikat(null)}
+                                >
                                     Batal
                                 </Button>
                             </div>
@@ -295,19 +355,37 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
                                 <Label>NIP</Label>
                                 <Input
                                     value={form.nip}
-                                    onChange={(e) => setForm({ ...form, nip: e.target.value })}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            nip: e.target.value,
+                                        })
+                                    }
                                     placeholder="Nomor Induk Pegawai"
                                 />
-                                {errors.nip && <p className="mt-1 text-xs text-destructive">{errors.nip}</p>}
+                                {errors.nip && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {errors.nip}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label>Nama Lengkap</Label>
                                 <Input
                                     value={form.name}
-                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            name: e.target.value,
+                                        })
+                                    }
                                     placeholder="Nama staff"
                                 />
-                                {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
+                                {errors.name && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {errors.name}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -315,18 +393,30 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
                             <Label>Jabatan</Label>
                             <Select
                                 value={form.jabatan}
-                                onValueChange={(v) => setForm({ ...form, jabatan: v })}
+                                onValueChange={(v) =>
+                                    setForm({ ...form, jabatan: v })
+                                }
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih jabatan" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="kaprog">Kaprog</SelectItem>
-                                    <SelectItem value="guru_pembimbing">Guru Pembimbing</SelectItem>
-                                    <SelectItem value="hubin">Staf Hubin</SelectItem>
+                                    <SelectItem value="kaprog">
+                                        Kaprog
+                                    </SelectItem>
+                                    <SelectItem value="guru_pembimbing">
+                                        Guru Pembimbing
+                                    </SelectItem>
+                                    <SelectItem value="hubin">
+                                        Staf Hubin
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
-                            {errors.jabatan && <p className="mt-1 text-xs text-destructive">{errors.jabatan}</p>}
+                            {errors.jabatan && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.jabatan}
+                                </p>
+                            )}
                         </div>
 
                         <div>
@@ -334,35 +424,57 @@ export default function KelolaStaff({ guru, adaKaprog }: Props) {
                             <Input
                                 type="email"
                                 value={form.email}
-                                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                onChange={(e) =>
+                                    setForm({ ...form, email: e.target.value })
+                                }
                                 placeholder="email@sekolah.id"
                             />
-                            {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
+                            {errors.email && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.email}
+                                </p>
+                            )}
                         </div>
 
                         <div>
                             <Label>
                                 Password{' '}
                                 {modeTambah && (
-                                    <span className="text-muted-foreground">(default: NIP)</span>
+                                    <span className="text-muted-foreground">
+                                        (default: NIP)
+                                    </span>
                                 )}
                             </Label>
                             <Input
                                 type="password"
                                 value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                placeholder={modeTambah ? 'Kosongkan untuk pakai NIP' : 'Kosongkan jika tidak diubah'}
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        password: e.target.value,
+                                    })
+                                }
+                                placeholder={
+                                    modeTambah
+                                        ? 'Kosongkan untuk pakai NIP'
+                                        : 'Kosongkan jika tidak diubah'
+                                }
                             />
                         </div>
                     </div>
 
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setDialogBuka(false)}>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setDialogBuka(false)}
+                        >
                             Batal
                         </Button>
                         <Button
                             onClick={() => simpan()}
-                            disabled={menyimpan || (!modeTambah && !adaPerubahan)}
+                            disabled={
+                                menyimpan || (!modeTambah && !adaPerubahan)
+                            }
                         >
                             {menyimpan ? 'Menyimpan...' : 'Simpan'}
                         </Button>

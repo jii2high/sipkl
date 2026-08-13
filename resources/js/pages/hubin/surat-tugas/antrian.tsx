@@ -42,19 +42,27 @@ export default function AntrianMonitoring({ drafts }: Props) {
     }
 
     function setujui(id: number) {
-        if (confirm('Setujui dan terbitkan Surat Tugas Monitoring ini? Nomor surat dibuat otomatis.')) {
-            router.post(`/hubin/surat-tugas/${id}/terbit`, {}, {
-                onSuccess: () => {
-                    // Inertia akan reload data dari server
+        if (
+            confirm(
+                'Setujui dan terbitkan Surat Tugas Monitoring ini? Nomor surat dibuat otomatis.',
+            )
+        ) {
+            router.post(
+                `/hubin/surat-tugas/${id}/terbit`,
+                {},
+                {
+                    onSuccess: () => {
+                        // Inertia akan reload data dari server
+                    },
                 },
-            });
+            );
         }
     }
 
     function tolak() {
         if (!targetId || !catatan.trim()) {
-return;
-}
+            return;
+        }
 
         setMenolak(true);
         router.delete(`/hubin/surat-tugas/${targetId}/tolak`, {
@@ -72,9 +80,12 @@ return;
             <Head title="Antrian Monitoring" />
             <div className="flex flex-col gap-4 p-4">
                 <div>
-                    <h2 className="text-2xl font-semibold">Antrian Surat Tugas Monitoring</h2>
+                    <h2 className="text-2xl font-semibold">
+                        Antrian Surat Tugas Monitoring
+                    </h2>
                     <p className="text-sm text-muted-foreground">
-                        Draft Surat Tugas yang diajukan Kaprog — setujui untuk menerbitkan atau tolak dengan catatan.
+                        Draft Surat Tugas yang diajukan Kaprog — setujui untuk
+                        menerbitkan atau tolak dengan catatan.
                     </p>
                 </div>
 
@@ -93,14 +104,23 @@ return;
                         <tbody>
                             {drafts.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
-                                        Tidak ada draft yang menunggu persetujuan.
+                                    <td
+                                        colSpan={6}
+                                        className="p-6 text-center text-muted-foreground"
+                                    >
+                                        Tidak ada draft yang menunggu
+                                        persetujuan.
                                     </td>
                                 </tr>
                             )}
                             {drafts.map((d, idx) => (
-                                <tr key={d.id} className="border-b last:border-0">
-                                    <td className="p-3 text-muted-foreground">{idx + 1}</td>
+                                <tr
+                                    key={d.id}
+                                    className="border-b last:border-0"
+                                >
+                                    <td className="p-3 text-muted-foreground">
+                                        {idx + 1}
+                                    </td>
                                     <td className="p-3 font-medium">
                                         {d.requested_by?.name ?? '-'}
                                     </td>
@@ -108,7 +128,8 @@ return;
                                     <td className="p-3">
                                         {d.lingkup === 'global'
                                             ? 'Semua Jurusan'
-                                            : d.kompetensi_keahlian?.nama ?? '-'}
+                                            : (d.kompetensi_keahlian?.nama ??
+                                              '-')}
                                     </td>
                                     <td className="p-3 text-muted-foreground">
                                         {d.berlaku_hingga ?? '-'}
@@ -126,7 +147,9 @@ return;
                                                 size="sm"
                                                 variant="outline"
                                                 className="text-destructive hover:text-destructive"
-                                                onClick={() => bukaDialogTolak(d.id)}
+                                                onClick={() =>
+                                                    bukaDialogTolak(d.id)
+                                                }
                                             >
                                                 <XCircle className="mr-1 size-4" />
                                                 Tolak
@@ -147,7 +170,10 @@ return;
                         <DialogTitle>Tolak Draft Surat Tugas</DialogTitle>
                     </DialogHeader>
                     <div>
-                        <Label>Catatan Penolakan <span className="text-destructive">*</span></Label>
+                        <Label>
+                            Catatan Penolakan{' '}
+                            <span className="text-destructive">*</span>
+                        </Label>
                         <Textarea
                             value={catatan}
                             onChange={(e) => setCatatan(e.target.value)}
@@ -156,11 +182,15 @@ return;
                             className="mt-1"
                         />
                         <p className="mt-1 text-xs text-muted-foreground">
-                            Catatan ini akan dikirim sebagai notifikasi ke Kaprog peminta.
+                            Catatan ini akan dikirim sebagai notifikasi ke
+                            Kaprog peminta.
                         </p>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setDialogTolak(false)}>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setDialogTolak(false)}
+                        >
                             Batal
                         </Button>
                         <Button

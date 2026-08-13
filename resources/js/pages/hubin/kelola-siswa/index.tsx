@@ -75,7 +75,10 @@ export default function KelolaSiswa({ siswa, jurusan, periodes }: Props) {
     const [editTarget, setEditTarget] = useState<SiswaItem | null>(null);
     const [form, setForm] = useState(formKosong);
     const [menyimpan, setMenyimpan] = useState(false);
-    const [duplikat, setDuplikat] = useState<{ nama: string; nis: string } | null>(null);
+    const [duplikat, setDuplikat] = useState<{
+        nama: string;
+        nis: string;
+    } | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     function bukaTambah() {
@@ -145,33 +148,33 @@ export default function KelolaSiswa({ siswa, jurusan, periodes }: Props) {
         const file = e.target.files?.[0];
 
         if (!file) {
-return;
-}
+            return;
+        }
 
         const form = new FormData();
         form.append('file', file);
         router.post('/hubin/kelola-siswa/import', form, {
             onSuccess: () => {
                 if (fileRef.current) {
-fileRef.current.value = '';
-}
+                    fileRef.current.value = '';
+                }
             },
         });
     }
 
     // Cek apakah form berubah dari data awal (untuk disable simpan saat edit)
-    const adaPerubahan = modeTambah || (
-        editTarget !== null && (
-            form.name !== editTarget.user.name ||
-            form.email !== editTarget.user.email ||
-            form.nis !== editTarget.nis ||
-            form.periode_id !== String(editTarget.periode?.id ?? '') ||
-            form.kompetensi_keahlian_id !== String(editTarget.kompetensi_keahlian?.id ?? '') ||
-            form.alamat !== (editTarget.alamat ?? '') ||
-            form.no_telp !== (editTarget.no_telp ?? '') ||
-            form.password !== ''
-        )
-    );
+    const adaPerubahan =
+        modeTambah ||
+        (editTarget !== null &&
+            (form.name !== editTarget.user.name ||
+                form.email !== editTarget.user.email ||
+                form.nis !== editTarget.nis ||
+                form.periode_id !== String(editTarget.periode?.id ?? '') ||
+                form.kompetensi_keahlian_id !==
+                    String(editTarget.kompetensi_keahlian?.id ?? '') ||
+                form.alamat !== (editTarget.alamat ?? '') ||
+                form.no_telp !== (editTarget.no_telp ?? '') ||
+                form.password !== ''));
 
     return (
         <>
@@ -180,7 +183,10 @@ fileRef.current.value = '';
                 <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-semibold">Kelola Siswa</h2>
                     <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => fileRef.current?.click()}>
+                        <Button
+                            variant="outline"
+                            onClick={() => fileRef.current?.click()}
+                        >
                             <FileUp className="mr-1 size-4" /> Import
                         </Button>
                         <a href="/hubin/kelola-siswa/export">
@@ -232,40 +238,60 @@ fileRef.current.value = '';
                         <tbody>
                             {siswa.data.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                                    <td
+                                        colSpan={6}
+                                        className="p-6 text-center text-muted-foreground"
+                                    >
                                         Tidak ada data siswa.
                                     </td>
                                 </tr>
                             )}
                             {siswa.data.map((s) => (
-                                <tr key={s.id} className="border-b last:border-0">
-                                    <td className="p-3 font-mono text-sm">{s.nis}</td>
-                                    <td className="p-3 font-medium">{s.user.name}</td>
+                                <tr
+                                    key={s.id}
+                                    className="border-b last:border-0"
+                                >
+                                    <td className="p-3 font-mono text-sm">
+                                        {s.nis}
+                                    </td>
+                                    <td className="p-3 font-medium">
+                                        {s.user.name}
+                                    </td>
                                     <td className="p-3">
                                         <Badge variant="secondary">
-                                            {s.kompetensi_keahlian?.acronym ?? '-'}
+                                            {s.kompetensi_keahlian?.acronym ??
+                                                '-'}
                                         </Badge>
                                     </td>
                                     <td className="p-3 text-muted-foreground">
                                         {s.periode?.nama ?? '-'}
                                     </td>
-                                    <td className="p-3 text-muted-foreground">{s.user.email}</td>
+                                    <td className="p-3 text-muted-foreground">
+                                        {s.user.email}
+                                    </td>
                                     <td className="p-3">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                >
                                                     •••
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => bukaEdit(s)}>
-                                                    <Pencil className="mr-2 size-4" /> Edit
+                                                <DropdownMenuItem
+                                                    onClick={() => bukaEdit(s)}
+                                                >
+                                                    <Pencil className="mr-2 size-4" />{' '}
+                                                    Edit
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     className="text-destructive"
                                                     onClick={() => hapus(s)}
                                                 >
-                                                    <Trash2 className="mr-2 size-4" /> Hapus
+                                                    <Trash2 className="mr-2 size-4" />{' '}
+                                                    Hapus
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -320,10 +346,18 @@ fileRef.current.value = '';
                             </strong>
                             . Yakin ingin menimpa?
                             <div className="mt-2 flex gap-2">
-                                <Button size="sm" variant="destructive" onClick={() => simpan(true)}>
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => simpan(true)}
+                                >
                                     Ya, Timpa
                                 </Button>
-                                <Button size="sm" variant="ghost" onClick={() => setDuplikat(null)}>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setDuplikat(null)}
+                                >
                                     Batal
                                 </Button>
                             </div>
@@ -336,19 +370,37 @@ fileRef.current.value = '';
                                 <Label>NIS</Label>
                                 <Input
                                     value={form.nis}
-                                    onChange={(e) => setForm({ ...form, nis: e.target.value })}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            nis: e.target.value,
+                                        })
+                                    }
                                     placeholder="Nomor Induk Siswa"
                                 />
-                                {errors.nis && <p className="mt-1 text-xs text-destructive">{errors.nis}</p>}
+                                {errors.nis && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {errors.nis}
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <Label>Nama Lengkap</Label>
                                 <Input
                                     value={form.name}
-                                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            name: e.target.value,
+                                        })
+                                    }
                                     placeholder="Nama siswa"
                                 />
-                                {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
+                                {errors.name && (
+                                    <p className="mt-1 text-xs text-destructive">
+                                        {errors.name}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -356,41 +408,60 @@ fileRef.current.value = '';
                             <Label>Periode</Label>
                             <Select
                                 value={form.periode_id}
-                                onValueChange={(v) => setForm({ ...form, periode_id: v })}
+                                onValueChange={(v) =>
+                                    setForm({ ...form, periode_id: v })
+                                }
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih periode aktif" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {periodes.map((p) => (
-                                        <SelectItem key={p.id} value={String(p.id)}>
+                                        <SelectItem
+                                            key={p.id}
+                                            value={String(p.id)}
+                                        >
                                             {p.nama}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-                            {errors.periode_id && <p className="mt-1 text-xs text-destructive">{errors.periode_id}</p>}
+                            {errors.periode_id && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.periode_id}
+                                </p>
+                            )}
                         </div>
 
                         <div>
                             <Label>Jurusan</Label>
                             <Select
                                 value={form.kompetensi_keahlian_id}
-                                onValueChange={(v) => setForm({ ...form, kompetensi_keahlian_id: v })}
+                                onValueChange={(v) =>
+                                    setForm({
+                                        ...form,
+                                        kompetensi_keahlian_id: v,
+                                    })
+                                }
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih jurusan" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {jurusan.map((j) => (
-                                        <SelectItem key={j.id} value={String(j.id)}>
+                                        <SelectItem
+                                            key={j.id}
+                                            value={String(j.id)}
+                                        >
                                             {j.nama}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                             {errors.kompetensi_keahlian_id && (
-                                <p className="mt-1 text-xs text-destructive">{errors.kompetensi_keahlian_id}</p>
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.kompetensi_keahlian_id}
+                                </p>
                             )}
                         </div>
 
@@ -399,10 +470,16 @@ fileRef.current.value = '';
                             <Input
                                 type="email"
                                 value={form.email}
-                                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                onChange={(e) =>
+                                    setForm({ ...form, email: e.target.value })
+                                }
                                 placeholder="email@sekolah.id"
                             />
-                            {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
+                            {errors.email && (
+                                <p className="mt-1 text-xs text-destructive">
+                                    {errors.email}
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
@@ -410,7 +487,12 @@ fileRef.current.value = '';
                                 <Label>Alamat</Label>
                                 <Input
                                     value={form.alamat}
-                                    onChange={(e) => setForm({ ...form, alamat: e.target.value })}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            alamat: e.target.value,
+                                        })
+                                    }
                                     placeholder="Alamat lengkap"
                                 />
                             </div>
@@ -418,7 +500,12 @@ fileRef.current.value = '';
                                 <Label>No. Telepon</Label>
                                 <Input
                                     value={form.no_telp}
-                                    onChange={(e) => setForm({ ...form, no_telp: e.target.value })}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            no_telp: e.target.value,
+                                        })
+                                    }
                                     placeholder="08xx-xxxx-xxxx"
                                 />
                             </div>
@@ -428,25 +515,41 @@ fileRef.current.value = '';
                             <Label>
                                 Password{' '}
                                 {modeTambah && (
-                                    <span className="text-muted-foreground">(default: NIS)</span>
+                                    <span className="text-muted-foreground">
+                                        (default: NIS)
+                                    </span>
                                 )}
                             </Label>
                             <Input
                                 type="password"
                                 value={form.password}
-                                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                placeholder={modeTambah ? 'Kosongkan untuk pakai NIS' : 'Kosongkan jika tidak diubah'}
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        password: e.target.value,
+                                    })
+                                }
+                                placeholder={
+                                    modeTambah
+                                        ? 'Kosongkan untuk pakai NIS'
+                                        : 'Kosongkan jika tidak diubah'
+                                }
                             />
                         </div>
                     </div>
 
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setDialogBuka(false)}>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setDialogBuka(false)}
+                        >
                             Batal
                         </Button>
                         <Button
                             onClick={() => simpan()}
-                            disabled={menyimpan || (!modeTambah && !adaPerubahan)}
+                            disabled={
+                                menyimpan || (!modeTambah && !adaPerubahan)
+                            }
                         >
                             {menyimpan ? 'Menyimpan...' : 'Simpan'}
                         </Button>
