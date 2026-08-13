@@ -1,10 +1,13 @@
 <?php
 
+use App\Models\KompetensiKeahlian;
 use App\Models\PengajuanPkl;
 use App\Models\PeriodePkl;
 use App\Models\Perusahaan;
+use App\Models\SiswaProfile;
 use App\Models\SuratBalasan;
 use App\Models\SuratPengantar;
+use App\Models\User;
 use App\Notifications\SuratBalasanDitolak;
 use App\Notifications\SuratBalasanDiupload;
 use App\Notifications\SuratPengantarTerbit;
@@ -20,7 +23,8 @@ it('hanya hubin yang bisa mengakses halaman bundling', function () {
 
     $p = Perusahaan::factory()->create();
     $pr = PeriodePkl::factory()->create();
-    asSiswa()->get("/hubin/surat-pengantar/{$p->id}/{$pr->id}")->assertForbidden();
+    $kk = KompetensiKeahlian::factory()->create();
+    asSiswa()->get("/hubin/surat-pengantar/{$p->id}/{$kk->id}/{$pr->id}")->assertForbidden();
 
     asHubin()->get('/hubin/surat-pengantar')->assertOk();
 });
@@ -38,7 +42,7 @@ it('tombol cetak mendownload pdf tanpa mengubah data', function () {
     $data = siapkanSuratPengantar();
 
     asHubin()
-        ->get("/hubin/surat-pengantar/{$data['perusahaan']->id}/{$data['periode']->id}/cetak")
+        ->get("/hubin/surat-pengantar/{$data['perusahaan']->id}/{$data['kk']->id}/{$data['periode']->id}/cetak")
         ->assertOk()
         ->assertHeader('Content-Type', 'application/pdf');
 
@@ -50,7 +54,7 @@ it('tombol kirim membuat record surat pengantar dan mengirim notifikasi', functi
     Notification::fake();
     $data = siapkanSuratPengantar();
 
-    asHubin()->post("/hubin/surat-pengantar/{$data['perusahaan']->id}/{$data['periode']->id}/kirim");
+    asHubin()->post("/hubin/surat-pengantar/{$data['perusahaan']->id}/{$data['kk']->id}/{$data['periode']->id}/kirim");
 
     // Record surat pengantar dibuat
     expect(SuratPengantar::count())->toBe(1);
@@ -66,9 +70,34 @@ it('tombol kirim membuat record surat pengantar dan mengirim notifikasi', functi
 it('nomor surat sequential per periode', function () {
     $data = siapkanSuratPengantar();
 
-    asHubin()->post("/hubin/surat-pengantar/{$data['perusahaan']->id}/{$data['periode']->id}/kirim")->assertRedirect();
-    asHubin()->post("/hubin/surat-pengantar/{$data['perusahaan']->id}/{$data['periode']->id}/kirim")->assertRedirect();
-    asHubin()->post("/hubin/surat-pengantar/{$data['perusahaan']->id}/{$data['periode']->id}/kirim")->assertRedirect();
+    // Unique constraint: 1 surat per perusahaan+jurusan+periode (BR17).
+    // Sequential diuji lewat 3 kombinasi berbeda dalam periode yang sama.
+    $perusahaan2 = Perusahaan::factory()->create();
+    $perusahaan3 = Perusahaan::factory()->create();
+    $p2Profile = SiswaProfile::factory()->create([
+        'user_id' => User::factory()->create()->id,
+        'kompetensi_keahlian_id' => $data['kk']->id,
+    ]);
+    $p3Profile = SiswaProfile::factory()->create([
+        'user_id' => User::factory()->create()->id,
+        'kompetensi_keahlian_id' => $data['kk']->id,
+    ]);
+    PengajuanPkl::factory()->create([
+        'siswa_id' => $p2Profile->id,
+        'perusahaan_id' => $perusahaan2->id,
+        'periode_id' => $data['periode']->id,
+        'status' => 'disetujui',
+    ]);
+    PengajuanPkl::factory()->create([
+        'siswa_id' => $p3Profile->id,
+        'perusahaan_id' => $perusahaan3->id,
+        'periode_id' => $data['periode']->id,
+        'status' => 'disetujui',
+    ]);
+
+    asHubin()->post("/hubin/surat-pengantar/{$data['perusahaan']->id}/{$data['kk']->id}/{$data['periode']->id}/kirim")->assertRedirect();
+    asHubin()->post("/hubin/surat-pengantar/{$perusahaan2->id}/{$data['kk']->id}/{$data['periode']->id}/kirim")->assertRedirect();
+    asHubin()->post("/hubin/surat-pengantar/{$perusahaan3->id}/{$data['kk']->id}/{$data['periode']->id}/kirim")->assertRedirect();
 
     expect(SuratPengantar::count())->toBe(3);
     $surats = SuratPengantar::orderBy('id')->get();
@@ -104,6 +133,7 @@ it('upload surat balasan berhasil mengubah status ke resmi_pkl otomatis (BR7)', 
     $surat = SuratPengantar::create([
         'nomor_surat' => PenomoranSurat::suratPengantar($data['periode']->id),
         'perusahaan_id' => $data['perusahaan']->id,
+        'kompetensi_keahlian_id' => $data['kk']->id,
         'periode_id' => $data['periode']->id,
         'tanggal_terbit' => now()->toDateString(),
         'generated_by' => $hubin->id,
@@ -131,6 +161,7 @@ it('upload file non-pdf ditolak validasi sebelum mengubah status', function () {
     $surat = SuratPengantar::create([
         'nomor_surat' => PenomoranSurat::suratPengantar($data['periode']->id),
         'perusahaan_id' => $data['perusahaan']->id,
+        'kompetensi_keahlian_id' => $data['kk']->id,
         'periode_id' => $data['periode']->id,
         'tanggal_terbit' => now()->toDateString(),
         'generated_by' => hubinUser()->id,
@@ -155,6 +186,7 @@ it('hubin dapat menolak surat balasan pasca-fakta (BR7)', function () {
     $surat = SuratPengantar::create([
         'nomor_surat' => PenomoranSurat::suratPengantar($data['periode']->id),
         'perusahaan_id' => $data['perusahaan']->id,
+        'kompetensi_keahlian_id' => $data['kk']->id,
         'periode_id' => $data['periode']->id,
         'tanggal_terbit' => now()->toDateString(),
         'generated_by' => hubinUser()->id,
@@ -192,6 +224,7 @@ it('penolakan balasan wajib catatan minimal 15 karakter', function () {
     $surat = SuratPengantar::create([
         'nomor_surat' => PenomoranSurat::suratPengantar($data['periode']->id),
         'perusahaan_id' => $data['perusahaan']->id,
+        'kompetensi_keahlian_id' => $data['kk']->id,
         'periode_id' => $data['periode']->id,
         'tanggal_terbit' => now()->toDateString(),
         'generated_by' => hubinUser()->id,

@@ -1,12 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
-import { FileText } from 'lucide-react';
+import { Building2, FileText } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard as hubinDashboard } from '@/routes/hubin';
-import {
-    index as suratPengantarIndex,
-    preview as suratPengantarPreview,
-} from '@/routes/hubin/surat-pengantar';
+import { preview as suratPengantarPreview } from '@/routes/hubin/surat-pengantar';
 
 export default function Index({ perusahaans, periodeAktif }: any) {
     return (
@@ -31,7 +29,9 @@ export default function Index({ perusahaans, periodeAktif }: any) {
                 {periodeAktif && (
                     <>
                         <p className="text-sm text-muted-foreground">
-                            Periode aktif: <strong>{periodeAktif.nama}</strong>
+                            Periode aktif:{' '}
+                            <strong>{periodeAktif.nama}</strong> — satu surat
+                            pengantar per perusahaan per jurusan.
                         </p>
 
                         {perusahaans?.length === 0 && (
@@ -44,12 +44,15 @@ export default function Index({ perusahaans, periodeAktif }: any) {
                         )}
 
                         {perusahaans?.map((p: any) => (
-                            <Card key={p.id}>
+                            <Card key={`${p.perusahaan_id}-${p.kompetensi_keahlian_id}`}>
                                 <CardHeader>
                                     <CardTitle className="flex items-center justify-between text-base">
                                         <span className="flex items-center gap-2">
-                                            <FileText className="size-4 text-muted-foreground" />
-                                            {p.nama}
+                                            <Building2 className="size-4 text-muted-foreground" />
+                                            {p.perusahaan_nama}
+                                            <Badge variant="secondary">
+                                                {p.kompetensi_keahlian_nama}
+                                            </Badge>
                                         </span>
                                         <span className="text-sm text-muted-foreground">
                                             {p.jumlah_siap} siswa siap
@@ -58,17 +61,18 @@ export default function Index({ perusahaans, periodeAktif }: any) {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-muted-foreground">
-                                            {p.alamat ||
-                                                'Alamat tidak tersedia'}
+                                        <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <FileText className="size-4" />
+                                            Kuota saran: {p.perusahaan_kuota}{' '}
+                                            siswa
                                         </span>
                                         <Link
-                                            href={
-                                                suratPengantarPreview({
-                                                    perusahaan: p.id,
-                                                    periode: periodeAktif.id,
-                                                }).url
-                                            }
+                                            href={suratPengantarPreview({
+                                                perusahaan: p.perusahaan_id,
+                                                kompetensiKeahlian:
+                                                    p.kompetensi_keahlian_id,
+                                                periode: periodeAktif.id,
+                                            }).url}
                                         >
                                             <Button variant="ghost" size="sm">
                                                 Lihat detail &rarr;
@@ -88,6 +92,6 @@ export default function Index({ perusahaans, periodeAktif }: any) {
 Index.layout = {
     breadcrumbs: [
         { title: 'Dashboard', href: hubinDashboard() },
-        { title: 'Bundling & Cetak', href: suratPengantarIndex() },
+        { title: 'Bundling & Cetak' },
     ],
 };

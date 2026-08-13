@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hubin;
 
 use App\Http\Controllers\Controller;
+use App\Models\KompetensiKeahlian;
 use App\Models\PengajuanPkl;
 use App\Models\PeriodePkl;
 use App\Models\Perusahaan;
@@ -11,6 +12,7 @@ use App\Notifications\SuratBalasanDitolak;
 use App\Notifications\SuratPengantarTerbit;
 use App\Support\PenomoranSurat;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -22,7 +24,7 @@ use Inertia\Response;
 class SuratPengantarController extends Controller
 {
     /**
-     * Daftar perusahaan yang ada pengajuan berstatus 'disetujui' pada periode aktif/terpilih.
+     * Daftar kombinasi perusahaan × jurusan yang punya pengajuan 'disetujui' pada periode aktif/terpilih.
      */
     public function index(): Response
     {
@@ -30,41 +32,45 @@ class SuratPengantarController extends Controller
 
         $periode = PeriodePkl::where('status_aktif', true)->first();
 
-        $perusahaans = Perusahaan::query()
-            ->when($periode, function ($q) use ($periode) {
-                $q->whereHas('pengajuanPkls', fn ($q2) => $q2
-                    ->where('periode_id', $periode->id)
-                    ->where('status', 'disetujui')
-                );
+        $pengajuans = PengajuanPkl::with(['perusahaan', 'siswa.kompetensiKeahlian'])
+            ->when($periode, fn ($q) => $q->where('periode_id', $periode->id))
+            ->where('status', 'disetujui')
+            ->orderByDesc('jumlah')
+            ->get()
+            ->groupBy(fn ($p) => $p->perusahaan_id.'-'.$p->siswa?->kompetensi_keahlian_id)
+            ->map(function ($group) {
+                $first = $group->first();
+
+                return [
+                    'perusahaan_id' => $first->perusahaan_id,
+                    'perusahaan_nama' => $first->perusahaan?->nama,
+                    'perusahaan_kuota' => $first->perusahaan?->kuota_saran,
+                    'kompetensi_keahlian_id' => $first->siswa?->kompetensi_keahlian_id,
+                    'kompetensi_keahlian_nama' => $first->siswa?->kompetensiKeahlian?->nama,
+                    'jumlah_siap' => $group->count(),
+                ];
             })
-            ->withCount(['pengajuanPkls as jumlah_siap' => fn ($q) => $q
-                ->when($periode, fn ($q2) => $q2->where('periode_id', $periode->id))
-                ->where('status', 'disetujui'),
-            ])
-            ->get();
+            ->values();
 
         return Inertia::render('hubin/surat-pengantar/index', [
-            'perusahaans' => $perusahaans,
+            'perusahaans' => $pengajuans,
             'periodeAktif' => $periode,
         ]);
     }
 
     /**
-     * Preview bundling per perusahaan+periode — dua tab: Kirim Surat & Balasan Masuk.
+     * Preview bundling per perusahaan+jurusan+periode — dua tab: Kirim Surat & Balasan Masuk.
      */
-    public function preview(Perusahaan $perusahaan, PeriodePkl $periode): Response
+    public function preview(Perusahaan $perusahaan, KompetensiKeahlian $kompetensiKeahlian, PeriodePkl $periode): Response
     {
         $this->authorize('viewAny', SuratPengantar::class);
 
-        $pengajuans = PengajuanPkl::with(['siswa.user', 'siswa.kompetensiKeahlian'])
-            ->where('perusahaan_id', $perusahaan->id)
-            ->where('periode_id', $periode->id)
-            ->where('status', 'disetujui')
-            ->get();
+        $pengajuans = $this->pengajuanDisetujui($perusahaan, $kompetensiKeahlian, $periode);
 
         $balasanMasuk = PengajuanPkl::with(['siswa.user', 'suratBalasan'])
             ->where('perusahaan_id', $perusahaan->id)
             ->where('periode_id', $periode->id)
+            ->whereHas('siswa', fn ($q) => $q->where('kompetensi_keahlian_id', $kompetensiKeahlian->id))
             ->where('status', 'resmi_pkl')
             ->get();
 
@@ -72,6 +78,7 @@ class SuratPengantarController extends Controller
 
         return Inertia::render('hubin/surat-pengantar/preview', [
             'perusahaan' => $perusahaan,
+            'kompetensiKeahlian' => $kompetensiKeahlian,
             'periode' => $periode,
             'pengajuans' => $pengajuans,
             'balasanMasuk' => $balasanMasuk,
@@ -82,15 +89,11 @@ class SuratPengantarController extends Controller
     /**
      * Cetak PDF surat pengantar — hanya download, tidak mengubah status atau membuat record.
      */
-    public function cetak(Perusahaan $perusahaan, PeriodePkl $periode): HttpResponse
+    public function cetak(Perusahaan $perusahaan, KompetensiKeahlian $kompetensiKeahlian, PeriodePkl $periode): HttpResponse
     {
         $this->authorize('viewAny', SuratPengantar::class);
 
-        $pengajuans = PengajuanPkl::with(['siswa.user', 'siswa.kompetensiKeahlian'])
-            ->where('perusahaan_id', $perusahaan->id)
-            ->where('periode_id', $periode->id)
-            ->where('status', 'disetujui')
-            ->get();
+        $pengajuans = $this->pengajuanDisetujui($perusahaan, $kompetensiKeahlian, $periode);
 
         // Buat objek surat sementara untuk preview PDF (tidak disimpan ke DB)
         $suratSementara = new SuratPengantar([
@@ -98,6 +101,7 @@ class SuratPengantarController extends Controller
             'tanggal_terbit' => now()->toDateString(),
         ]);
         $suratSementara->setRelation('perusahaan', $perusahaan);
+        $suratSementara->setRelation('kompetensiKeahlian', $kompetensiKeahlian);
         $suratSementara->setRelation('periode', $periode);
         $suratSementara->setRelation('pengajuans', $pengajuans);
 
@@ -110,16 +114,12 @@ class SuratPengantarController extends Controller
     /**
      * Kirim surat pengantar — buat record, generate PDF final, simpan, ubah status, notifikasi.
      */
-    public function kirim(Request $request, Perusahaan $perusahaan, PeriodePkl $periode): RedirectResponse
+    public function kirim(Request $request, Perusahaan $perusahaan, KompetensiKeahlian $kompetensiKeahlian, PeriodePkl $periode): RedirectResponse
     {
         $this->authorize('create', SuratPengantar::class);
 
-        $suratPengantar = DB::transaction(function () use ($request, $perusahaan, $periode) {
-            $pengajuans = PengajuanPkl::with(['siswa.user', 'siswa.kompetensiKeahlian'])
-                ->where('perusahaan_id', $perusahaan->id)
-                ->where('periode_id', $periode->id)
-                ->where('status', 'disetujui')
-                ->get();
+        $suratPengantar = DB::transaction(function () use ($request, $perusahaan, $kompetensiKeahlian, $periode) {
+            $pengajuans = $this->pengajuanDisetujui($perusahaan, $kompetensiKeahlian, $periode);
 
             abort_if($pengajuans->isEmpty(), 422, 'Tidak ada pengajuan yang siap untuk perusahaan ini.');
 
@@ -130,6 +130,7 @@ class SuratPengantarController extends Controller
             $surat = SuratPengantar::create([
                 'nomor_surat' => $nomorSurat,
                 'perusahaan_id' => $perusahaan->id,
+                'kompetensi_keahlian_id' => $kompetensiKeahlian->id,
                 'periode_id' => $periode->id,
                 'tanggal_terbit' => now()->toDateString(),
                 'generated_by' => $request->user()->id,
@@ -140,6 +141,7 @@ class SuratPengantarController extends Controller
 
             // Generate PDF final
             $surat->setRelation('perusahaan', $perusahaan);
+            $surat->setRelation('kompetensiKeahlian', $kompetensiKeahlian);
             $surat->setRelation('periode', $periode);
             $surat->setRelation('pengajuans', $pengajuans);
 
@@ -179,26 +181,6 @@ class SuratPengantarController extends Controller
     }
 
     /**
-     * Tab Balasan Masuk — daftar pengajuan resmi_pkl per perusahaan+periode untuk aksi tolak pasca-fakta.
-     */
-    public function balasanMasuk(Perusahaan $perusahaan, PeriodePkl $periode): Response
-    {
-        $this->authorize('viewAny', SuratPengantar::class);
-
-        $pengajuans = PengajuanPkl::with(['siswa.user', 'suratBalasan'])
-            ->where('perusahaan_id', $perusahaan->id)
-            ->where('periode_id', $periode->id)
-            ->where('status', 'resmi_pkl')
-            ->get();
-
-        return Inertia::render('hubin/surat-pengantar/balasan-masuk', [
-            'perusahaan' => $perusahaan,
-            'periode' => $periode,
-            'pengajuans' => $pengajuans,
-        ]);
-    }
-
-    /**
      * Tolak surat balasan pasca-fakta (BR7) — status kembali ke disetujui.
      */
     public function tolakBalasan(Request $request, PengajuanPkl $pengajuan): RedirectResponse
@@ -234,5 +216,18 @@ class SuratPengantarController extends Controller
         $pengajuan->siswa?->user->notify(new SuratBalasanDitolak($pengajuan, $validated['catatan']));
 
         return back()->with('sukses', 'Surat balasan berhasil ditolak. Status pengajuan kembali ke Disetujui.');
+    }
+
+    /**
+     * @return Collection<int, PengajuanPkl>
+     */
+    private function pengajuanDisetujui(Perusahaan $perusahaan, KompetensiKeahlian $kompetensiKeahlian, PeriodePkl $periode): Collection
+    {
+        return PengajuanPkl::with(['siswa.user', 'siswa.kompetensiKeahlian'])
+            ->where('perusahaan_id', $perusahaan->id)
+            ->where('periode_id', $periode->id)
+            ->whereHas('siswa', fn ($q) => $q->where('kompetensi_keahlian_id', $kompetensiKeahlian->id))
+            ->where('status', 'disetujui')
+            ->get();
     }
 }

@@ -22,6 +22,7 @@ import { index as suratPengantarIndex } from '@/routes/hubin/surat-pengantar';
 
 export default function Preview({
     perusahaan,
+    kompetensiKeahlian,
     periode,
     pengajuans,
     balasanMasuk,
@@ -37,6 +38,7 @@ export default function Preview({
         window.open(
             suratPengantarCetak({
                 perusahaan: perusahaan.id,
+                kompetensiKeahlian: kompetensiKeahlian.id,
                 periode: periode.id,
             }).url,
             '_blank',
@@ -56,6 +58,7 @@ export default function Preview({
         router.post(
             suratPengantarKirim({
                 perusahaan: perusahaan.id,
+                kompetensiKeahlian: kompetensiKeahlian.id,
                 periode: periode.id,
             }).url,
             {},
@@ -95,7 +98,8 @@ export default function Preview({
                             {perusahaan.nama}
                         </h2>
                         <p className="text-sm text-muted-foreground">
-                            Periode: {periode.nama}
+                            Jurusan: {kompetensiKeahlian.nama} · Periode:{' '}
+                            {periode.nama}
                         </p>
                     </div>
                 </div>
