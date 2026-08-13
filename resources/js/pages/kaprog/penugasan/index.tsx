@@ -3,7 +3,6 @@ import { UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Select,
     SelectContent,
@@ -40,105 +39,84 @@ export default function Penugasan({ pengajuans, guruPembimbings }: any) {
         <>
             <Head title="Penugasan Pembimbing" />
 
-            <div className="space-y-6">
-                <h2 className="text-2xl font-semibold">
-                    Penugasan Guru Pembimbing
-                </h2>
+            <div className="flex flex-col gap-4 p-4">
+                <h2 className="text-2xl font-semibold">Penugasan Guru Pembimbing</h2>
 
-                {pengajuans?.length === 0 && (
-                    <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                            Tidak ada pengajuan yang siap ditugaskan.
-                        </CardContent>
-                    </Card>
-                )}
-
-                <div className="space-y-3">
-                    {pengajuans?.map((item: any) => (
-                        <Card key={item.id}>
-                            <CardHeader>
-                                <CardTitle className="flex items-center justify-between text-base">
-                                    <span>{item.siswa?.user?.name}</span>
-                                    {item.penugasan_aktif ? (
-                                        <Badge className="bg-green-100 text-green-800">
-                                            Ditugaskan
-                                        </Badge>
-                                    ) : (
-                                        <Badge className="bg-yellow-100 text-yellow-800">
-                                            Belum ditugaskan
-                                        </Badge>
-                                    )}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div className="space-y-1 text-sm">
-                                    <p>
-                                        Perusahaan:{' '}
-                                        <span className="font-medium">
-                                            {item.perusahaan?.nama}
-                                        </span>
-                                    </p>
-                                    <p>
-                                        Kompetensi Keahlian:{' '}
-                                        <span className="font-medium">
-                                            {item.siswa?.kompetensi_keahlian
-                                                ?.nama || '-'}
-                                        </span>
-                                    </p>
-                                    {item.penugasan_aktif && (
-                                        <p>
-                                            Pembimbing aktif:{' '}
-                                            <span className="font-medium">
-                                                {item.penugasan_aktif
-                                                    .guru_pembimbing?.name ||
-                                                    '-'}
-                                            </span>
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="flex flex-wrap items-end gap-2">
-                                    <div className="min-w-52 flex-1">
-                                        <Select
-                                            value={selected[item.id] || ''}
-                                            onValueChange={(v) =>
-                                                setSelected((prev) => ({
-                                                    ...prev,
-                                                    [item.id]: v,
-                                                }))
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Pilih guru pembimbing" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {guruPembimbings?.map(
-                                                    (gp: any) => (
-                                                        <SelectItem
-                                                            key={gp.id}
-                                                            value={String(
-                                                                gp.id,
-                                                            )}
-                                                        >
+                <div className="overflow-hidden rounded-lg border">
+                    <table className="w-full text-sm">
+                        <thead className="text-left text-muted-foreground">
+                            <tr className="border-b">
+                                <th className="p-3">No</th>
+                                <th className="p-3">Nama Siswa</th>
+                                <th className="p-3">Perusahaan</th>
+                                <th className="p-3">Jurusan</th>
+                                <th className="p-3">Pembimbing Aktif</th>
+                                <th className="p-3 min-w-64">Tugaskan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {pengajuans?.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                                        Tidak ada pengajuan yang siap ditugaskan.
+                                    </td>
+                                </tr>
+                            )}
+                            {pengajuans?.map((item: any, idx: number) => (
+                                <tr key={item.id} className="border-b last:border-0">
+                                    <td className="p-3 text-muted-foreground">{idx + 1}</td>
+                                    <td className="p-3 font-medium">
+                                        {item.siswa?.user?.name ?? '-'}
+                                    </td>
+                                    <td className="p-3">{item.perusahaan?.nama ?? '-'}</td>
+                                    <td className="p-3 text-muted-foreground">
+                                        {item.siswa?.kompetensi_keahlian?.nama ?? '-'}
+                                    </td>
+                                    <td className="p-3">
+                                        {item.penugasan_aktif ? (
+                                            <Badge variant="default">
+                                                {item.penugasan_aktif.guru_pembimbing?.name ?? '-'}
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="secondary">Belum ditugaskan</Badge>
+                                        )}
+                                    </td>
+                                    <td className="p-3">
+                                        <div className="flex items-center gap-2">
+                                            <Select
+                                                value={selected[item.id] || ''}
+                                                onValueChange={(v) =>
+                                                    setSelected((prev) => ({
+                                                        ...prev,
+                                                        [item.id]: v,
+                                                    }))
+                                                }
+                                            >
+                                                <SelectTrigger className="w-44">
+                                                    <SelectValue placeholder="Pilih guru..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {guruPembimbings?.map((gp: any) => (
+                                                        <SelectItem key={gp.id} value={String(gp.id)}>
                                                             {gp.name}
                                                         </SelectItem>
-                                                    ),
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => assign(item.id)}
-                                        disabled={!selected[item.id]}
-                                    >
-                                        <UserCheck className="mr-1 size-4" />
-                                        Tugaskan
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            <Button
+                                                size="sm"
+                                                onClick={() => assign(item.id)}
+                                                disabled={!selected[item.id]}
+                                            >
+                                                <UserCheck className="mr-1 size-4" />
+                                                Tugaskan
+                                            </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </>

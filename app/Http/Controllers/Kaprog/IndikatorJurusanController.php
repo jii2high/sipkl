@@ -9,7 +9,6 @@ use App\Models\SectionPenilaian;
 use App\Models\SubSectionPenilaian;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,12 +45,16 @@ class IndikatorJurusanController extends Controller
         $kk = $this->kompetensiKeahlianKaprog();
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        IndikatorPenilaian::create($validated + ['kompetensi_keahlian_id' => $kk->id]);
+        $maxNo = IndikatorPenilaian::where('kompetensi_keahlian_id', $kk->id)->max('nomor_urut') ?? 0;
+
+        IndikatorPenilaian::create($validated + [
+            'kompetensi_keahlian_id' => $kk->id,
+            'nomor_urut' => $maxNo + 1,
+        ]);
 
         return redirect()->route('kaprog.indikator-jurusan.index');
     }
@@ -61,7 +64,6 @@ class IndikatorJurusanController extends Controller
         abort_unless($indikatorPenilaian->kompetensi_keahlian_id === $this->kompetensiKeahlianKaprog()->id, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
@@ -85,12 +87,12 @@ class IndikatorJurusanController extends Controller
         abort_unless($indikatorPenilaian->kompetensi_keahlian_id === $this->kompetensiKeahlianKaprog()->id, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        $indikatorPenilaian->sections()->create($validated);
+        $maxNo = $indikatorPenilaian->sections()->max('nomor_urut') ?? 0;
+        $indikatorPenilaian->sections()->create($validated + ['nomor_urut' => $maxNo + 1]);
 
         return redirect()->route('kaprog.indikator-jurusan.index');
     }
@@ -100,7 +102,6 @@ class IndikatorJurusanController extends Controller
         abort_unless($section->indikatorPenilaian->kompetensi_keahlian_id === $this->kompetensiKeahlianKaprog()->id, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
@@ -124,12 +125,12 @@ class IndikatorJurusanController extends Controller
         abort_unless($section->indikatorPenilaian->kompetensi_keahlian_id === $this->kompetensiKeahlianKaprog()->id, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        $section->subSections()->create($validated);
+        $maxNo = $section->subSections()->max('nomor_urut') ?? 0;
+        $section->subSections()->create($validated + ['nomor_urut' => $maxNo + 1]);
 
         return redirect()->route('kaprog.indikator-jurusan.index');
     }
@@ -139,7 +140,6 @@ class IndikatorJurusanController extends Controller
         abort_unless($subSection->sectionPenilaian->indikatorPenilaian->kompetensi_keahlian_id === $this->kompetensiKeahlianKaprog()->id, 403);
 
         $validated = $request->validate([
-            'nomor_urut' => 'required|integer|min:1|max:99',
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string|max:255',
         ]);
@@ -159,33 +159,30 @@ class IndikatorJurusanController extends Controller
     }
 
     /**
-     * Reorder dalam satu level, scope jurusan kaprog.
+     * Reorder dalam satu level, scope jurusan kaprog — terima ids[] dari dnd-kit.
      */
     public function reorder(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'level' => 'required|in:indikator,section,subSection',
-            'itemId' => 'required|integer',
-            'fromIndex' => 'required|integer|min:0',
-            'toIndex' => 'required|integer|min:0',
+            'itemId' => 'nullable|integer',
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
         ]);
 
         $kk = $this->kompetensiKeahlianKaprog();
 
-        $siblings = match ($validated['level']) {
-            'indikator' => IndikatorPenilaian::where('kompetensi_keahlian_id', $kk->id)->orderBy('nomor_urut')->get(),
-            'section' => SectionPenilaian::where('indikator_penilaian_id', $validated['itemId'])->orderBy('nomor_urut')->get(),
-            default => SubSectionPenilaian::where('section_penilaian_id', $validated['itemId'])->orderBy('nomor_urut')->get(),
-        };
-
-        $ids = $siblings->pluck('id')->all();
-        array_splice($ids, $validated['toIndex'], 0, array_splice($ids, $validated['fromIndex'], 1));
-
-        DB::transaction(function () use ($siblings, $ids) {
-            foreach (array_values($ids) as $index => $id) {
-                $siblings->firstWhere('id', $id)?->update(['nomor_urut' => $index + 1]);
-            }
-        });
+        foreach (array_values($validated['ids']) as $index => $id) {
+            match ($validated['level']) {
+                'indikator' => IndikatorPenilaian::where('id', $id)
+                    ->where('kompetensi_keahlian_id', $kk->id)
+                    ->update(['nomor_urut' => $index + 1]),
+                'section' => SectionPenilaian::where('id', $id)
+                    ->update(['nomor_urut' => $index + 1]),
+                default => SubSectionPenilaian::where('id', $id)
+                    ->update(['nomor_urut' => $index + 1]),
+            };
+        }
 
         return redirect()->route('kaprog.indikator-jurusan.index');
     }

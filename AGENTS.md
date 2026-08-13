@@ -2,7 +2,83 @@
 
 **SI-PKL** (Sistem Informasi PKL) — SMKN 1 Kota Bekasi.
 Laravel 13 + Inertia.js v3 + React 19 + Tailwind CSS v4 + shadcn/ui.
-**Status:** M1 (Foundation & Auth) in progress — only scaffold exists.
+**Status:** Revisi besar berdasarkan `docs/Hasil Diskusi-Final.txt` sedang berlangsung.
+
+---
+
+## ⚠️ Hasil Diskusi Final — Poin Wajib Ingat
+
+> Baca ini SEBELUM menyentuh halaman mana pun. Diambil dari `docs/Hasil Diskusi-Final.txt`.
+
+### AUTH
+- Ganti password: tidak boleh pakai password saat ini (cek 1 history terakhir sejak first-login, berlaku selamanya)
+- Reset password siswa/staff: lewat form **Edit** di Hubin (bukan aksi terpisah), karena form Edit juga untuk update email
+
+### FRONTEND — Indikator Penilaian (3 level)
+- Level 1: **Tujuan Pembelajaran** (No 1,2,4 = Umum; No 3 = Jurusan scoped ke kompetensi_keahlian_id)
+- Level 2: **Indikator Penilaian** (a,b,c,d) — dikelola via dialog dari kolom "Kelola Indikator"
+- Level 3: **Sub-indikator** — nullable, dialog lapis kedua
+- **Semua level draggable** (reorder) — pakai `@dnd-kit/sortable`
+- Nomor urut auto-assign 1..N setelah drag; tidak ada input manual nomor urut
+- Form tambah: field Tujuan Pembelajaran + deskripsi — **TIDAK ada** field "Pilih Jurusan" (Kaprog auto-scoped) & **TIDAK ada** field "Pilih Kategori"/"No. Urut"
+
+### FRONTEND — CRUD Akun (Hubin)
+- **Kelola Siswa**: Live search + filter (jurusan/periode) + tambah akun; tabel: nis, nama, jurusan, periode, aksi dropdown (edit, hapus)
+  - Form Tambah: nis, nama, **periode** (dropdown periode aktif), jurusan, alamat, email, no_telp, password (default=nis)
+  - Form Edit: halaman penuh, field sama + password bebas diedit; Simpan disabled kalau tidak ada perubahan
+- **Kelola Staff**: Live search + filter (jabatan) + tambah akun; tabel: nip, nama, jabatan, aksi dropdown (edit, hapus/nonaktifkan jika kaprog)
+  - Form Tambah/Edit: nip, nama, jabatan, email, password (default=nip)
+  - Warning merah kecil jika jabatan dipilih **Kaprog** padahal sudah ada kaprog (informatif, bukan blocking)
+- **Duplicate check**: cek nis/email/no_telp (siswa); nip/email (staff). **Nama TIDAK dipakai**. Alert tampilkan identitas conflict, user konfirmasi sebelum timpa.
+
+### FRONTEND — Pengajuan PKL (Siswa)
+- Halaman `/siswa/pengajuan`:
+  1. **Form** di atas — search-select perusahaan, autofill alamat/telp/email kalau match
+  2. Submit → sonner "diajukan ke kaprog" → form **read-only permanen** (begitu masuk antrian/pending/disetujui)
+  3. **List di bawah form**: HANYA pengajuan status **ditolak** — per item: "lihat catatan" + bisa isi ulang, pagination > 3
+- Pengajuan approved/periode lama → halaman **Riwayat PKL** terpisah (bukan di halaman ini)
+
+### FRONTEND — Verifikasi Pengajuan (Kaprog)
+- **Halaman utama** (`/kaprog/verifikasi`): tabel hanya status **pending** — kolom: no, nama siswa, perusahaan, aksi "Lihat Detail" — pagination > 6
+- **Halaman Riwayat** (`/kaprog/riwayat-verifikasi`): tabel — kolom: no, nama siswa, perusahaan, status, aksi — filter button (Disetujui / Ditolak)
+- **Halaman Detail**: form read-only + tombol tolak (dialog catatan + notif siswa) / setuju (confirm + notif)
+- **Semua list/daftar**: TABEL, bukan Card list
+
+### FRONTEND — Surat Pengantar (Hubin)
+- Tabel belum dikirim: no, perusahaan, alamat, jurusan, **jumlah siswa**, aksi "Lihat Detail"
+- Dialog Lihat Detail (read-only): data perusahaan + list siswa; tombol Cetak + Close/Kirim
+- Kirim → confirm → sonner + notif siswa
+
+### FRONTEND — Monitoring (Surat Tugas)
+- **Alur baru**: Kaprog buat **draft pengajuan monitoring** → draft masuk ke antrian **Hubin** → Hubin tolak (wajib catatan) / setujui (terbitkan + nomor otomatis)
+- Kaprog **TIDAK BISA** terbitkan surat monitoring sendiri
+- Halaman Kaprog monitoring: hanya buat draft + lihat status draft + lihat surat terbit (read-only)
+- Halaman Hubin antrian: tabel draft request dari semua Kaprog, aksi Setujui/Tolak
+
+### GLOBAL
+- **Live search**: `SearchFilterBar` harus auto-search setelah delay ~300ms, TIDAK perlu tekan Enter/tombol Cari
+- **Sidebar**: dibagi per section dengan `SidebarGroup` + `SidebarGroupLabel`
+- **Semua daftar**: gunakan tabel (bukan Card list) kecuali desain khusus mobile
+
+### BACKEND
+- **Soft delete**: semua hapus (indikator, akun siswa, akun staff) → recycle bin, bukan hard delete
+  - Bug: delete harus redirect ke recycle-bin (bukan `back()`), bukan blank halaman
+- **Read-only lock**: form Pengajuan PKL terkunci begitu data masuk antrian Kaprog (pending/disetujui)
+- **Notifikasi**: tolak → notif+catatan ke siswa; setuju → notif ke siswa; surat pengantar terbit → notif siswa
+
+### Urutan Eksekusi Revisi
+1. Fix `SearchFilterBar` debounce (global)
+2. Fix Sidebar sections (global)
+3. Fix Surat Pengantar query bug (`jumlah` column tidak ada)
+4. Fix Soft Delete redirect (tidak blank)
+5. Kelola Siswa — CRUD lengkap (Tambah + Edit)
+6. Kelola Staff — CRUD lengkap (Tambah + Edit)
+7. Kaprog verifikasi + riwayat → tabel
+8. Kaprog penugasan → tabel (jika masih card)
+9. IndikatorTree drag-and-drop (install @dnd-kit)
+10. Siswa Pengajuan — fix struktur (form + list ditolak saja)
+11. Siswa Riwayat — fix filter (hanya periode lama/closed)
+12. Monitoring flow — Kaprog draft → Hubin antrian (hapus terbit dari Kaprog)
 
 ---
 

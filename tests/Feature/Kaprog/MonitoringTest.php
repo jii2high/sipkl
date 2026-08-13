@@ -43,8 +43,9 @@ test('kaprog membuat draft surat tugas scoped', function () {
     ]);
 });
 
-test('kaprog menerbitkan draft: status aktif + nomor otomatis + notif pembimbing', function () {
+test('hubin menerbitkan draft: status aktif + nomor otomatis + notif pembimbing', function () {
     Notification::fake();
+    $hubin = hubinUser();
     $kaprog = kaprogUser();
     $pembimbing = guruPembimbingUser();
     $periode = PeriodePkl::factory()->create(['status_aktif' => true]);
@@ -68,14 +69,14 @@ test('kaprog menerbitkan draft: status aktif + nomor otomatis + notif pembimbing
         'periode_id' => $periode->id,
     ]);
 
-    $this->actingAs($kaprog)
-        ->post(route('kaprog.monitoring.terbit', $surat))
+    $this->actingAs($hubin)
+        ->post(route('hubin.surat-tugas.terbit', $surat))
         ->assertRedirect();
 
     $this->assertDatabaseHas('surat_tugas_monitoring', [
         'id' => $surat->id,
         'status' => 'aktif',
-        'diterbitkan_by' => $kaprog->id,
+        'diterbitkan_by' => $hubin->id,
     ]);
     expect($surat->fresh()->nomor_surat)->not->toBeNull();
     Notification::assertSentTo($pembimbing, SuratTugasTerbit::class);

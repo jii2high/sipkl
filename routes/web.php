@@ -98,12 +98,12 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
             Route::post('reorder', [IndikatorJurusanController::class, 'reorder'])->name('reorder');
         });
 
-        // Monitoring bulanan — draft surat tugas scoped + ringkasan terbit
+        // Monitoring bulanan — Kaprog hanya buat draft, Hubin yang terbitkan (sesuai notes diskusi)
         Route::prefix('monitoring')->name('monitoring.')->middleware('permission:surat-tugas.kelola')->group(function () {
             Route::get('/', [MonitoringController::class, 'index'])->name('index');
             Route::post('/', [MonitoringController::class, 'store'])->name('store');
             Route::delete('{suratTugas}', [MonitoringController::class, 'destroy'])->name('destroy');
-            Route::post('{suratTugas}/terbit', [MonitoringController::class, 'terbit'])->name('terbit');
+            // Route terbit sengaja DIHAPUS — Kaprog tidak bisa terbitkan sendiri (lihat AGENTS.md)
         });
     });
 
@@ -194,6 +194,10 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
 
         Route::get('kelola-siswa', [KelolaSiswaController::class, 'index'])->name('kelola-siswa.index')
             ->middleware('permission:akun.kelola');
+        Route::post('kelola-siswa', [KelolaSiswaController::class, 'store'])
+            ->name('kelola-siswa.store')->middleware('permission:akun.kelola');
+        Route::put('kelola-siswa/{user}', [KelolaSiswaController::class, 'update'])
+            ->name('kelola-siswa.update')->middleware('permission:akun.kelola');
         Route::delete('kelola-siswa/{user}', [KelolaSiswaController::class, 'destroy'])
             ->name('kelola-siswa.destroy')->middleware('permission:akun.kelola');
         Route::post('kelola-siswa/import', [KelolaSiswaController::class, 'import'])
@@ -205,6 +209,12 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
 
         Route::get('kelola-staff', [KelolaStaffController::class, 'index'])->name('kelola-staff.index')
             ->middleware('permission:akun.kelola');
+        Route::post('kelola-staff', [KelolaStaffController::class, 'store'])
+            ->name('kelola-staff.store')->middleware('permission:akun.kelola');
+        Route::put('kelola-staff/{guruProfile}', [KelolaStaffController::class, 'update'])
+            ->name('kelola-staff.update')->middleware('permission:akun.kelola');
+        Route::delete('kelola-staff/{guruProfile}', [KelolaStaffController::class, 'destroy'])
+            ->name('kelola-staff.destroy')->middleware('permission:akun.kelola');
         Route::patch('kelola-staff/{guruProfile}/nonaktifkan', [KelolaStaffController::class, 'nonaktifkanKaprog'])
             ->name('kelola-staff.nonaktifkan')->middleware('permission:akun.kelola');
         Route::post('kelola-staff/import', [KelolaStaffController::class, 'import'])
@@ -231,9 +241,11 @@ Route::middleware(['auth', 'verified', 'check.first.login'])->group(function () 
 
         Route::prefix('surat-tugas')->name('surat-tugas.')->middleware('permission:surat-tugas.kelola')->group(function () {
             Route::get('/', [SuratTugasController::class, 'index'])->name('index');
+            Route::get('antrian', [SuratTugasController::class, 'antrian'])->name('antrian');
             Route::post('/', [SuratTugasController::class, 'store'])->name('store');
             Route::post('{suratTugas}/terbit', [SuratTugasController::class, 'terbit'])->name('terbit');
             Route::post('{suratTugas}/nonaktif', [SuratTugasController::class, 'nonaktif'])->name('nonaktif');
+            Route::delete('{suratTugas}/tolak', [SuratTugasController::class, 'tolak'])->name('tolak');
             Route::get('{suratTugas}/download', [SuratTugasController::class, 'download'])->name('download');
         });
     });

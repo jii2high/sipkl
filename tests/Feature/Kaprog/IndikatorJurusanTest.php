@@ -95,9 +95,7 @@ test('reorder menggeser nomor urut indikator', function () {
     $this->actingAs($kaprog)
         ->post(route('kaprog.indikator-jurusan.reorder'), [
             'level' => 'indikator',
-            'itemId' => $a->id,
-            'fromIndex' => 0,
-            'toIndex' => 1,
+            'ids' => [$b->id, $a->id],
         ])->assertRedirect();
 
     expect($a->fresh()->nomor_urut)->toBe(2);

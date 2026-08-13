@@ -7,6 +7,7 @@ use App\Models\KompetensiKeahlian;
 use App\Models\PeriodePkl;
 use App\Models\SuratTugasMonitoring;
 use App\Models\User;
+use App\Notifications\DraftMonitoringDitolak;
 use App\Notifications\SuratTugasTerbit;
 use App\Support\PenomoranSurat;
 use Illuminate\Http\RedirectResponse;
@@ -46,37 +47,54 @@ class SuratTugasController extends Controller
             'kompetensi_keahlian_id' => 'required_if:lingkup,scoped|nullable|exists:kompetensi_keahlian,id',
             'requested_by' => 'nullable|exists:users,id',
             'berlaku_hingga' => 'required|date|after_or_equal:today',
+            'langsung_terbit' => 'boolean',
         ]);
 
-        $suratTugas = DB::transaction(function () use ($validated, $request) {
-            return SuratTugasMonitoring::create([
+        $langsungTerbit = $request->has('langsung_terbit') ? $request->boolean('langsung_terbit') : true;
+
+        $suratTugas = DB::transaction(function () use ($validated, $request, $langsungTerbit) {
+            $data = [
                 'periode_id' => $validated['periode_id'],
                 'lingkup' => $validated['lingkup'],
                 'kompetensi_keahlian_id' => $validated['kompetensi_keahlian_id'] ?? null,
                 'requested_by' => $validated['requested_by'] ?? null,
-                'diterbitkan_by' => $request->user()->id,
-                'nomor_surat' => PenomoranSurat::suratTugas($validated['periode_id']),
-                'tanggal_terbit' => now()->toDateString(),
-                'status' => 'aktif',
                 'berlaku_hingga' => $validated['berlaku_hingga'],
-            ]);
+            ];
+
+            if ($langsungTerbit) {
+                $data['diterbitkan_by'] = $request->user()->id;
+                $data['nomor_surat'] = PenomoranSurat::suratTugas($validated['periode_id']);
+                $data['tanggal_terbit'] = now()->toDateString();
+                $data['status'] = 'aktif';
+            } else {
+                // Simpan sebagai draft — Hubin yang tentukan terbit nanti
+                $data['status'] = 'draft';
+            }
+
+            return SuratTugasMonitoring::create($data);
         });
 
-        $suratTugas->generatePdf();
+        if ($langsungTerbit) {
+            $suratTugas->generatePdf();
 
-        // Notif ke Guru Pembimbing yang tercakup (+ Kaprog peminta kalau scoped)
-        $suratTugas->penugasansTercakup()
-            ->pluck('guruPembimbing')
-            ->filter()
-            ->unique('id')
-            ->each(fn (User $pembimbing) => $pembimbing->notify(new SuratTugasTerbit($suratTugas)));
+            // Notif ke Guru Pembimbing yang tercakup
+            $suratTugas->penugasansTercakup()
+                ->pluck('guruPembimbing')
+                ->filter()
+                ->unique('id')
+                ->each(fn (User $pembimbing) => $pembimbing->notify(new SuratTugasTerbit($suratTugas)));
 
-        if ($suratTugas->lingkup === 'scoped' && $suratTugas->requested_by) {
-            User::find($suratTugas->requested_by)?->notify(new SuratTugasTerbit($suratTugas));
+            if ($suratTugas->lingkup === 'scoped' && $suratTugas->requested_by) {
+                User::find($suratTugas->requested_by)?->notify(new SuratTugasTerbit($suratTugas));
+            }
         }
 
+        $pesan = $langsungTerbit
+            ? 'Surat Tugas Monitoring berhasil diterbitkan.'
+            : 'Draft Surat Tugas berhasil disimpan.';
+
         return redirect()->route('hubin.surat-tugas.index')
-            ->with('sukses', 'Surat Tugas Monitoring berhasil diterbitkan.');
+            ->with('sukses', $pesan);
     }
 
     /**
@@ -130,5 +148,46 @@ class SuratTugasController extends Controller
         return response(Storage::get($suratTugas->file))
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="surat-tugas-'.$suratTugas->id.'.pdf"');
+    }
+
+    /**
+     * Antrian draft Surat Tugas yang diminta Kaprog — menunggu Hubin setujui/tolak.
+     */
+    public function antrian(): Response
+    {
+        $drafts = SuratTugasMonitoring::with(['periode', 'kompetensiKeahlian', 'requestedBy'])
+            ->where('status', 'draft')
+            ->whereNotNull('requested_by')
+            ->orderByDesc('id')
+            ->get();
+
+        return Inertia::render('hubin/surat-tugas/antrian', [
+            'drafts' => $drafts,
+        ]);
+    }
+
+    /**
+     * Tolak draft Surat Tugas dari Kaprog. Catatan wajib, notif ke peminta.
+     */
+    public function tolak(Request $request, SuratTugasMonitoring $suratTugas): RedirectResponse
+    {
+        abort_unless($suratTugas->status === 'draft', 422, 'Hanya draft yang bisa ditolak.');
+        abort_unless($suratTugas->requested_by !== null, 422, 'Draft ini tidak berasal dari Kaprog.');
+
+        $validated = $request->validate([
+            'catatan' => 'required|string|min:5|max:500',
+        ]);
+
+        // Hapus draft + kirim notif ke Kaprog peminta
+        $requestedBy = User::find($suratTugas->requested_by);
+        $suratTugas->delete();
+
+        // Notif sederhana lewat database notification
+        if ($requestedBy) {
+            $requestedBy->notify(new DraftMonitoringDitolak($validated['catatan']));
+        }
+
+        return redirect()->route('hubin.surat-tugas.antrian')
+            ->with('sukses', 'Draft ditolak dan notifikasi dikirim ke Kaprog.');
     }
 }
