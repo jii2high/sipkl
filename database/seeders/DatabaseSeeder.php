@@ -33,23 +33,23 @@ class DatabaseSeeder extends Seeder
 
         $fajri = User::create(['name' => 'Muhammad Fajri', 'email' => 'mfajri110301@gmail.com', 'password' => $pw, 'email_verified_at' => now()]);
         $fajri->assignRole('siswa');
-        SiswaProfile::create(['user_id' => $fajri->id, 'nis' => '0011223301', 'kelas' => 'XII RPL 1', 'kompetensi_keahlian_id' => $rpl->id]);
+        SiswaProfile::create(['user_id' => $fajri->id, 'nis' => '0011223301', 'kompetensi_keahlian_id' => $rpl->id]);
 
         $fikri = User::create(['name' => 'Muhammad Fikri', 'email' => 'johndoe18077@gmail.com', 'password' => $pw, 'email_verified_at' => now()]);
         $fikri->assignRole('siswa');
-        SiswaProfile::create(['user_id' => $fikri->id, 'nis' => '0011223302', 'kelas' => 'XII RPL 1', 'kompetensi_keahlian_id' => $rpl->id]);
+        SiswaProfile::create(['user_id' => $fikri->id, 'nis' => '0011223302', 'kompetensi_keahlian_id' => $rpl->id]);
 
         $bagas = User::create(['name' => 'Bagas Setiawan', 'email' => 'yohanjuganda@gmail.com', 'password' => $pw, 'email_verified_at' => now()]);
         $bagas->assignRole('siswa');
-        SiswaProfile::create(['user_id' => $bagas->id, 'nis' => '0011223303', 'kelas' => 'XII TKJ 1', 'kompetensi_keahlian_id' => $tkj->id]);
+        SiswaProfile::create(['user_id' => $bagas->id, 'nis' => '0011223303', 'kompetensi_keahlian_id' => $tkj->id]);
 
         $pedrosa = User::create(['name' => 'Pedrosa Simanjuntak', 'email' => 'jipaw130898@gmail.com', 'password' => $pw, 'email_verified_at' => now()]);
         $pedrosa->assignRole('siswa');
-        SiswaProfile::create(['user_id' => $pedrosa->id, 'nis' => '0011223304', 'kelas' => 'XII MM 1', 'kompetensi_keahlian_id' => $mm->id]);
+        SiswaProfile::create(['user_id' => $pedrosa->id, 'nis' => '0011223304', 'kompetensi_keahlian_id' => $mm->id]);
 
         $nawfal = User::create(['name' => 'Muhammad Nawfal Hakim', 'email' => 'liyadisupri3@gmail.com', 'password' => $pw, 'email_verified_at' => now()]);
         $nawfal->assignRole('siswa');
-        SiswaProfile::create(['user_id' => $nawfal->id, 'nis' => '0011223305', 'kelas' => 'XII AKL 1', 'kompetensi_keahlian_id' => $akl->id]);
+        SiswaProfile::create(['user_id' => $nawfal->id, 'nis' => '0011223305', 'kompetensi_keahlian_id' => $akl->id]);
 
         // ─── GURU ─────────────────────────────────────────────
         // Observer syncs role otomatis dari jabatan

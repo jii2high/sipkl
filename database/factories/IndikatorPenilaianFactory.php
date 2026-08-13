@@ -13,10 +13,9 @@ class IndikatorPenilaianFactory extends Factory
     public function definition(): array
     {
         return [
-            'kategori' => fake()->randomElement(['umum', 'teknis_kejuruan']),
             'kompetensi_keahlian_id' => null,
             'nomor_urut' => fake()->numberBetween(1, 20),
-            'deskripsi' => fake()->sentence(),
+            'nama' => fake()->sentence(3),
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\KompetensiKeahlian;
+use App\Models\PeriodePkl;
 use App\Models\SiswaProfile;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -25,7 +26,7 @@ class SiswaImport implements SkipsOnFailure, ToCollection, WithHeadingRow, WithV
             'nis' => 'required|unique:siswa_profiles,nis',
             'nama' => 'required|string|max:150',
             'email' => 'required|email|unique:users,email',
-            'kelas' => 'required|string|max:20',
+            'periode' => 'required|exists:periode_pkls,nama',
             'kompetensi_keahlian' => 'required|exists:kompetensi_keahlian,nama',
         ];
     }
@@ -35,6 +36,7 @@ class SiswaImport implements SkipsOnFailure, ToCollection, WithHeadingRow, WithV
     {
         foreach ($rows as $row) {
             $jurusan = KompetensiKeahlian::where('nama', $row['kompetensi_keahlian'])->first();
+            $periode = PeriodePkl::where('nama', $row['periode'])->first();
 
             $user = User::create([
                 'name' => $row['nama'],
@@ -47,7 +49,7 @@ class SiswaImport implements SkipsOnFailure, ToCollection, WithHeadingRow, WithV
             SiswaProfile::create([
                 'user_id' => $user->id,
                 'nis' => $row['nis'],
-                'kelas' => $row['kelas'],
+                'periode_id' => $periode->id,
                 'kompetensi_keahlian_id' => $jurusan->id,
                 'alamat' => $row['alamat'] ?? null,
                 'no_telp' => $row['no_telp'] ?? null,

@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\PeriodePkl;
 use App\Models\SuratTugasMonitoring;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -24,10 +23,10 @@ class SuratTugasMonitoringFactory extends Factory
             'lingkup' => 'global',
             'kompetensi_keahlian_id' => null,
             'requested_by' => null,
-            'diterbitkan_by' => User::factory(),
-            'nomor_surat' => fake()->unique()->numerify('1/######/00/00/00/0000'),
-            'tanggal_terbit' => now(),
-            'status' => 'aktif',
+            'diterbitkan_by' => null,
+            'nomor_surat' => null,
+            'tanggal_terbit' => null,
+            'status' => 'draft',
             'berlaku_hingga' => now()->addMonth(),
         ];
     }

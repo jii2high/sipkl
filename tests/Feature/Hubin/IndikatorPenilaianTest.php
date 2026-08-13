@@ -22,38 +22,38 @@ test('index returns indikator list', function () {
 test('create indikator penilaian', function () {
     asHubin();
     $this->post(route('hubin.indikator-penilaian.store'), [
-        'kategori' => 'umum', 'nomor_urut' => 1, 'deskripsi' => 'Kedisiplinan',
+        'nomor_urut' => 1, 'nama' => 'Kedisiplinan',
     ])->assertRedirect();
-    $this->assertDatabaseHas('indikator_penilaians', ['deskripsi' => 'Kedisiplinan']);
+    $this->assertDatabaseHas('indikator_penilaians', ['nama' => 'Kedisiplinan']);
 });
 
 test('create indikator penilaian validation', function () {
     asHubin();
-    $this->post(route('hubin.indikator-penilaian.store'), ['kategori' => ''])->assertSessionHasErrors(['kategori']);
+    $this->post(route('hubin.indikator-penilaian.store'), ['nama' => ''])->assertSessionHasErrors(['nama']);
 });
 
 test('create section under indikator', function () {
     asHubin();
     $i = IndikatorPenilaian::factory()->create();
     $this->post(route('hubin.indikator-penilaian.section.store', $i), [
-        'nomor_urut' => 1, 'deskripsi' => 'Datang tepat waktu',
+        'nomor_urut' => 1, 'nama' => 'Datang tepat waktu',
     ])->assertRedirect();
-    $this->assertDatabaseHas('section_penilaians', ['deskripsi' => 'Datang tepat waktu']);
+    $this->assertDatabaseHas('section_penilaians', ['nama' => 'Datang tepat waktu']);
 });
 
 test('update section', function () {
     asHubin();
-    $s = SectionPenilaian::factory()->create(['deskripsi' => 'Lama']);
+    $s = SectionPenilaian::factory()->create(['nama' => 'Lama']);
     $this->put(route('hubin.indikator-penilaian.section.update', $s), [
         'nomor_urut' => 1,
-        'deskripsi' => 'Baru',
+        'nama' => 'Baru',
     ])->assertRedirect();
-    $this->assertDatabaseHas('section_penilaians', ['deskripsi' => 'Baru']);
+    $this->assertDatabaseHas('section_penilaians', ['nama' => 'Baru']);
 });
 
 test('delete section', function () {
     asHubin();
     $s = SectionPenilaian::factory()->create();
     $this->delete(route('hubin.indikator-penilaian.section.destroy', $s))->assertRedirect();
-    $this->assertDatabaseMissing('section_penilaians', ['id' => $s->id]);
+    $this->assertSoftDeleted('section_penilaians', ['id' => $s->id]);
 });

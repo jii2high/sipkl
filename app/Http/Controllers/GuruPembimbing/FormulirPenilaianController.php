@@ -7,6 +7,7 @@ use App\Models\FormulirPenilaian;
 use App\Models\IndikatorPenilaian;
 use App\Models\PenugasanPembimbing;
 use App\Models\SectionPenilaian;
+use App\Models\SubSectionPenilaian;
 use App\Notifications\PenilaianSubmitted;
 use App\Support\SkalaPredikat;
 use Illuminate\Http\RedirectResponse;
@@ -50,14 +51,13 @@ class FormulirPenilaianController extends Controller
 
         $kompetensiId = $penugasan->pengajuan->siswa->kompetensi_keahlian_id;
 
-        $indikatorUmum = IndikatorPenilaian::where('kategori', 'umum')
-            ->with('sections')
+        $indikatorUmum = IndikatorPenilaian::whereNull('kompetensi_keahlian_id')
+            ->with('sections.subSections')
             ->orderBy('nomor_urut')
             ->get();
 
-        $indikatorTeknis = IndikatorPenilaian::where('kategori', 'teknis_kejuruan')
-            ->where('kompetensi_keahlian_id', $kompetensiId)
-            ->with('sections')
+        $indikatorTeknis = IndikatorPenilaian::where('kompetensi_keahlian_id', $kompetensiId)
+            ->with('sections.subSections')
             ->orderBy('nomor_urut')
             ->get();
 
@@ -84,6 +84,7 @@ class FormulirPenilaianController extends Controller
             'nilai' => 'required|array',
             'nilai.*.indikator_penilaian_id' => 'nullable|integer|exists:indikator_penilaians,id',
             'nilai.*.section_penilaian_id' => 'nullable|integer|exists:section_penilaians,id',
+            'nilai.*.sub_section_penilaian_id' => 'nullable|integer|exists:sub_section_penilaians,id',
             'nilai.*.nilai' => 'nullable|numeric|min:0|max:100',
         ], [
             'sakit.required' => 'Jumlah hari sakit wajib diisi.',
@@ -112,24 +113,25 @@ class FormulirPenilaianController extends Controller
 
             $nilaiTerisi[] = $leaf;
 
-            $kategori = $leaf['indikator_penilaian_id'] !== null
-                ? IndikatorPenilaian::find((int) $leaf['indikator_penilaian_id'])?->kategori
-                : SectionPenilaian::find((int) $leaf['section_penilaian_id'])?->indikatorPenilaian?->kategori;
+            $kkId = $leaf['indikator_penilaian_id'] !== null
+                ? IndikatorPenilaian::find((int) $leaf['indikator_penilaian_id'])?->kompetensi_keahlian_id
+                : ($leaf['section_penilaian_id'] !== null
+                    ? SectionPenilaian::find((int) $leaf['section_penilaian_id'])?->indikatorPenilaian?->kompetensi_keahlian_id
+                    : SubSectionPenilaian::find((int) $leaf['sub_section_penilaian_id'])?->sectionPenilaian?->indikatorPenilaian?->kompetensi_keahlian_id);
 
-            if ($kategori !== null) {
-                $kategoriTerisi[] = $kategori;
-            }
+            $kategoriTerisi[] = $kkId === null ? 'umum' : 'jurusan';
         }
 
-        // BR31: submit boleh partial, tapi minimal 1 leaf terisi per kategori yang tampil.
+        // BR31: submit boleh partial, tapi minimal 1 leaf terisi per kelompok yang tampil.
         $kategoriTampil = IndikatorPenilaian::whereIn('id', $indikatorIds)
             ->orWhereHas('sections', fn ($q) => $q->whereIn('id', $sectionIds))
-            ->pluck('kategori')
+            ->get()
+            ->map(fn ($i) => $i->kompetensi_keahlian_id === null ? 'umum' : 'jurusan')
             ->unique();
 
         if ($kategoriTampil->diff(collect($kategoriTerisi)->unique())->isNotEmpty()) {
             throw ValidationException::withMessages([
-                'nilai' => 'Minimal satu nilai wajib diisi per kategori indikator (Umum dan Teknis Kejuruan).',
+                'nilai' => 'Minimal satu nilai wajib diisi per kelompok indikator (Umum dan Jurusan).',
             ]);
         }
 
@@ -149,6 +151,7 @@ class FormulirPenilaianController extends Controller
                 $formulir->nilaiPenilaians()->create([
                     'indikator_penilaian_id' => $leaf['indikator_penilaian_id'] !== null ? (int) $leaf['indikator_penilaian_id'] : null,
                     'section_penilaian_id' => $leaf['section_penilaian_id'] !== null ? (int) $leaf['section_penilaian_id'] : null,
+                    'sub_section_penilaian_id' => $leaf['sub_section_penilaian_id'] ?? null,
                     'nilai' => $leaf['nilai'],
                     'predikat' => SkalaPredikat::dari((float) $leaf['nilai']),
                 ]);

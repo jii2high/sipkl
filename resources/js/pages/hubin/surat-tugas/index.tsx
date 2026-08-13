@@ -57,6 +57,16 @@ export default function SuratTugas({
         }
     }
 
+    function terbitkan(id: number) {
+        if (
+            confirm(
+                'Terbitkan Surat Tugas ini? Nomor surat akan dibuat otomatis.',
+            )
+        ) {
+            router.post(`/hubin/surat-tugas/${id}/terbit`);
+        }
+    }
+
     return (
         <>
             <Head title="Surat Tugas Monitoring" />
@@ -96,7 +106,7 @@ export default function SuratTugas({
                                         className="border-b last:border-0"
                                     >
                                         <td className="p-3 font-medium">
-                                            {s.nomor_surat}
+                                            {s.nomor_surat ?? '—'}
                                         </td>
                                         <td className="p-3">
                                             {s.periode?.nama}
@@ -114,14 +124,29 @@ export default function SuratTugas({
                                                 className={
                                                     s.status === 'aktif'
                                                         ? 'bg-green-100 text-green-800'
-                                                        : 'bg-muted text-muted-foreground'
+                                                        : s.status === 'draft'
+                                                          ? 'bg-yellow-100 text-yellow-800'
+                                                          : 'bg-muted text-muted-foreground'
                                                 }
                                             >
-                                                {s.status}
+                                                {s.status === 'draft'
+                                                    ? 'Draft'
+                                                    : s.status}
                                             </Badge>
                                         </td>
                                         <td className="p-3">
                                             <div className="flex gap-2">
+                                                {s.status === 'draft' && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            terbitkan(s.id)
+                                                        }
+                                                    >
+                                                        <FileCheck2 className="mr-1 size-4" />
+                                                        Terbit
+                                                    </Button>
+                                                )}
                                                 {s.file && (
                                                     <Button
                                                         variant="outline"

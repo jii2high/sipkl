@@ -12,6 +12,7 @@ use App\Models\PeriodePkl;
 use App\Models\Perusahaan;
 use App\Models\SectionPenilaian;
 use App\Models\SiswaProfile;
+use App\Models\SubSectionPenilaian;
 use App\Models\User;
 use App\Notifications\FormulirPenilaianTerbuka;
 use Illuminate\Http\UploadedFile;
@@ -66,13 +67,11 @@ function siapkanPenilaian(array $overrides = []): array
 function siapkanIndikator(string $kompetensiId): array
 {
     $umum = IndikatorPenilaian::factory()->create([
-        'kategori' => 'umum',
         'kompetensi_keahlian_id' => null,
         'nomor_urut' => 1,
     ]);
 
     $umumBerSection = IndikatorPenilaian::factory()->create([
-        'kategori' => 'umum',
         'kompetensi_keahlian_id' => null,
         'nomor_urut' => 2,
     ]);
@@ -80,7 +79,6 @@ function siapkanIndikator(string $kompetensiId): array
     $section2 = SectionPenilaian::factory()->create(['indikator_penilaian_id' => $umumBerSection->id, 'nomor_urut' => 2]);
 
     $teknis = IndikatorPenilaian::factory()->create([
-        'kategori' => 'teknis_kejuruan',
         'kompetensi_keahlian_id' => $kompetensiId,
         'nomor_urut' => 1,
     ]);
@@ -232,6 +230,38 @@ it('nilai akhir dihitung 2 tahap: rata-rata leaf per kategori lalu rata-rata kat
     $formulir = FormulirPenilaian::first();
     expect($formulir->nilai_akhir)->toBe(92.5);
     expect((string) $formulir->nilai_akhir)->toBe('92.5');
+});
+
+it('nilai akhir mengenali leaf sub-section untuk klasifikasi kategori', function () {
+    $data = siapkanPenilaian();
+    uploadLaporan($data['pengajuan'], $data['siswa']);
+    $ind = siapkanIndikator((string) $data['kk']->id);
+
+    // Indikator teknis ber-section yang leaf-nya diisi di level sub-section saja.
+    $teknisSection = SectionPenilaian::factory()->create([
+        'indikator_penilaian_id' => $ind['teknis']->id,
+        'nomor_urut' => 1,
+    ]);
+    $sub = SubSectionPenilaian::factory()->create([
+        'section_penilaian_id' => $teknisSection->id,
+        'nomor_urut' => 1,
+    ]);
+
+    // Umum: 80. Teknis (via sub-section): 100 → (80+100)/2 = 90.
+    $payload = [
+        ['indikator_penilaian_id' => $ind['umum']->id, 'section_penilaian_id' => null, 'sub_section_penilaian_id' => null, 'nilai' => 80],
+        ['indikator_penilaian_id' => null, 'section_penilaian_id' => null, 'sub_section_penilaian_id' => $sub->id, 'nilai' => 100],
+    ];
+
+    $this->actingAs($data['pembimbing'])
+        ->post("/guru-pembimbing/penilaian/{$data['penugasan']->id}", [
+            'sakit' => 0, 'izin' => 0, 'alpa' => 0,
+            'nilai' => $payload,
+        ])
+        ->assertRedirect();
+
+    $formulir = FormulirPenilaian::first();
+    expect($formulir->nilai_akhir)->toBe(90.0);
 });
 
 it('submit sekali saja: submit kedua ditolak 403 (BR31)', function () {

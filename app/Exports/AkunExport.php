@@ -11,7 +11,7 @@ class AkunExport implements FromArray, WithHeadings
     /** @return array<int, string> */
     public function headings(): array
     {
-        return ['Nama', 'NIS/NIP', 'Email', 'Role', 'Kelas/Jabatan', 'Jurusan'];
+        return ['Nama', 'NIS/NIP', 'Email', 'Role', 'Periode/Jabatan', 'Jurusan'];
     }
 
     /** @return array<int, array<string, string>> */
@@ -22,7 +22,7 @@ class AkunExport implements FromArray, WithHeadings
         foreach (User::with('guruProfile', 'siswaProfile', 'roles')->cursor() as $user) {
             $nis = $user->siswaProfile?->nis;
             $nip = $user->guruProfile?->nip;
-            $kelas = $user->siswaProfile?->kelas;
+            $periode = $user->siswaProfile?->periode?->nama;
             $jabatan = $user->guruProfile?->jabatan;
             $jurusanSiswa = $user->siswaProfile?->kompetensiKeahlian?->nama;
             $jurusanGuru = $user->guruProfile?->kompetensiKeahlian?->nama;
@@ -32,7 +32,7 @@ class AkunExport implements FromArray, WithHeadings
                 'nis_nip' => $nis ?? $nip ?? '-',
                 'email' => $user->email,
                 'role' => $user->getRoleNames()->first() ?? '-',
-                'kelas_jabatan' => $kelas ?? $jabatan ?? '-',
+                'periode_jabatan' => $periode ?? $jabatan ?? '-',
                 'jurusan' => $jurusanSiswa ?? $jurusanGuru ?? '-',
             ];
         }

@@ -6,6 +6,7 @@ use Database\Factories\KompetensiKeahlianFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property-read SiswaProfile[] $siswaProfiles
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class KompetensiKeahlian extends Model
 {
     /** @use HasFactory<KompetensiKeahlianFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'kompetensi_keahlian';
 

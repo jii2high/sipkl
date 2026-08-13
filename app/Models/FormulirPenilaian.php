@@ -67,22 +67,24 @@ class FormulirPenilaian extends Model
     }
 
     /**
-     * BR28: Nilai Akhir dihitung 2 tahap — rata-rata leaf terisi per kategori
-     * (umum/teknis_kejuruan), lalu rata-rata antar kategori yang punya leaf.
+     * BR28: Nilai Akhir dihitung 2 tahap — rata-rata leaf terisi per kelompok
+     * (umum/jurusan — derive dari kompetensi_keahlian_id), lalu rata-rata antar kelompok.
      * Sumber kebenaran sebelum submit; kolom nilai_akhir = snapshot saat submit.
      */
     public function getNilaiAkhirAttribute(): ?float
     {
         $rataPerKategori = [];
 
-        foreach ($this->nilaiPenilaians()->with(['indikatorPenilaian', 'sectionPenilaian.indikatorPenilaian'])->get() as $nilai) {
-            $kategori = $nilai->sectionPenilaian?->indikatorPenilaian->kategori
-                ?? $nilai->indikatorPenilaian?->kategori;
+        foreach ($this->nilaiPenilaians()->with([
+            'indikatorPenilaian',
+            'sectionPenilaian.indikatorPenilaian',
+            'subSectionPenilaian.sectionPenilaian.indikatorPenilaian',
+        ])->get() as $nilai) {
+            $kkId = $nilai->subSectionPenilaian?->sectionPenilaian->indikatorPenilaian->kompetensi_keahlian_id
+                ?? $nilai->sectionPenilaian?->indikatorPenilaian->kompetensi_keahlian_id
+                ?? $nilai->indikatorPenilaian?->kompetensi_keahlian_id;
 
-            if ($kategori === null) {
-                continue;
-            }
-
+            $kategori = $kkId === null ? 'umum' : 'jurusan';
             $rataPerKategori[$kategori][] = (float) $nilai->nilai;
         }
 

@@ -42,7 +42,7 @@ test('delete kompetensi keahlian', function () {
     asHubin();
     $kk = KompetensiKeahlian::factory()->create();
     $this->delete(route('hubin.kompetensi-keahlian.destroy', $kk))->assertRedirect();
-    $this->assertDatabaseMissing('kompetensi_keahlian', ['id' => $kk->id]);
+    $this->assertSoftDeleted('kompetensi_keahlian', ['id' => $kk->id]);
 });
 
 test('delete blocked kompetensi keahlian flashes error toast', function () {

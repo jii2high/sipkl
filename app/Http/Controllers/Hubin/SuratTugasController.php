@@ -20,7 +20,7 @@ use Inertia\Response;
 class SuratTugasController extends Controller
 {
     /**
-     * Daftar Surat Tugas Monitoring + data untuk form terbitkan.
+     * Daftar Surat Tugas Monitoring (draft + terbit) + data untuk form terbitkan.
      */
     public function index(): Response
     {
@@ -77,6 +77,35 @@ class SuratTugasController extends Controller
 
         return redirect()->route('hubin.surat-tugas.index')
             ->with('sukses', 'Surat Tugas Monitoring berhasil diterbitkan.');
+    }
+
+    /**
+     * Terbitkan draft (dibuat Kaprog scoped atau Hubin) — BR18: nomor sequential, BR22: aktif.
+     */
+    public function terbit(Request $request, SuratTugasMonitoring $suratTugas): RedirectResponse
+    {
+        abort_unless($suratTugas->status === 'draft', 422, 'Surat tugas ini bukan draft.');
+
+        $suratTugas = DB::transaction(function () use ($suratTugas, $request) {
+            $suratTugas->update([
+                'status' => 'aktif',
+                'diterbitkan_by' => $request->user()->id,
+                'nomor_surat' => PenomoranSurat::suratTugas($suratTugas->periode_id),
+                'tanggal_terbit' => now()->toDateString(),
+            ]);
+
+            return $suratTugas;
+        });
+
+        $suratTugas->generatePdf();
+
+        $suratTugas->penugasansTercakup()
+            ->pluck('guruPembimbing')
+            ->filter()
+            ->unique('id')
+            ->each(fn (User $pembimbing) => $pembimbing->notify(new SuratTugasTerbit($suratTugas)));
+
+        return back()->with('sukses', 'Surat Tugas Monitoring berhasil diterbitkan.');
     }
 
     /**

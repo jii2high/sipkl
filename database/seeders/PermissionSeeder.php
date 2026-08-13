@@ -57,6 +57,8 @@ class PermissionSeeder extends Seeder
             'pengajuan.setujui',
             'pengajuan.tolak',
             'penugasan.kelola',
+            'master-penilaian.kelola',
+            'surat-tugas.kelola',
         ]);
 
         Role::findByName('hubin')->givePermissionTo([

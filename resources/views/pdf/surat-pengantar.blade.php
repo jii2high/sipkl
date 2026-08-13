@@ -148,7 +148,7 @@
                     <td>{{ $pengajuan->siswa->user->name ?? '-' }}</td>
                     <td>{{ $pengajuan->siswa->nis ?? '-' }}</td>
                     <td>{{ $pengajuan->siswa->kompetensiKeahlian->nama ?? '-' }}</td>
-                    <td>{{ $pengajuan->siswa->kelas ?? '-' }}</td>
+                    <td>{{ $pengajuan->siswa->periode?->nama ?? '-' }}</td>
                 </tr>
             @endforeach
         </tbody>

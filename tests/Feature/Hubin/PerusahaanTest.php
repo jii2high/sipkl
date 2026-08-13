@@ -43,5 +43,5 @@ test('delete perusahaan', function () {
     asHubin();
     $p = Perusahaan::factory()->create();
     $this->delete(route('hubin.perusahaan.destroy', $p))->assertRedirect();
-    $this->assertDatabaseMissing('perusahaans', ['id' => $p->id]);
+    $this->assertSoftDeleted('perusahaans', ['id' => $p->id]);
 });

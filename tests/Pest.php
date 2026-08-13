@@ -50,6 +50,7 @@ pest()->extend(TestCase::class)
         ]);
         Role::firstOrCreate(['name' => 'kaprog'])->givePermissionTo([
             'pengajuan.lihat', 'pengajuan.setujui', 'pengajuan.tolak', 'penugasan.kelola',
+            'master-penilaian.kelola', 'surat-tugas.kelola',
         ]);
         Role::firstOrCreate(['name' => 'guru_pembimbing'])->givePermissionTo([
             'kunjungan.isi', 'kunjungan.lihat', 'penilaian.lihat', 'penilaian.isi',
@@ -149,5 +150,5 @@ function siapkanSuratPengantar(): array
         'status' => 'disetujui',
     ]);
 
-    return compact('periode', 'perusahaan', 'user', 'pengajuan');
+    return compact('periode', 'perusahaan', 'user', 'pengajuan', 'kk');
 }

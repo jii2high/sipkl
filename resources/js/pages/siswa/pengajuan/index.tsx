@@ -37,8 +37,9 @@ const statusBadge: Record<string, string> = {
 
 export default function Pengajuan({
     pengajuan,
+    pengajuanDitolak,
     perusahaan,
-    periodeAktif,
+    periode,
 }: any) {
     const { data, setData, post, errors } = useForm({ perusahaan_id: '' });
     const [uploading, setUploading] = useState(false);
@@ -140,15 +141,15 @@ export default function Pengajuan({
             <div className="mx-auto max-w-2xl space-y-6">
                 <h2 className="text-2xl font-semibold">Pengajuan PKL</h2>
 
-                {!periodeAktif && (
+                {!periode && (
                     <Card>
                         <CardContent className="py-8 text-center text-muted-foreground">
-                            Belum ada periode PKL aktif.
+                            Belum ada periode PKL untuk akun Anda.
                         </CardContent>
                     </Card>
                 )}
 
-                {periodeAktif && !pengajuan && (
+                {periode && !pengajuan && (
                     <Card>
                         <CardHeader>
                             <CardTitle>Form Pengajuan PKL</CardTitle>
@@ -187,12 +188,48 @@ export default function Pengajuan({
                                 </div>
 
                                 <p className="text-sm text-muted-foreground">
-                                    Periode aktif:{' '}
-                                    <strong>{periodeAktif.nama}</strong>
+                                    Periode:{' '}
+                                    <strong>{periode.nama}</strong>
                                 </p>
 
                                 <Button type="submit">Simpan Draft</Button>
                             </form>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {pengajuanDitolak?.length > 0 && !pengajuan && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">
+                                Pengajuan Ditolak (periode ini)
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            {pengajuanDitolak.map((p: any) => (
+                                <div
+                                    key={p.id}
+                                    className="rounded-lg border border-red-100 bg-red-50 p-3 text-sm"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-medium">
+                                            {p.perusahaan?.nama}
+                                        </span>
+                                        <Badge className="bg-red-100 text-red-800">
+                                            Ditolak
+                                        </Badge>
+                                    </div>
+                                    {p.catatan_kaprog && (
+                                        <p className="mt-1 text-red-700">
+                                            {p.catatan_kaprog}
+                                        </p>
+                                    )}
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Ajukan ulang ke perusahaan lain jika
+                                        diperlukan.
+                                    </p>
+                                </div>
+                            ))}
                         </CardContent>
                     </Card>
                 )}

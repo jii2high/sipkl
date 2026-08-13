@@ -37,6 +37,16 @@ class SuratTugasMonitoring extends Model
         'berlaku_hingga',
     ];
 
+    public function scopeDraft(Builder $query): Builder
+    {
+        return $query->where('status', 'draft');
+    }
+
+    public function scopeTerbit(Builder $query): Builder
+    {
+        return $query->whereIn('status', ['aktif', 'nonaktif']);
+    }
+
     protected function casts(): array
     {
         return [
