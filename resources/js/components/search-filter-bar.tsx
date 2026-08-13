@@ -53,7 +53,8 @@ export default function SearchFilterBar({
     ) {
         const q: Record<string, string> = {};
         const s = overrideSearch !== undefined ? overrideSearch : search;
-        const f = overrideFilters !== undefined ? overrideFilters : activeFilters;
+        const f =
+            overrideFilters !== undefined ? overrideFilters : activeFilters;
 
         if (s) {
             q.search = s;

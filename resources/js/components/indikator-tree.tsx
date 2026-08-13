@@ -1,5 +1,4 @@
-import type {
-    DragEndEvent} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
 import {
     DndContext,
     KeyboardSensor,
@@ -83,7 +82,14 @@ function SortableRow({
         dragHandleProps: React.HTMLAttributes<HTMLButtonElement>;
     }) => React.ReactNode;
 }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id });
 
     return (
         <div
@@ -113,7 +119,14 @@ function SortableTr({
         dragHandleProps: React.HTMLAttributes<HTMLButtonElement>;
     }) => React.ReactNode;
 }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id });
 
     return (
         <tr
@@ -167,7 +180,9 @@ function FormItem({
                     id="form-deskripsi"
                     value={form.deskripsi}
                     placeholder="Deskripsi singkat..."
-                    onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
+                    onChange={(e) =>
+                        setForm({ ...form, deskripsi: e.target.value })
+                    }
                     rows={2}
                 />
             </div>
@@ -199,10 +214,13 @@ function DialogKelolaSub({
     const liveSectionData = page.props.indikator
         .flatMap((i) => i.sections)
         .find((s) => s.id === section?.id);
-    const liveSubSections = liveSectionData?.sub_sections ?? section?.sub_sections ?? [];
+    const liveSubSections =
+        liveSectionData?.sub_sections ?? section?.sub_sections ?? [];
 
     // Override sementara untuk optimistic drag — di-clear setelah server respond
-    const [dragOverride, setDragOverride] = useState<SubSectionItem[] | null>(null);
+    const [dragOverride, setDragOverride] = useState<SubSectionItem[] | null>(
+        null,
+    );
     const items = dragOverride ?? liveSubSections;
 
     const [formOpen, setFormOpen] = useState(false);
@@ -211,15 +229,17 @@ function DialogKelolaSub({
 
     const sensors = useSensors(
         useSensor(PointerSensor),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
     );
 
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
 
         if (!over || active.id === over.id || !section) {
-return;
-}
+            return;
+        }
 
         const oldIdx = items.findIndex((it) => it.id === active.id);
         const newIdx = items.findIndex((it) => it.id === over.id);
@@ -228,26 +248,37 @@ return;
 
         router.post(
             `${basePath}/reorder`,
-            { level: 'subSection', itemId: section.id, ids: reordered.map((it) => it.id) },
+            {
+                level: 'subSection',
+                itemId: section.id,
+                ids: reordered.map((it) => it.id),
+            },
             { preserveScroll: true, onSuccess: () => setDragOverride(null) },
         );
     }
 
     function bukaForm(target?: SubSectionItem) {
         setEditTarget(target ?? null);
-        setForm({ nama: target?.nama ?? '', deskripsi: target?.deskripsi ?? '' });
+        setForm({
+            nama: target?.nama ?? '',
+            deskripsi: target?.deskripsi ?? '',
+        });
         setFormOpen(true);
     }
 
     function submit() {
         if (!section) {
-return;
-}
+            return;
+        }
 
         if (editTarget) {
-            router.put(`${basePath}/sub-section/${editTarget.id}`, form, { preserveScroll: true });
+            router.put(`${basePath}/sub-section/${editTarget.id}`, form, {
+                preserveScroll: true,
+            });
         } else {
-            router.post(`${basePath}/section/${section.id}/sub-section`, form, { preserveScroll: true });
+            router.post(`${basePath}/section/${section.id}/sub-section`, form, {
+                preserveScroll: true,
+            });
         }
 
         setFormOpen(false);
@@ -255,13 +286,15 @@ return;
 
     function hapus(id: number) {
         if (confirm('Hapus sub-indikator ini?')) {
-            router.delete(`${basePath}/sub-section/${id}`, { preserveScroll: true });
+            router.delete(`${basePath}/sub-section/${id}`, {
+                preserveScroll: true,
+            });
         }
     }
 
     if (!section) {
-return null;
-}
+        return null;
+    }
 
     return (
         <>
@@ -278,8 +311,15 @@ return null;
                     </DialogHeader>
 
                     <div className="max-h-80 overflow-y-auto">
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                            <SortableContext items={items.map((it) => it.id)} strategy={verticalListSortingStrategy}>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext
+                                items={items.map((it) => it.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
                                 <div className="space-y-1">
                                     {items.length === 0 && (
                                         <p className="py-4 text-center text-sm text-muted-foreground">
@@ -301,11 +341,14 @@ return null;
                                                         <div>
                                                             <span className="text-sm font-medium">
                                                                 {parentHuruf}
-                                                                {idx + 1}. {ss.nama}
+                                                                {idx + 1}.{' '}
+                                                                {ss.nama}
                                                             </span>
                                                             {ss.deskripsi && (
                                                                 <p className="text-xs text-muted-foreground">
-                                                                    {ss.deskripsi}
+                                                                    {
+                                                                        ss.deskripsi
+                                                                    }
                                                                 </p>
                                                             )}
                                                         </div>
@@ -314,7 +357,9 @@ return null;
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
-                                                            onClick={() => bukaForm(ss)}
+                                                            onClick={() =>
+                                                                bukaForm(ss)
+                                                            }
                                                         >
                                                             Edit
                                                         </Button>
@@ -322,7 +367,9 @@ return null;
                                                             size="sm"
                                                             variant="ghost"
                                                             className="text-destructive"
-                                                            onClick={() => hapus(ss.id)}
+                                                            onClick={() =>
+                                                                hapus(ss.id)
+                                                            }
                                                         >
                                                             Hapus
                                                         </Button>
@@ -337,7 +384,11 @@ return null;
                     </div>
 
                     <DialogFooter className="justify-start">
-                        <Button size="sm" variant="outline" onClick={() => bukaForm()}>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => bukaForm()}
+                        >
                             <Plus className="mr-1 size-3.5" />
                             Tambah Sub-indikator
                         </Button>
@@ -382,11 +433,15 @@ function DialogKelolaSeksi({
 }) {
     // Baca sections langsung dari Inertia props (reaktif)
     const page = usePage<{ indikator: IndikatorItem[] }>();
-    const liveIndikator = page.props.indikator.find((i) => i.id === indikator?.id);
+    const liveIndikator = page.props.indikator.find(
+        (i) => i.id === indikator?.id,
+    );
     const liveSections = liveIndikator?.sections ?? indikator?.sections ?? [];
 
     // Override sementara saat drag
-    const [dragOverride, setDragOverride] = useState<SectionItem[] | null>(null);
+    const [dragOverride, setDragOverride] = useState<SectionItem[] | null>(
+        null,
+    );
     const items = dragOverride ?? liveSections;
 
     const [formOpen, setFormOpen] = useState(false);
@@ -400,15 +455,17 @@ function DialogKelolaSeksi({
 
     const sensors = useSensors(
         useSensor(PointerSensor),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
     );
 
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
 
         if (!over || active.id === over.id || !indikator) {
-return;
-}
+            return;
+        }
 
         const oldIdx = items.findIndex((it) => it.id === active.id);
         const newIdx = items.findIndex((it) => it.id === over.id);
@@ -417,34 +474,49 @@ return;
 
         router.post(
             `${basePath}/reorder`,
-            { level: 'section', itemId: indikator.id, ids: reordered.map((it) => it.id) },
+            {
+                level: 'section',
+                itemId: indikator.id,
+                ids: reordered.map((it) => it.id),
+            },
             { preserveScroll: true, onSuccess: () => setDragOverride(null) },
         );
     }
 
     function bukaForm(target?: SectionItem) {
         setEditTarget(target ?? null);
-        setForm({ nama: target?.nama ?? '', deskripsi: target?.deskripsi ?? '' });
+        setForm({
+            nama: target?.nama ?? '',
+            deskripsi: target?.deskripsi ?? '',
+        });
         setFormOpen(true);
     }
 
     function submit() {
         if (!indikator) {
-return;
-}
+            return;
+        }
 
         if (editTarget) {
-            router.put(`${basePath}/section/${editTarget.id}`, form, { preserveScroll: true });
+            router.put(`${basePath}/section/${editTarget.id}`, form, {
+                preserveScroll: true,
+            });
         } else {
-            router.post(`${basePath}/${indikator.id}/section`, form, { preserveScroll: true });
+            router.post(`${basePath}/${indikator.id}/section`, form, {
+                preserveScroll: true,
+            });
         }
 
         setFormOpen(false);
     }
 
     function hapus(id: number) {
-        if (confirm('Hapus indikator penilaian ini beserta sub-indikatornya?')) {
-            router.delete(`${basePath}/section/${id}`, { preserveScroll: true });
+        if (
+            confirm('Hapus indikator penilaian ini beserta sub-indikatornya?')
+        ) {
+            router.delete(`${basePath}/section/${id}`, {
+                preserveScroll: true,
+            });
         }
     }
 
@@ -455,8 +527,8 @@ return;
     }
 
     if (!indikator) {
-return null;
-}
+        return null;
+    }
 
     return (
         <>
@@ -471,8 +543,15 @@ return null;
                     </DialogHeader>
 
                     <div className="max-h-96 overflow-y-auto">
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                            <SortableContext items={items.map((it) => it.id)} strategy={verticalListSortingStrategy}>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext
+                                items={items.map((it) => it.id)}
+                                strategy={verticalListSortingStrategy}
+                            >
                                 <div className="space-y-1">
                                     {items.length === 0 && (
                                         <p className="py-6 text-center text-sm text-muted-foreground">
@@ -493,19 +572,34 @@ return null;
                                                         </button>
                                                         <div>
                                                             <div className="flex items-center gap-1.5">
-                                                                <Badge variant="outline" className="font-mono text-xs">
-                                                                    {toHuruf(idx)}
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="font-mono text-xs"
+                                                                >
+                                                                    {toHuruf(
+                                                                        idx,
+                                                                    )}
                                                                 </Badge>
-                                                                <span className="text-sm font-medium">{s.nama}</span>
+                                                                <span className="text-sm font-medium">
+                                                                    {s.nama}
+                                                                </span>
                                                             </div>
                                                             {s.deskripsi && (
                                                                 <p className="mt-0.5 text-xs text-muted-foreground">
-                                                                    {s.deskripsi}
+                                                                    {
+                                                                        s.deskripsi
+                                                                    }
                                                                 </p>
                                                             )}
-                                                            {s.sub_sections.length > 0 && (
+                                                            {s.sub_sections
+                                                                .length > 0 && (
                                                                 <p className="mt-0.5 text-xs text-muted-foreground/70">
-                                                                    {s.sub_sections.length} sub-indikator
+                                                                    {
+                                                                        s
+                                                                            .sub_sections
+                                                                            .length
+                                                                    }{' '}
+                                                                    sub-indikator
                                                                 </p>
                                                             )}
                                                         </div>
@@ -514,14 +608,18 @@ return null;
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            onClick={() => bukaSub(s, idx)}
+                                                            onClick={() =>
+                                                                bukaSub(s, idx)
+                                                            }
                                                         >
                                                             Sub-indikator
                                                         </Button>
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
-                                                            onClick={() => bukaForm(s)}
+                                                            onClick={() =>
+                                                                bukaForm(s)
+                                                            }
                                                         >
                                                             Edit
                                                         </Button>
@@ -529,7 +627,9 @@ return null;
                                                             size="sm"
                                                             variant="ghost"
                                                             className="text-destructive"
-                                                            onClick={() => hapus(s.id)}
+                                                            onClick={() =>
+                                                                hapus(s.id)
+                                                            }
                                                         >
                                                             Hapus
                                                         </Button>
@@ -544,7 +644,11 @@ return null;
                     </div>
 
                     <DialogFooter className="justify-start">
-                        <Button size="sm" variant="outline" onClick={() => bukaForm()}>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => bukaForm()}
+                        >
                             <Plus className="mr-1 size-3.5" />
                             Tambah Indikator Penilaian
                         </Button>
@@ -594,7 +698,9 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
     const liveIndikator = page.props.indikator ?? indikator;
 
     // Override sementara saat drag
-    const [dragOverride, setDragOverride] = useState<IndikatorItem[] | null>(null);
+    const [dragOverride, setDragOverride] = useState<IndikatorItem[] | null>(
+        null,
+    );
     const items = dragOverride ?? liveIndikator;
 
     const [halaman, setHalaman] = useState(1);
@@ -609,19 +715,24 @@ export default function IndikatorTree({ indikator, basePath }: Props) {
 
     const sensors = useSensors(
         useSensor(PointerSensor),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        }),
     );
 
     // Pagination
     const totalHalaman = Math.ceil(items.length / PAGE_SIZE);
-    const itemsHalaman = items.slice((halaman - 1) * PAGE_SIZE, halaman * PAGE_SIZE);
+    const itemsHalaman = items.slice(
+        (halaman - 1) * PAGE_SIZE,
+        halaman * PAGE_SIZE,
+    );
 
     function handleDragEnd(event: DragEndEvent) {
         const { active, over } = event;
 
         if (!over || active.id === over.id) {
-return;
-}
+            return;
+        }
 
         const oldIdx = items.findIndex((it) => it.id === active.id);
         const newIdx = items.findIndex((it) => it.id === over.id);
@@ -637,7 +748,10 @@ return;
 
     function bukaForm(target?: IndikatorItem) {
         setEditTarget(target ?? null);
-        setForm({ nama: target?.nama ?? '', deskripsi: target?.deskripsi ?? '' });
+        setForm({
+            nama: target?.nama ?? '',
+            deskripsi: target?.deskripsi ?? '',
+        });
         setFormOpen(true);
     }
 
@@ -652,7 +766,9 @@ return;
     }
 
     function hapus(id: number) {
-        if (confirm('Hapus tujuan pembelajaran ini beserta semua indikatornya?')) {
+        if (
+            confirm('Hapus tujuan pembelajaran ini beserta semua indikatornya?')
+        ) {
             router.delete(`${basePath}/${id}`);
         }
     }
@@ -673,7 +789,8 @@ return;
             <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
                     {items.length} tujuan pembelajaran —{' '}
-                    <GripVertical className="inline size-3.5" /> untuk mengubah urutan.
+                    <GripVertical className="inline size-3.5" /> untuk mengubah
+                    urutan.
                 </p>
                 <Button size="sm" onClick={() => bukaForm()}>
                     <Plus className="mr-1 size-4" />
@@ -683,7 +800,11 @@ return;
 
             {/* Tabel */}
             <div className="overflow-hidden rounded-lg border">
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                >
                     <SortableContext
                         items={itemsHalaman.map((it) => it.id)}
                         strategy={verticalListSortingStrategy}
@@ -701,8 +822,12 @@ return;
                             <tbody>
                                 {itemsHalaman.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                                            Belum ada tujuan pembelajaran. Tambahkan yang pertama.
+                                        <td
+                                            colSpan={5}
+                                            className="p-8 text-center text-muted-foreground"
+                                        >
+                                            Belum ada tujuan pembelajaran.
+                                            Tambahkan yang pertama.
                                         </td>
                                     </tr>
                                 )}
@@ -723,7 +848,9 @@ return;
                                                     {nomorGlobal(i.id)}
                                                 </td>
                                                 <td className="p-3">
-                                                    <div className="font-medium">{i.nama}</div>
+                                                    <div className="font-medium">
+                                                        {i.nama}
+                                                    </div>
                                                     {i.deskripsi && (
                                                         <div className="text-xs text-muted-foreground">
                                                             {i.deskripsi}
@@ -734,15 +861,21 @@ return;
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        onClick={() => bukaKelola(i)}
+                                                        onClick={() =>
+                                                            bukaKelola(i)
+                                                        }
                                                     >
                                                         Kelola Indikator
-                                                        {i.sections.length > 0 && (
+                                                        {i.sections.length >
+                                                            0 && (
                                                             <Badge
                                                                 variant="secondary"
                                                                 className="ml-1.5 text-xs"
                                                             >
-                                                                {i.sections.length}
+                                                                {
+                                                                    i.sections
+                                                                        .length
+                                                                }
                                                             </Badge>
                                                         )}
                                                     </Button>
@@ -752,7 +885,9 @@ return;
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
-                                                            onClick={() => bukaForm(i)}
+                                                            onClick={() =>
+                                                                bukaForm(i)
+                                                            }
                                                         >
                                                             Edit
                                                         </Button>
@@ -760,7 +895,9 @@ return;
                                                             size="sm"
                                                             variant="ghost"
                                                             className="text-destructive"
-                                                            onClick={() => hapus(i.id)}
+                                                            onClick={() =>
+                                                                hapus(i.id)
+                                                            }
                                                         >
                                                             Hapus
                                                         </Button>
@@ -808,9 +945,13 @@ return;
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
                         <DialogTitle>
-                            {editTarget ? 'Edit Tujuan Pembelajaran' : 'Tambah Penilaian'}
+                            {editTarget
+                                ? 'Edit Tujuan Pembelajaran'
+                                : 'Tambah Penilaian'}
                         </DialogTitle>
-                        <DialogDescription>Level 1 — tujuan pembelajaran.</DialogDescription>
+                        <DialogDescription>
+                            Level 1 — tujuan pembelajaran.
+                        </DialogDescription>
                     </DialogHeader>
                     <FormItem
                         form={form}

@@ -13,7 +13,9 @@ export default function Verifikasi({ pengajuan }: any) {
             <Head title="Verifikasi Pengajuan" />
 
             <div className="flex flex-col gap-4 p-4">
-                <h2 className="text-2xl font-semibold">Antrian Verifikasi PKL</h2>
+                <h2 className="text-2xl font-semibold">
+                    Antrian Verifikasi PKL
+                </h2>
 
                 <SearchFilterBar
                     baseRoute="/kaprog/verifikasi"
@@ -34,25 +36,43 @@ export default function Verifikasi({ pengajuan }: any) {
                         <tbody>
                             {pengajuan?.data?.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="p-6 text-center text-muted-foreground">
-                                        Tidak ada pengajuan yang menunggu verifikasi.
+                                    <td
+                                        colSpan={5}
+                                        className="p-6 text-center text-muted-foreground"
+                                    >
+                                        Tidak ada pengajuan yang menunggu
+                                        verifikasi.
                                     </td>
                                 </tr>
                             )}
                             {pengajuan?.data?.map((item: any, idx: number) => (
-                                <tr key={item.id} className="border-b last:border-0">
+                                <tr
+                                    key={item.id}
+                                    className="border-b last:border-0"
+                                >
                                     <td className="p-3 text-muted-foreground">
-                                        {(pengajuan.current_page - 1) * pengajuan.per_page + idx + 1}
+                                        {(pengajuan.current_page - 1) *
+                                            pengajuan.per_page +
+                                            idx +
+                                            1}
                                     </td>
                                     <td className="p-3 font-medium">
                                         {item.siswa?.user?.name ?? '-'}
                                     </td>
-                                    <td className="p-3">{item.perusahaan?.nama ?? '-'}</td>
+                                    <td className="p-3">
+                                        {item.perusahaan?.nama ?? '-'}
+                                    </td>
                                     <td className="p-3 text-muted-foreground">
                                         {item.periode?.nama ?? '-'}
                                     </td>
                                     <td className="p-3">
-                                        <Link href={verifikasiShow({ pengajuan: item.id }).url}>
+                                        <Link
+                                            href={
+                                                verifikasiShow({
+                                                    pengajuan: item.id,
+                                                }).url
+                                            }
+                                        >
                                             <Button variant="outline" size="sm">
                                                 Lihat Detail
                                             </Button>

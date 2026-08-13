@@ -1,5 +1,11 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { AlertCircle, ChevronRight, Download, FileText, Upload } from 'lucide-react';
+import {
+    AlertCircle,
+    ChevronRight,
+    Download,
+    FileText,
+    Upload,
+} from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,7 +41,10 @@ const STATUS_LABEL: Record<string, string> = {
     selesai_pkl: 'Selesai PKL',
 };
 
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+const STATUS_VARIANT: Record<
+    string,
+    'default' | 'secondary' | 'destructive' | 'outline'
+> = {
     draft: 'secondary',
     diajukan: 'secondary',
     disetujui: 'default',
@@ -44,12 +53,21 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | '
     selesai_pkl: 'default',
 };
 
-export default function Pengajuan({ pengajuan, pengajuanDitolak, perusahaan, periode }: any) {
+export default function Pengajuan({
+    pengajuan,
+    pengajuanDitolak,
+    perusahaan,
+    periode,
+}: any) {
     // Form pengajuan baru
-    const { data, setData, post, errors, processing } = useForm({ perusahaan_id: '' });
+    const { data, setData, post, errors, processing } = useForm({
+        perusahaan_id: '',
+    });
 
     // Pilih perusahaan — autofill info
-    const perusahaanDipilih = perusahaan?.find((p: any) => String(p.id) === data.perusahaan_id);
+    const perusahaanDipilih = perusahaan?.find(
+        (p: any) => String(p.id) === data.perusahaan_id,
+    );
 
     // Upload Surat Balasan
     const fileRef = useRef<HTMLInputElement>(null);
@@ -69,8 +87,8 @@ export default function Pengajuan({ pengajuan, pengajuanDitolak, perusahaan, per
         e.preventDefault();
 
         if (!data.perusahaan_id) {
-return;
-}
+            return;
+        }
 
         post(pengajuanStore().url);
     }
@@ -79,20 +97,20 @@ return;
         const file = fileRef.current?.files?.[0];
 
         if (!file) {
-return;
-}
+            return;
+        }
 
         if (file.type !== 'application/pdf') {
- alert('File harus PDF.');
+            alert('File harus PDF.');
 
- return; 
-}
+            return;
+        }
 
         if (file.size > 5 * 1024 * 1024) {
- alert('Maksimal 5 MB.');
+            alert('Maksimal 5 MB.');
 
- return; 
-}
+            return;
+        }
 
         setUploading(true);
         const fd = new FormData();
@@ -103,8 +121,8 @@ return;
                 setUploading(false);
 
                 if (fileRef.current) {
-fileRef.current.value = '';
-}
+                    fileRef.current.value = '';
+                }
             },
         });
     }
@@ -113,20 +131,20 @@ fileRef.current.value = '';
         const file = laporanRef.current?.files?.[0];
 
         if (!file) {
-return;
-}
+            return;
+        }
 
         if (file.type !== 'application/pdf') {
- alert('File harus PDF.');
+            alert('File harus PDF.');
 
- return; 
-}
+            return;
+        }
 
         if (file.size > 10 * 1024 * 1024) {
- alert('Maksimal 10 MB.');
+            alert('Maksimal 10 MB.');
 
- return; 
-}
+            return;
+        }
 
         setUploadingLaporan(true);
         const fd = new FormData();
@@ -137,8 +155,8 @@ return;
                 setUploadingLaporan(false);
 
                 if (laporanRef.current) {
-laporanRef.current.value = '';
-}
+                    laporanRef.current.value = '';
+                }
             },
         });
     }
@@ -162,7 +180,9 @@ laporanRef.current.value = '';
                 {periode && (
                     <div className="space-y-4 rounded-lg border p-5">
                         <div className="flex items-center justify-between">
-                            <h3 className="font-semibold">Form Pengajuan PKL</h3>
+                            <h3 className="font-semibold">
+                                Form Pengajuan PKL
+                            </h3>
                             <span className="text-sm text-muted-foreground">
                                 Periode: <strong>{periode.nama}</strong>
                             </span>
@@ -173,11 +193,21 @@ laporanRef.current.value = '';
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
                                     <div className="text-sm">
-                                        <p className="font-medium">{pengajuan.perusahaan?.nama}</p>
-                                        <p className="text-muted-foreground">{pengajuan.perusahaan?.alamat}</p>
+                                        <p className="font-medium">
+                                            {pengajuan.perusahaan?.nama}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            {pengajuan.perusahaan?.alamat}
+                                        </p>
                                     </div>
-                                    <Badge variant={STATUS_VARIANT[pengajuan.status] ?? 'secondary'}>
-                                        {STATUS_LABEL[pengajuan.status] ?? pengajuan.status}
+                                    <Badge
+                                        variant={
+                                            STATUS_VARIANT[pengajuan.status] ??
+                                            'secondary'
+                                        }
+                                    >
+                                        {STATUS_LABEL[pengajuan.status] ??
+                                            pengajuan.status}
                                     </Badge>
                                 </div>
 
@@ -186,14 +216,17 @@ laporanRef.current.value = '';
                                     <div className="flex items-start gap-2 rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">
                                         <AlertCircle className="mt-0.5 size-4 shrink-0" />
                                         <div>
-                                            <p className="font-medium">Catatan Kaprog:</p>
+                                            <p className="font-medium">
+                                                Catatan Kaprog:
+                                            </p>
                                             <p>{pengajuan.catatan_kaprog}</p>
                                         </div>
                                     </div>
                                 )}
 
                                 <p className="text-xs text-muted-foreground">
-                                    Form pengajuan terkunci karena pengajuan sudah masuk antrian atau disetujui.
+                                    Form pengajuan terkunci karena pengajuan
+                                    sudah masuk antrian atau disetujui.
                                 </p>
                             </div>
                         )}
@@ -205,64 +238,107 @@ laporanRef.current.value = '';
                                     <Label>Perusahaan Tujuan</Label>
                                     <Select
                                         value={data.perusahaan_id}
-                                        onValueChange={(v) => setData('perusahaan_id', v)}
+                                        onValueChange={(v) =>
+                                            setData('perusahaan_id', v)
+                                        }
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Pilih perusahaan" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {perusahaan.map((p: any) => (
-                                                <SelectItem key={p.id} value={String(p.id)}>
+                                                <SelectItem
+                                                    key={p.id}
+                                                    value={String(p.id)}
+                                                >
                                                     {p.nama}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                     {errors.perusahaan_id && (
-                                        <p className="mt-1 text-sm text-destructive">{errors.perusahaan_id}</p>
+                                        <p className="mt-1 text-sm text-destructive">
+                                            {errors.perusahaan_id}
+                                        </p>
                                     )}
                                 </div>
 
                                 {/* Autofill info perusahaan */}
                                 {perusahaanDipilih && (
                                     <div className="rounded-md bg-muted/50 p-3 text-sm">
-                                        <p><span className="text-muted-foreground">Alamat: </span>{perusahaanDipilih.alamat ?? '-'}</p>
-                                        <p><span className="text-muted-foreground">Telepon: </span>{perusahaanDipilih.telepon ?? '-'}</p>
-                                        <p><span className="text-muted-foreground">Email: </span>{perusahaanDipilih.email ?? '-'}</p>
+                                        <p>
+                                            <span className="text-muted-foreground">
+                                                Alamat:{' '}
+                                            </span>
+                                            {perusahaanDipilih.alamat ?? '-'}
+                                        </p>
+                                        <p>
+                                            <span className="text-muted-foreground">
+                                                Telepon:{' '}
+                                            </span>
+                                            {perusahaanDipilih.telepon ?? '-'}
+                                        </p>
+                                        <p>
+                                            <span className="text-muted-foreground">
+                                                Email:{' '}
+                                            </span>
+                                            {perusahaanDipilih.email ?? '-'}
+                                        </p>
                                     </div>
                                 )}
 
-                                <Button type="submit" disabled={processing || !data.perusahaan_id} className="w-full">
-                                    {processing ? 'Mengirim...' : 'Ajukan ke Kaprog'}
+                                <Button
+                                    type="submit"
+                                    disabled={processing || !data.perusahaan_id}
+                                    className="w-full"
+                                >
+                                    {processing
+                                        ? 'Mengirim...'
+                                        : 'Ajukan ke Kaprog'}
                                 </Button>
                             </form>
                         )}
 
                         {/* Upload Surat Balasan — muncul jika disetujui & surat pengantar terbit */}
-                        {pengajuan?.status === 'disetujui' && pengajuan?.exists_surat_pengantar && (
-                            <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                                <div className="flex items-center gap-2 text-sm font-medium text-blue-800">
-                                    <FileText className="size-4" />
-                                    Upload Surat Balasan dari Perusahaan
+                        {pengajuan?.status === 'disetujui' &&
+                            pengajuan?.exists_surat_pengantar && (
+                                <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-blue-800">
+                                        <FileText className="size-4" />
+                                        Upload Surat Balasan dari Perusahaan
+                                    </div>
+                                    <p className="text-xs text-blue-600">
+                                        Upload surat balasan untuk melanjutkan
+                                        ke status Resmi PKL.
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            ref={fileRef}
+                                            type="file"
+                                            accept=".pdf"
+                                            className="flex-1"
+                                        />
+                                        <Button
+                                            size="sm"
+                                            onClick={handleUploadBalasan}
+                                            disabled={uploading}
+                                        >
+                                            <Upload className="mr-1 size-4" />
+                                            {uploading
+                                                ? 'Mengupload...'
+                                                : 'Upload'}
+                                        </Button>
+                                    </div>
                                 </div>
-                                <p className="text-xs text-blue-600">
-                                    Upload surat balasan untuk melanjutkan ke status Resmi PKL.
-                                </p>
-                                <div className="flex gap-2">
-                                    <Input ref={fileRef} type="file" accept=".pdf" className="flex-1" />
-                                    <Button size="sm" onClick={handleUploadBalasan} disabled={uploading}>
-                                        <Upload className="mr-1 size-4" />
-                                        {uploading ? 'Mengupload...' : 'Upload'}
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
+                            )}
 
-                        {pengajuan?.status === 'disetujui' && !pengajuan?.exists_surat_pengantar && (
-                            <div className="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">
-                                Menunggu Surat Pengantar diterbitkan Hubin sebelum upload Surat Balasan.
-                            </div>
-                        )}
+                        {pengajuan?.status === 'disetujui' &&
+                            !pengajuan?.exists_surat_pengantar && (
+                                <div className="rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">
+                                    Menunggu Surat Pengantar diterbitkan Hubin
+                                    sebelum upload Surat Balasan.
+                                </div>
+                            )}
 
                         {/* Upload Laporan Akhir — muncul hanya jika resmi_pkl */}
                         {pengajuan?.status === 'resmi_pkl' && (
@@ -275,31 +351,67 @@ laporanRef.current.value = '';
                                     <div className="flex items-center gap-2">
                                         <p className="text-xs text-green-700">
                                             Diunggah pada{' '}
-                                            {new Date(pengajuan.laporan_akhir_uploaded_at).toLocaleDateString('id-ID')}
+                                            {new Date(
+                                                pengajuan.laporan_akhir_uploaded_at,
+                                            ).toLocaleDateString('id-ID')}
                                         </p>
-                                        <Button variant="outline" size="sm" asChild>
-                                            <a href={laporanAkhirDownload({ pengajuan: pengajuan.id }).url} target="_blank" rel="noopener noreferrer">
-                                                <Download className="mr-1 size-4" /> Download
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            asChild
+                                        >
+                                            <a
+                                                href={
+                                                    laporanAkhirDownload({
+                                                        pengajuan: pengajuan.id,
+                                                    }).url
+                                                }
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                <Download className="mr-1 size-4" />{' '}
+                                                Download
                                             </a>
                                         </Button>
                                     </div>
                                 ) : (
                                     <>
                                         <p className="text-xs text-green-700">
-                                            Unggah laporan akhir menjelang PKL berakhir.
+                                            Unggah laporan akhir menjelang PKL
+                                            berakhir.
                                         </p>
                                         <div className="flex gap-2">
-                                            <Input ref={laporanRef} type="file" accept=".pdf" className="flex-1" />
-                                            <Button size="sm" onClick={handleUploadLaporan} disabled={uploadingLaporan}>
+                                            <Input
+                                                ref={laporanRef}
+                                                type="file"
+                                                accept=".pdf"
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                size="sm"
+                                                onClick={handleUploadLaporan}
+                                                disabled={uploadingLaporan}
+                                            >
                                                 <Upload className="mr-1 size-4" />
-                                                {uploadingLaporan ? 'Mengupload...' : 'Upload'}
+                                                {uploadingLaporan
+                                                    ? 'Mengupload...'
+                                                    : 'Upload'}
                                             </Button>
                                         </div>
                                     </>
                                 )}
                                 <Button variant="outline" size="sm" asChild>
-                                    <a href={suratBalasanDownload({ pengajuan: pengajuan.id }).url} target="_blank" rel="noopener noreferrer">
-                                        <Download className="mr-1 size-4" /> Download Surat Balasan
+                                    <a
+                                        href={
+                                            suratBalasanDownload({
+                                                pengajuan: pengajuan.id,
+                                            }).url
+                                        }
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <Download className="mr-1 size-4" />{' '}
+                                        Download Surat Balasan
                                     </a>
                                 </Button>
                             </div>
@@ -313,7 +425,7 @@ laporanRef.current.value = '';
                 ───────────────────────────────────────────── */}
                 {pengajuanDitolak?.length > 0 && (
                     <div className="space-y-3">
-                        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                        <h3 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                             Pengajuan Ditolak — Bisa Diajukan Ulang
                         </h3>
                         {pengajuanDitolak.map((p: any) => (
@@ -323,8 +435,12 @@ laporanRef.current.value = '';
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="text-sm">
-                                        <p className="font-medium">{p.perusahaan?.nama}</p>
-                                        <p className="text-muted-foreground">{p.perusahaan?.alamat}</p>
+                                        <p className="font-medium">
+                                            {p.perusahaan?.nama}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            {p.perusahaan?.alamat}
+                                        </p>
                                     </div>
                                     <Badge variant="destructive">Ditolak</Badge>
                                 </div>
@@ -332,7 +448,13 @@ laporanRef.current.value = '';
                                 <div className="mt-2 flex items-center gap-2">
                                     {p.catatan_kaprog ? (
                                         <button
-                                            onClick={() => setCatatanBuka(catatanBuka === p.id ? null : p.id)}
+                                            onClick={() =>
+                                                setCatatanBuka(
+                                                    catatanBuka === p.id
+                                                        ? null
+                                                        : p.id,
+                                                )
+                                            }
                                             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
                                         >
                                             <AlertCircle className="size-3" />
@@ -342,7 +464,9 @@ laporanRef.current.value = '';
                                             />
                                         </button>
                                     ) : (
-                                        <span className="text-xs text-muted-foreground">Tanpa catatan</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            Tanpa catatan
+                                        </span>
                                     )}
                                 </div>
 
@@ -355,7 +479,8 @@ laporanRef.current.value = '';
                                 {/* Tombol isi ulang hanya muncul jika tidak ada pengajuan aktif */}
                                 {!formLocked && (
                                     <p className="mt-2 text-xs text-muted-foreground">
-                                        Pilih perusahaan lain di form di atas untuk mengajukan ulang.
+                                        Pilih perusahaan lain di form di atas
+                                        untuk mengajukan ulang.
                                     </p>
                                 )}
                             </div>

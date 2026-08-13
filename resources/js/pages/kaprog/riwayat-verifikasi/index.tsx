@@ -74,31 +74,51 @@ export default function RiwayatVerifikasi({ pengajuan }: any) {
                         <tbody>
                             {pengajuan?.data?.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                                    <td
+                                        colSpan={5}
+                                        className="p-6 text-center text-muted-foreground"
+                                    >
                                         Belum ada pengajuan yang diverifikasi.
                                     </td>
                                 </tr>
                             )}
                             {pengajuan?.data?.map((item: any, idx: number) => (
-                                <tr key={item.id} className="border-b last:border-0">
+                                <tr
+                                    key={item.id}
+                                    className="border-b last:border-0"
+                                >
                                     <td className="p-3 text-muted-foreground">
-                                        {(pengajuan.current_page - 1) * pengajuan.per_page + idx + 1}
+                                        {(pengajuan.current_page - 1) *
+                                            pengajuan.per_page +
+                                            idx +
+                                            1}
                                     </td>
                                     <td className="p-3 font-medium">
                                         {item.siswa?.user?.name ?? '-'}
                                     </td>
-                                    <td className="p-3">{item.perusahaan?.nama ?? '-'}</td>
+                                    <td className="p-3">
+                                        {item.perusahaan?.nama ?? '-'}
+                                    </td>
                                     <td className="p-3">
                                         <Badge
                                             variant={
-                                                item.status === 'disetujui' ? 'default' : 'destructive'
+                                                item.status === 'disetujui'
+                                                    ? 'default'
+                                                    : 'destructive'
                                             }
                                         >
-                                            {LABEL_STATUS[item.status] ?? item.status}
+                                            {LABEL_STATUS[item.status] ??
+                                                item.status}
                                         </Badge>
                                     </td>
                                     <td className="p-3">
-                                        <Link href={verifikasiShow({ pengajuan: item.id }).url}>
+                                        <Link
+                                            href={
+                                                verifikasiShow({
+                                                    pengajuan: item.id,
+                                                }).url
+                                            }
+                                        >
                                             <Button variant="ghost" size="sm">
                                                 Detail
                                             </Button>
