@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import IndikatorTree from '@/components/indikator-tree';
-import type {IndikatorItem} from '@/components/indikator-tree';
+import type { IndikatorItem } from '@/components/indikator-tree';
 import { Badge } from '@/components/ui/badge';
 import { dashboard as kaprogDashboard } from '@/routes/kaprog';
 

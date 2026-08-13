@@ -86,9 +86,11 @@ export default function RiwayatVerifikasi({ pengajuan }: any) {
                                     )}
                                 </div>
                                 <Link
-                                    href={verifikasiShow({
-                                        pengajuan: item.id,
-                                    }).url}
+                                    href={
+                                        verifikasiShow({
+                                            pengajuan: item.id,
+                                        }).url
+                                    }
                                 >
                                     <Badge variant="outline">Detail</Badge>
                                 </Link>

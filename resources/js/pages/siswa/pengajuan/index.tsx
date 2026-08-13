@@ -188,8 +188,7 @@ export default function Pengajuan({
                                 </div>
 
                                 <p className="text-sm text-muted-foreground">
-                                    Periode:{' '}
-                                    <strong>{periode.nama}</strong>
+                                    Periode: <strong>{periode.nama}</strong>
                                 </p>
 
                                 <Button type="submit">Simpan Draft</Button>
@@ -316,7 +315,8 @@ export default function Pengajuan({
                                             Resmi PKL
                                         </div>
                                         <p className="text-xs text-blue-600">
-                                            Selamat! Status PKL Anda telah resmi.
+                                            Selamat! Status PKL Anda telah
+                                            resmi.
                                         </p>
                                         <Button
                                             variant="outline"
@@ -326,8 +326,7 @@ export default function Pengajuan({
                                             <a
                                                 href={
                                                     suratBalasanDownload({
-                                                        pengajuan:
-                                                            pengajuan.id,
+                                                        pengajuan: pengajuan.id,
                                                     }).url
                                                 }
                                                 target="_blank"
@@ -346,9 +345,9 @@ export default function Pengajuan({
                                         </div>
                                         <p className="text-xs text-green-700">
                                             Unggah Laporan Akhir menjelang masa
-                                            PKL berakhir. Setelah diunggah,
-                                            Guru Pembimbing dapat mengisi
-                                            Formulir Penilaian.
+                                            PKL berakhir. Setelah diunggah, Guru
+                                            Pembimbing dapat mengisi Formulir
+                                            Penilaian.
                                         </p>
                                         {pengajuan.laporan_akhir_uploaded_at ? (
                                             <div className="flex items-center gap-2">
