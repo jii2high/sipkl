@@ -23,73 +23,83 @@ Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Turunan dari `PRD.md` v2 dan 
 
 # MILESTONE 0 — Fondasi Project
 
-- [ ] **Task M0.1: Verifikasi/bootstrap proyek Laravel**
+- [x] **Task M0.1: Verifikasi/bootstrap proyek Laravel**
   - **Goal**: Proyek Laravel berjalan lokal.
   - **Target Files/Location**: `composer.json`, `.env.example`, `README.md`
   - **Instructions**: Cek apakah `composer.json` sudah ada. Bila belum, buat proyek Laravel versi stabil terbaru yang didukung. Catat versi PHP/Laravel aktual. Jalankan `php artisan about`.
   - **Acceptance Criteria**: `php artisan about` berhasil; versi tercatat di PR.
 
-- [ ] **Task M0.2: Pasang paket inti**
+- [x] **Task M0.2: Pasang paket inti**
   - **Goal**: Dependency sesuai PRD §1.4 terpasang.
   - **Target Files/Location**: `composer.json`, `composer.lock`
   - **Instructions**: `composer require` filament/filament, livewire/livewire (bila belum bawaan Filament), spatie/laravel-activitylog, barryvdh/laravel-dompdf, endroid/qr-code, maatwebsite/excel; dev: pestphp/pest, pest-plugin-laravel, pest-plugin-livewire. Inisialisasi Pest.
   - **Acceptance Criteria**: `composer install` bersih; `./vendor/bin/pest` berjalan (boleh 0 test).
 
-- [ ] **Task M0.3: Konfigurasi environment dan zona waktu**
+- [x] **Task M0.3: Konfigurasi environment dan zona waktu**
   - **Goal**: DB, mail, queue database, cache/session database, UTC di penyimpanan.
   - **Target Files/Location**: `.env.example`, `config/app.php`, `config/queue.php`
   - **Instructions**: Set `APP_TIMEZONE=UTC`; tambah `config('app.display_timezone')='Asia/Jakarta'` dari env. `QUEUE_CONNECTION=database`, `CACHE_STORE=database`, `SESSION_DRIVER=database`. Buat migration tabel framework (`queue:table`, `cache:table`, `session:table`, `queue:failed-table`, `queue:batches-table`). Jangan commit kredensial.
   - **Acceptance Criteria**: `php artisan migrate` pada DB kosong berhasil; `config('app.timezone')==='UTC'`.
 
-- [ ] **Task M0.4: Service waktu Jakarta**
+- [x] **Task M0.4: Service waktu Jakarta**
   - **Goal**: Satu sumber aturan waktu (PD-05).
   - **Target Files/Location**: `app/Services/JakartaTime.php`, `tests/Unit/JakartaTimeTest.php`
   - **Instructions**: Method: `today()` (tanggal Jakarta), `endOfDay(Carbon|string $date)` → 23:59:59 Jakarta dalam UTC, `toDisplay($utc)`, `businessDaysBetween($a,$b)` (Senin–Jumat, libur tidak dikecualikan).
   - **Acceptance Criteria**: Unit test: date-only inklusif sampai 23:59:59 Jakarta; hitung hari kerja benar melintasi akhir pekan (AC-48).
 
-- [ ] **Task M0.5: Migration master jurusan, kelas, academic_periods**
+- [x] **Task M0.5: Migration master jurusan, kelas, academic_periods**
   - **Goal**: Tiga tabel master dasar.
   - **Target Files/Location**: `database/migrations/*_create_jurusan_table.php`, `*_create_kelas_table.php`, `*_create_academic_periods_table.php`, `app/Models/{Jurusan,Kelas,AcademicPeriod}.php`
   - **Instructions**: Ikuti `schema.sql` Bagian 1 termasuk CHECK dan UNIQUE. Tanpa `walas_id` di `kelas`. Tambah factory.
   - **Acceptance Criteria**: Migrate berhasil; insert `tahun_ajaran` format salah ditolak DB.
 
-- [ ] **Task M0.6: Migration users, user_roles, otp_codes**
+- [x] **Task M0.6: Migration users, user_roles, otp_codes**
   - **Goal**: Akun, multi-role, OTP.
   - **Target Files/Location**: `database/migrations/*_create_users_table.php`, `*_create_user_roles_table.php`, `*_create_otp_codes_table.php`, `app/Models/{User,UserRole,OtpCode}.php`
   - **Instructions**: Ikuti `schema.sql` Bagian 2 (CHECK domain email, CHECK siswa wajib jurusan+kelas, generated `jurusan_key/kelas_key`). Relasi `User::roles()`. Tambah factory per tipe.
   - **Acceptance Criteria**: Insert role ganda (user,role,scope sama) ditolak DB; email non-domain sekolah ditolak DB.
 
-- [ ] **Task M0.7: Migration activity_log dan notifikasi**
+- [x] **Task M0.7: Migration activity_log dan notifikasi**
   - **Goal**: Audit dan notifikasi in-app.
   - **Target Files/Location**: `database/migrations/*_create_activity_log_table.php`, `*_create_notifications_table.php`, `*_create_notification_delivery_failures_table.php`, `app/Models/NotificationDeliveryFailure.php`
   - **Instructions**: Ikuti `schema.sql` Bagian 13. Konfigurasi activitylog memakai tabel ini.
   - **Acceptance Criteria**: Migrate berhasil; `activity()->log('x')` menulis baris.
 
-- [ ] **Task M0.8: Panel Filament `hubin` dan `app` (kosong)**
+- [x] **Task M0.8: Panel Filament `hubin` dan `app` (kosong)**
   - **Goal**: Dua panel dengan auth session yang sama.
   - **Target Files/Location**: `app/Providers/Filament/HubinPanelProvider.php`, `AppPanelProvider.php`, `bootstrap/providers.php`
   - **Instructions**: Panel `hubin` path `/hubin`, `canAccessPanel` hanya bila `active_role==='hubin'`. Panel `app` path `/app`, akses untuk selain Hubin. Login memakai halaman kustom (M1), bukan login Filament bawaan; nonaktifkan registrasi/reset password bawaan.
   - **Acceptance Criteria**: Panel terbuka untuk user ber-role sesuai (dites lewat factory); user tanpa role mendapat 403.
 
-- [ ] **Task M0.9: Middleware `EnsureActiveRoleMatches` dan helper active_role**
+- [x] **Task M0.9: Middleware `EnsureActiveRoleMatches` dan helper active_role**
   - **Goal**: Otorisasi berbasis `session('active_role')`.
   - **Target Files/Location**: `app/Http/Middleware/EnsureActiveRoleMatches.php`, `app/Services/ActiveRole.php`, `bootstrap/app.php`
   - **Instructions**: Middleware menerima parameter role; cek role ada di `user_roles` DAN sama dengan `active_role`. Helper mengembalikan role + scope (jurusan_id/kelas_id) aktif. Tolak 403.
   - **Acceptance Criteria**: Test: user Kaprog+Guru dengan `active_role=guru_pembimbing` ke route Kaprog → 403 (AC-06).
 
-- [ ] **Task M0.10: Layanan validasi upload dan unduhan private**
+- [x] **Task M0.10: Layanan validasi upload dan unduhan private**
   - **Goal**: Satu jalur upload/unduh aman (PD-09).
   - **Target Files/Location**: `app/Services/UploadValidator.php`, `app/Services/PrivateFileStore.php`, `app/Http/Controllers/PrivateFileController.php`, `config/filesystems.php`
   - **Instructions**: Disk `private` di luar public. Profil: `laporan` (pdf/doc/docx, 10MB), `foto` (jpg/jpeg/png, 5MB), `balasan` (pdf/jpg/png, 10MB). Validasi ekstensi DAN MIME dari deteksi konten; tolak mismatch/kosong/oversize. Simpan di `{academic_period_id}/{jenis}/{uuid}.{ext}`. Controller unduh memanggil callback otorisasi per objek (Policy).
   - **Acceptance Criteria**: Test: `.pdf` berisi konten gambar ditolak; oversize ditolak; unduhan tanpa izin 403/404; tidak ada URL langsung (AC-49).
 
-- [ ] **Task M0.11: Seeder data dev**
+- [x] **Task M0.11: Seeder data dev**
   - **Goal**: Data dummy untuk uji manual.
   - **Target Files/Location**: `database/seeders/DevSeeder.php`
   - **Instructions**: 2 jurusan, 4 kelas, 1 periode aktif, user per role (siswa ×6, guru multi-role, kaprog, walas, hubin, kepsek). Password awal = NIS/NIP ter-hash. Jangan data siswa nyata.
   - **Acceptance Criteria**: `migrate:fresh --seed` berhasil.
 
 **Checkpoint M0**: migrate dari DB kosong, `pest` hijau, panel `/hubin` dan `/app` dapat diakses sesuai role dummy, test AC-06 lulus. Catat hasil.
+
+**Hasil Checkpoint M0 (2026-11-16)**:
+
+- `php artisan about` → Laravel 13.42.0, PHP 8.4.13, timezone `UTC`.
+- `php artisan migrate:fresh --seed` pada `sistem_pkl` → 12 migration + `DevSeeder` berhasil (2 jurusan, 4 kelas, 1 periode, 11 user, 12 baris user_roles).
+- `php vendor/bin/pest` → 53 test, 85 assertion, semua lulus (Unit: JakartaTime, UploadValidator; Feature: skema master, skema user, audit log, akses panel, middleware active_role/AC-06, file private).
+- Akses panel `/hubin` dan `/app` diuji lewat feature test dengan factory (bukan manual browser) — 200 untuk role yang benar, 403 untuk role salah/tanpa `active_role`.
+- AC-06 dibuktikan `tests/Feature/ActiveRoleMiddlewareTest.php`.
+- Catatan lingkungan: DB dev memakai **MariaDB 10.4.32** (server XAMPP yang sudah dipakai PO), bukan MySQL 8.0.16+ seperti PRD §1.4. Dua penyesuaian portabilitas: kolom `TIMESTAMP NOT NULL` dipetakan ke `DATETIME NOT NULL`, dan `activity_log` mendapat kolom `attribute_changes` (wajib spatie v5). Perilaku harus diverifikasi ulang di MySQL 8 sebelum go-live.
+- Belum diverifikasi: render panel di browser sungguhan (aset CSS/JS Filament belum dipublikasikan), halaman `/login` masih placeholder (M1), dan belum ada uji beban/traffic nyata.
 
 ---
 
