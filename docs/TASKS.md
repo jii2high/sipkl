@@ -105,17 +105,19 @@ Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Turunan dari `PRD.md` v2 dan 
 
 # MILESTONE 1 — Autentikasi
 
-- [ ] **Task M1.1: Layanan notifikasi (email + in-app + retry)**
+- [x] **Task M1.1: Layanan notifikasi (email + in-app + retry)**
   - **Goal**: Satu pintu pengiriman notifikasi (PD-06).
   - **Target Files/Location**: `app/Services/NotificationDispatcher.php`, `app/Notifications/BaseNotification.php`, `app/Jobs/SendEmailNotificationJob.php`
   - **Instructions**: Kirim in-app (tabel notifications) + email lewat queue. Retry transient maks 3x (backoff), kegagalan permanen → tulis `notification_delivery_failures`. Push tidak diimplementasikan (best-effort, ditunda). Tanpa menulis rahasia ke log.
   - **Acceptance Criteria**: Test: email gagal 3x menulis satu baris failure; kanal yang sukses tidak terkirim ulang saat retry (AC-18).
+  - **Hasil**: `NotificationDispatcher` menyimpan in-app dan mengantrekan email dalam transaksi; job email terenkripsi, mencoba ulang kegagalan transport maksimal 3 kali dengan backoff, dan mencatat kegagalan tanpa pesan exception. Pest: 57 test, 112 assertion, lulus.
 
-- [ ] **Task M1.2: Halaman login (email + password, validasi domain)**
+- [x] **Task M1.2: Halaman login (email + password, validasi domain)**
   - **Goal**: Login dengan email sebagai identifier.
   - **Target Files/Location**: `app/Livewire/Public/Login.php`, `resources/views/livewire/public/login.blade.php`, `routes/web.php`
   - **Instructions**: Validasi domain `@smkn1kotabekasi.sch.id` saat submit sebelum OTP. NIS/NIP sebagai identifier ditolak. Pesan galat generik (tidak membocorkan akun). Rate limit login per akun + IP.
   - **Acceptance Criteria**: Email luar domain ditolak sebelum OTP; input NIS ditolak (AC-01). Responsif 360px.
+  - **Hasil**: Halaman Livewire memvalidasi domain dan kredensial, memakai pesan generik untuk kredensial salah, serta membatasi 5 percobaan per menit berdasarkan akun dan IP. Sesuai keputusan implementasi, sesi login dan OTP ditunda ke M1.5; role switch tetap M1.7. Pest: 66 test, 177 assertion, lulus.
 
 - [ ] **Task M1.3: OtpService (terbit & verifikasi)**
   - **Goal**: OTP first-login aman.

@@ -1,19 +1,14 @@
 <?php
 
 use App\Http\Controllers\PrivateFileController;
+use App\Livewire\Public\Login;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-/*
-| Login kustom (PRD F1) dibangun pada M1. Route bernama `login` dibutuhkan sekarang
-| karena panel Filament tidak memakai halaman login bawaannya.
-*/
-Route::get('/login', function () {
-    return view('auth.login-placeholder');
-})->name('login');
+Route::get('/login', Login::class)->name('login');
 
 /*
 | Satu-satunya jalur unduh dokumen private (AC-49). Otorisasi per objek lewat
