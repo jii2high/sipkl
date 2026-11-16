@@ -119,11 +119,12 @@ Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Turunan dari `PRD.md` v2 dan 
   - **Acceptance Criteria**: Email luar domain ditolak sebelum OTP; input NIS ditolak (AC-01). Responsif 360px.
   - **Hasil**: Halaman Livewire memvalidasi domain dan kredensial, memakai pesan generik untuk kredensial salah, serta membatasi 5 percobaan per menit berdasarkan akun dan IP. Sesuai keputusan implementasi, sesi login dan OTP ditunda ke M1.5; role switch tetap M1.7. Pest: 66 test, 177 assertion, lulus.
 
-- [ ] **Task M1.3: OtpService (terbit & verifikasi)**
+- [x] **Task M1.3: OtpService (terbit & verifikasi)**
   - **Goal**: OTP first-login aman.
   - **Target Files/Location**: `app/Services/OtpService.php`, `app/Mail/OtpMail.php`, `tests/Feature/Auth/OtpTest.php`
   - **Instructions**: OTP 6 digit acak kuat, simpan SHA-256, berlaku 1 menit elapsed. Menerbitkan OTP baru menginvalidasi yang lama (`invalidated_at`). Verifikasi: maks 3 percobaan; percobaan ke-4 menginvalidasi paksa (AC-04). Bandingkan hash secara aman.
   - **Acceptance Criteria**: Test: benar lolos; kedaluwarsa gagal; 3 salah lalu ke-4 → OTP invalid walau belum 1 menit.
+  - **Hasil**: OTP diterbitkan dengan `random_int`, disimpan sebagai SHA-256, kedaluwarsa setelah 60 detik, dan penerbitan baru membatalkan kode sebelumnya. Verifikasi aman, single-use, serta percobaan ke-4 menginvalidasi kode; email memuat OTP hanya di job terenkripsi, payload in-app tidak memuat kode. Pest: 73 test, 205 assertion, lulus.
 
 - [ ] **Task M1.4: Rate limiter `otp-verify` dan `otp-resend` terpisah**
   - **Goal**: Batas resend 5x/30 menit dengan cooldown 30 menit.
