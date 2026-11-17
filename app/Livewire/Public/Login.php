@@ -3,6 +3,7 @@
 namespace App\Livewire\Public;
 
 use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -65,6 +66,17 @@ class Login extends Component
         }
 
         $this->password = '';
+
+        if ($user->is_first_login) {
+            session()->put('otp_pending', true);
+            session()->put('otp_email', $user->email);
+            app(OtpService::class)->issue($user);
+
+            $this->status = 'Kredensial valid. Proses verifikasi lanjutan belum tersedia.';
+
+            return;
+        }
+
         $this->status = 'Kredensial valid. Proses verifikasi lanjutan belum tersedia.';
     }
 

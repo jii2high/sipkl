@@ -80,6 +80,16 @@ final class ActiveRole
         return $name !== null && in_array($name, $roles, true);
     }
 
+    public function set(string $role): void
+    {
+        $user = $this->user();
+
+        abort_unless($user?->roles()->where('role', $role)->exists(), 403);
+
+        session(['active_role' => $role]);
+        $this->forget();
+    }
+
     /**
      * Bersihkan cache internal (dipakai setelah role switch).
      */

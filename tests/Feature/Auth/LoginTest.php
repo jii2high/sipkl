@@ -129,7 +129,7 @@ it('menerapkan batas IP lintas alamat email berbeda', function () {
         ->assertSee('Terlalu banyak percobaan masuk. Silakan coba lagi sebentar.');
 });
 
-it('memvalidasi kredensial benar tanpa membuat sesi login sebelum alur OTP di M1.5', function () {
+it('memvalidasi kredensial benar dan menyiapkan OTP sebelum alur M1.5 selesai', function () {
     $user = User::factory()->create();
 
     Livewire::test(Login::class)
@@ -140,5 +140,5 @@ it('memvalidasi kredensial benar tanpa membuat sesi login sebelum alur OTP di M1
         ->assertSet('password', '');
 
     expect(Auth::guest())->toBeTrue()
-        ->and(DB::table('otp_codes')->count())->toBe(0);
+        ->and(DB::table('otp_codes')->count())->toBe(1);
 });

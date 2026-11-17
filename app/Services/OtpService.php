@@ -7,12 +7,21 @@ use App\Models\OtpCode;
 use App\Models\User;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 
 final class OtpService
 {
     private const int CODE_LIFETIME_SECONDS = 60;
 
     private const int MAX_ATTEMPTS = 3;
+
+    private const int RESEND_LIMIT = 5;
+
+    private const int RESEND_WINDOW_SECONDS = 1800;
+
+    private const int VERIFY_WINDOW_SECONDS = 1800;
+
+    private const int VERIFY_LIMIT = 5;
 
     public function __construct(
         private readonly NotificationDispatcher $notifications,
@@ -48,8 +57,29 @@ final class OtpService
         return $otp;
     }
 
+    public function resend(User $user): OtpCode
+    {
+        $key = $this->resendLimiterKey($user);
+
+        if (RateLimiter::tooManyAttempts($key, self::RESEND_LIMIT, self::RESEND_WINDOW_SECONDS)) {
+            throw new DomainException('OTP telah dikirim terlalu sering. Silakan tunggu sebelum meminta ulang.');
+        }
+
+        RateLimiter::hit($key, self::RESEND_WINDOW_SECONDS);
+
+        return $this->issue($user);
+    }
+
     public function verify(User $user, string $code): bool
     {
+        $verifyKey = $this->verifyLimiterKey($user);
+
+        if (RateLimiter::tooManyAttempts($verifyKey, self::VERIFY_LIMIT, self::VERIFY_WINDOW_SECONDS)) {
+            return false;
+        }
+
+        RateLimiter::hit($verifyKey, self::VERIFY_WINDOW_SECONDS);
+
         return DB::transaction(function () use ($user, $code): bool {
             $lockedUser = User::query()->lockForUpdate()->findOrFail($user->getKey());
 
@@ -93,5 +123,15 @@ final class OtpService
 
             return false;
         });
+    }
+
+    private function resendLimiterKey(User $user): string
+    {
+        return 'otp-resend:'.$user->getKey();
+    }
+
+    private function verifyLimiterKey(User $user): string
+    {
+        return 'otp-verify:'.$user->getKey();
     }
 }
