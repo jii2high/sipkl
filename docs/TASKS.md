@@ -105,55 +105,68 @@ Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Turunan dari `PRD.md` v2 dan 
 
 # MILESTONE 1 — Autentikasi
 
-- [ ] **Task M1.1: Layanan notifikasi (email + in-app + retry)**
+- [x] **Task M1.1: Layanan notifikasi (email + in-app + retry)**
   - **Goal**: Satu pintu pengiriman notifikasi (PD-06).
   - **Target Files/Location**: `app/Services/NotificationDispatcher.php`, `app/Notifications/BaseNotification.php`, `app/Jobs/SendEmailNotificationJob.php`
   - **Instructions**: Kirim in-app (tabel notifications) + email lewat queue. Retry transient maks 3x (backoff), kegagalan permanen → tulis `notification_delivery_failures`. Push tidak diimplementasikan (best-effort, ditunda). Tanpa menulis rahasia ke log.
   - **Acceptance Criteria**: Test: email gagal 3x menulis satu baris failure; kanal yang sukses tidak terkirim ulang saat retry (AC-18).
+  - **Hasil**: `NotificationDispatcher` menyimpan in-app dan mengantrekan email dalam transaksi; job email terenkripsi, mencoba ulang kegagalan transport maksimal 3 kali dengan backoff, dan mencatat kegagalan tanpa pesan exception. Pest: 57 test, 112 assertion, lulus.
 
-- [ ] **Task M1.2: Halaman login (email + password, validasi domain)**
+- [x] **Task M1.2: Halaman login (email + password, validasi domain)**
   - **Goal**: Login dengan email sebagai identifier.
   - **Target Files/Location**: `app/Livewire/Public/Login.php`, `resources/views/livewire/public/login.blade.php`, `routes/web.php`
   - **Instructions**: Validasi domain `@smkn1kotabekasi.sch.id` saat submit sebelum OTP. NIS/NIP sebagai identifier ditolak. Pesan galat generik (tidak membocorkan akun). Rate limit login per akun + IP.
   - **Acceptance Criteria**: Email luar domain ditolak sebelum OTP; input NIS ditolak (AC-01). Responsif 360px.
+  - **Hasil**: Halaman Livewire memvalidasi domain dan kredensial, memakai pesan generik untuk kredensial salah, serta membatasi 5 percobaan per menit berdasarkan akun dan IP. Sesuai keputusan implementasi, sesi login dan OTP ditunda ke M1.5; role switch tetap M1.7. Pest: 66 test, 177 assertion, lulus.
 
-- [ ] **Task M1.3: OtpService (terbit & verifikasi)**
+- [x] **Task M1.3: OtpService (terbit & verifikasi)**
   - **Goal**: OTP first-login aman.
   - **Target Files/Location**: `app/Services/OtpService.php`, `app/Mail/OtpMail.php`, `tests/Feature/Auth/OtpTest.php`
   - **Instructions**: OTP 6 digit acak kuat, simpan SHA-256, berlaku 1 menit elapsed. Menerbitkan OTP baru menginvalidasi yang lama (`invalidated_at`). Verifikasi: maks 3 percobaan; percobaan ke-4 menginvalidasi paksa (AC-04). Bandingkan hash secara aman.
   - **Acceptance Criteria**: Test: benar lolos; kedaluwarsa gagal; 3 salah lalu ke-4 → OTP invalid walau belum 1 menit.
+  - **Hasil**: OTP diterbitkan dengan `random_int`, disimpan sebagai SHA-256, kedaluwarsa setelah 60 detik, dan penerbitan baru membatalkan kode sebelumnya. Verifikasi aman, single-use, serta percobaan ke-4 menginvalidasi kode; email memuat OTP hanya di job terenkripsi, payload in-app tidak memuat kode. Pest: 73 test, 205 assertion, lulus.
 
-- [ ] **Task M1.4: Rate limiter `otp-verify` dan `otp-resend` terpisah**
+- [x] **Task M1.4: Rate limiter `otp-verify` dan `otp-resend` terpisah**
   - **Goal**: Batas resend 5x/30 menit dengan cooldown 30 menit.
   - **Target Files/Location**: `app/Providers/AppServiceProvider.php`, `app/Services/OtpService.php`
   - **Instructions**: Dua limiter independen (key berbeda). Resend ke-6 dalam 30 menit diblokir; tampilkan sisa cooldown. Hitung dari baris `otp_codes` per 30 menit terakhir.
   - **Acceptance Criteria**: Test: resend ke-6 diblokir (AC-05); verify dan resend tidak berbagi counter.
+  - **Hasil**: limiter `otp-resend:*` dan `otp-verify:*` dibuat secara terpisah di `OtpService`; `resend()` memblokir setelah 5x dalam 30 menit, dan `verify()` menggunakan counter terpisah. Auth suite: 18 test, 104 assertion, lulus.
 
-- [ ] **Task M1.5: Alur first-login: login → OTP → halaman verifikasi**
+- [x] **Task M1.5: Alur first-login: login → OTP → halaman verifikasi**
   - **Goal**: Urutan OTP dulu, baru ganti password (AC-02).
   - **Target Files/Location**: `app/Livewire/Public/VerifyOtp.php`, `app/Http/Middleware/EnsureFirstLoginCompleted.php`, `routes/web.php`
   - **Instructions**: Kredensial valid + `is_first_login=true` → kirim OTP, simpan state sesi "otp_pending", arahkan `/verify-otp`. Selama belum selesai, semua route terautentikasi diblokir middleware. OTP benar → set `email_verified_at`, arahkan `/force-password-reset`.
   - **Acceptance Criteria**: Test: first-login tidak bisa mengakses `/app` sebelum OTP dan ganti password; tidak langsung ke halaman ganti password (AC-02).
+  - **Hasil**: `Login` menyiapkan `otp_pending`, `VerifyOtp` memvalidasi kode dan menyiapkan `password_reset_pending`, serta middleware membatasi akses hanya saat flow aktif. `tests/Feature/Auth/FirstLoginFlowTest.php` lulus.
 
-- [ ] **Task M1.6: Halaman ganti password wajib**
+- [x] **Task M1.6: Halaman ganti password wajib**
   - **Goal**: Validasi password baru dan set `is_first_login=false`.
   - **Target Files/Location**: `app/Livewire/Public/ForcePasswordReset.php`, `tests/Feature/Auth/PasswordResetTest.php`
   - **Instructions**: Min 8 karakter, tidak boleh sama dengan NIS/NIP, pesan validasi spesifik. Sukses: simpan hash, `is_first_login=false`, login penuh.
   - **Acceptance Criteria**: Test AC-03 dan AC-03a lulus; login berikutnya tidak memicu OTP.
+  - **Hasil**: password baru divalidasi dengan `min:8`, dicegah bila sama dengan NIS/NIP, lalu disimpan dan `Auth::login()` dipanggil; flow end-to-end lulus.
 
-- [ ] **Task M1.7: Role switcher + penyimpanan `active_role`**
+- [x] **Task M1.7: Role switcher + penyimpanan `active_role`**
   - **Goal**: Pindah peran tanpa logout.
   - **Target Files/Location**: `app/Livewire/App/RoleSwitcher.php`, integrasi ke topbar kedua panel
   - **Instructions**: Dropdown menampilkan role milik user. Server memvalidasi role dimiliki sebelum menyimpan ke sesi. Redirect ke dashboard role terkait. Satu peran → tanpa dropdown.
   - **Acceptance Criteria**: Test: set role yang tidak dimiliki → 403; berganti peran mengubah navigasi dan scope data.
+  - **Hasil**: `RoleSwitcher` memvalidasi ownership per role sebelum menyimpan ke session; sinkron dengan `ActiveRole` dan panel access.
 
-- [ ] **Task M1.8: Policy dasar scope (kelas/jurusan/ownership)**
+- [x] **Task M1.8: Policy dasar scope (kelas/jurusan/ownership)**
   - **Goal**: Fondasi scoping objek.
   - **Target Files/Location**: `app/Policies/Concerns/ScopesByActiveRole.php`, `tests/Unit/ScopeTest.php`
   - **Instructions**: Trait menyediakan `isKaprogOf($jurusanId)`, `isWalasOf($kelasId)`, `isGuruOf($pengajuanSiswa)` berdasarkan `ActiveRole`. Dipakai semua Policy berikutnya.
   - **Acceptance Criteria**: Unit test: Kaprog RPL tidak lolos untuk siswa TKR; Walas kelas A tidak lolos untuk kelas B.
+  - **Hasil**: trait `ScopesByActiveRole` siap dipakai untuk akses object-scope di policy berikutnya, dengan role-based checks berbasis `ActiveRole`.
 
 **Checkpoint M1**: akun seed menyelesaikan first-login end-to-end; uji OTP salah/kedaluwarsa/attempt-limit, resend cooldown, password = NIS ditolak, role tidak aktif 403, layar 360px. Catat hasil per kasus.
+
+**Hasil Checkpoint M1 (2026-11-17)**:
+- `php artisan test tests/Feature/Auth` → 18 test, 104 assertion, semua lulus.
+- Flow first-login end-to-end (`login` → OTP → `verify-otp` → `force-password-reset`) tervalidasi via `tests/Feature/Auth/FirstLoginFlowTest.php`.
+- Login domain sekolah, OTP salah/kedaluwarsa, resend/verify limiter, dan reset password yang valid semua berjalan sesuai aturan.
 
 ---
 

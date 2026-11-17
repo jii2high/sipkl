@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => EnsureActiveRoleMatches::class,
+            'first-login' => \App\Http\Middleware\EnsureFirstLoginCompleted::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
