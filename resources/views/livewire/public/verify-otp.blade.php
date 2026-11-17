@@ -46,6 +46,18 @@
             @error('resend')
                 <p class="error" role="alert">{{ $message }}</p>
             @enderror
+            @if ($resendCooldownSeconds > 0)
+                <div
+                    class="cooldown"
+                    role="status"
+                    data-otp-cooldown
+                    x-data="{ remaining: {{ $resendCooldownSeconds }} }"
+                    x-init="const timer = setInterval(() => { if (!$el.isConnected || remaining <= 0) { clearInterval(timer); return; } remaining -= 1; }, 1000)"
+                >
+                    <span>Coba kirim ulang dalam</span>
+                    <strong x-text="`${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`"></strong>
+                </div>
+            @endif
         </div>
     </section>
 </main>
@@ -86,5 +98,7 @@
     .secondary { background: #edf2ff; color: #1d3d7a; margin-top: 12px; }
     .error { margin-top: 8px; color: #c33131; }
     .success { margin: 0 0 16px; padding: 10px 12px; border-radius: 8px; background: #edf9ef; color: #175a28; }
+    .cooldown { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; padding: 11px 13px; border: 1px solid #dce6fa; border-radius: 10px; background: #f3f6ff; color: #274575; font-size: 0.9rem; }
+    .cooldown strong { color: #1d3d7a; font-variant-numeric: tabular-nums; font-size: 1rem; }
     @media (max-width: 380px) { .auth-card { padding: 24px 18px; } }
 </style>

@@ -61,7 +61,7 @@ final class OtpService
     {
         $key = $this->resendLimiterKey($user);
 
-        if (RateLimiter::tooManyAttempts($key, self::RESEND_LIMIT, self::RESEND_WINDOW_SECONDS)) {
+        if (RateLimiter::tooManyAttempts($key, self::RESEND_LIMIT)) {
             throw new DomainException('OTP telah dikirim terlalu sering. Silakan tunggu sebelum meminta ulang.');
         }
 
@@ -70,11 +70,20 @@ final class OtpService
         return $this->issue($user);
     }
 
+    public function resendCooldownSeconds(User $user): int
+    {
+        $key = $this->resendLimiterKey($user);
+
+        return RateLimiter::tooManyAttempts($key, self::RESEND_LIMIT)
+            ? RateLimiter::availableIn($key)
+            : 0;
+    }
+
     public function verify(User $user, string $code): bool
     {
         $verifyKey = $this->verifyLimiterKey($user);
 
-        if (RateLimiter::tooManyAttempts($verifyKey, self::VERIFY_LIMIT, self::VERIFY_WINDOW_SECONDS)) {
+        if (RateLimiter::tooManyAttempts($verifyKey, self::VERIFY_LIMIT)) {
             return false;
         }
 
