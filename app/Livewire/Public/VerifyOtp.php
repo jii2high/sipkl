@@ -51,11 +51,14 @@ class VerifyOtp extends Component
 
     public function resend(): void
     {
+        $this->resetErrorBag();
+        $this->message = null;
+
         $email = session('otp_email');
         $user = $email ? User::query()->where('email', $email)->first() : null;
 
         if ($user === null) {
-            $this->addError('code', 'Sesi OTP tidak valid. Silakan ulang login.');
+            $this->addError('resend', 'Sesi OTP tidak valid. Silakan ulang login.');
 
             return;
         }
@@ -64,7 +67,7 @@ class VerifyOtp extends Component
             app(OtpService::class)->resend($user);
             $this->message = 'Kode OTP baru telah dikirim. Silakan cek email Anda.';
         } catch (\DomainException $e) {
-            $this->addError('code', $e->getMessage());
+            $this->addError('resend', $e->getMessage());
         }
     }
 

@@ -31,9 +31,12 @@ Stack yang dikunci (PRD §1.4): Laravel + Filament multi-panel (`/hubin`, `/app`
 
 ```powershell
 composer install
+npm install
 copy .env.example .env
 php artisan key:generate
 php artisan migrate:fresh --seed
+npm run build
+php artisan filament:assets
 php artisan serve
 ```
 
