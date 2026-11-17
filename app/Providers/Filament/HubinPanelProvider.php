@@ -34,8 +34,9 @@ class HubinPanelProvider extends PanelProvider
             ->id('hubin')
             ->path('hubin')
             ->authGuard('web')
+            ->darkMode(false)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::hex('#2456a6'),
             ])
             ->discoverResources(in: app_path('Filament/Hubin/Resources'), for: 'App\Filament\Hubin\Resources')
             ->discoverPages(in: app_path('Filament/Hubin/Pages'), for: 'App\Filament\Hubin\Pages')

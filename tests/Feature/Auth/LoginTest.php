@@ -2,8 +2,10 @@
 
 use App\Livewire\Public\Login;
 use App\Models\User;
+use App\Models\UserRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
@@ -129,16 +131,34 @@ it('menerapkan batas IP lintas alamat email berbeda', function () {
         ->assertSee('Terlalu banyak percobaan masuk. Silakan coba lagi sebentar.');
 });
 
-it('memvalidasi kredensial benar dan menyiapkan OTP sebelum alur M1.5 selesai', function () {
+it('mengirim first-login ke verifikasi OTP', function () {
+    Queue::fake();
     $user = User::factory()->create();
 
     Livewire::test(Login::class)
         ->set('email', strtoupper($user->email))
         ->set('password', $user->nis_nip)
         ->call('submit')
-        ->assertSee('Kredensial valid. Proses verifikasi lanjutan belum tersedia.')
+        ->assertRedirect(route('verify-otp'))
         ->assertSet('password', '');
 
     expect(Auth::guest())->toBeTrue()
+        ->and(session('otp_pending'))->toBeTrue()
+        ->and(session('otp_email'))->toBe($user->email)
         ->and(DB::table('otp_codes')->count())->toBe(1);
+});
+
+it('authenticates a returning Hubin account and selects its role', function () {
+    $user = User::factory()->hubin()->sudahGantiPassword()->create();
+    UserRole::create(['user_id' => $user->id, 'role' => 'hubin']);
+
+    Livewire::test(Login::class)
+        ->set('email', $user->email)
+        ->set('password', $user->nis_nip)
+        ->call('submit')
+        ->assertRedirect('/hubin')
+        ->assertSet('password', '');
+
+    expect(Auth::id())->toBe($user->id)
+        ->and(session('active_role'))->toBe('hubin');
 });

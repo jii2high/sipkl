@@ -72,12 +72,27 @@ class Login extends Component
             session()->put('otp_email', $user->email);
             app(OtpService::class)->issue($user);
 
-            $this->status = 'Kredensial valid. Proses verifikasi lanjutan belum tersedia.';
+            $this->redirectRoute('verify-otp');
 
             return;
         }
 
-        $this->status = 'Kredensial valid. Proses verifikasi lanjutan belum tersedia.';
+        Auth::guard('web')->login($user);
+        session()->regenerate();
+
+        $role = $user->roles()->first()?->role;
+
+        if ($role === null) {
+            $role = match ($user->user_type) {
+                'hubin' => 'hubin',
+                'kepsek' => 'kepsek',
+                default => 'guru_pembimbing',
+            };
+        }
+
+        session(['active_role' => $role]);
+
+        $this->redirect($role === 'hubin' ? '/hubin' : '/app');
     }
 
     /**

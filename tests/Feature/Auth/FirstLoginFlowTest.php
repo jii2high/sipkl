@@ -9,6 +9,7 @@ use App\Services\OtpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -22,6 +23,29 @@ it('memisahkan rate limiter otp resend dan verify', function () {
 
     expect(fn () => app(OtpService::class)->resend($user))->toThrow(DomainException::class)
         ->and(app(OtpService::class)->verify($user, '000000'))->toBeFalse();
+});
+
+it('shows resend cooldown feedback separately from OTP validation errors', function () {
+    $user = User::factory()->create();
+    $rateLimitKey = 'otp-resend:'.$user->id;
+    session(['otp_email' => $user->email]);
+    RateLimiter::clear($rateLimitKey);
+
+    for ($attempt = 0; $attempt < 5; $attempt++) {
+        RateLimiter::hit($rateLimitKey, 1800);
+    }
+
+    Livewire::test(VerifyOtp::class)
+        ->assertSee('data-otp-cooldown', false)
+        ->assertSee('Coba kirim ulang dalam')
+        ->call('resend')
+        ->assertHasErrors('resend')
+        ->assertSee('OTP telah dikirim terlalu sering.')
+        ->assertSee('data-otp-cooldown', false)
+        ->call('submit')
+        ->assertHasErrors(['code' => 'required'])
+        ->assertSee('Kode OTP wajib diisi.')
+        ->assertDontSee('OTP telah dikirim terlalu sering.');
 });
 
 it('memverifikasi OTP dan mengharuskan reset password pada first login', function () {

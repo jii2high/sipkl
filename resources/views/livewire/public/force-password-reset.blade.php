@@ -1,43 +1,166 @@
-<main class="auth-page">
-    <section class="auth-card" aria-labelledby="reset-title">
-        <p class="eyebrow">Akun baru</p>
-        <h1 id="reset-title">Atur ulang password</h1>
-        <p class="intro">Password baru Anda wajib minimal 8 karakter dan tidak boleh sama dengan NIS/NIP.</p>
+<main class="reset-page">
+    <section class="reset-card" aria-labelledby="reset-title">
+        <header class="reset-header">
+            <div class="reset-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <rect x="4.5" y="10" width="15" height="10" rx="2.5"></rect>
+                    <path d="M8 10V7.5a4 4 0 0 1 8 0V10"></path>
+                    <path d="M12 14v2"></path>
+                </svg>
+            </div>
+            <p class="reset-eyebrow">Akun baru</p>
+            <h1 id="reset-title">Atur ulang password</h1>
+            <p class="reset-intro">Buat password baru untuk menyelesaikan pendaftaran dan mengamankan akun Anda.</p>
+        </header>
+
+        <div class="password-guidance">
+            <span class="guidance-dot" aria-hidden="true"></span>
+            <p><strong>Persyaratan password</strong><br>Minimal 8 karakter dan tidak boleh sama dengan NIS/NIP.</p>
+        </div>
 
         <form wire:submit="submit" novalidate>
-            <div class="field">
+            <div class="reset-field">
                 <label for="password">Password baru</label>
-                <input id="password" type="password" wire:model="password" autocomplete="new-password" required>
+                <input
+                    id="password"
+                    class="reset-input"
+                    type="password"
+                    wire:model="password"
+                    autocomplete="new-password"
+                    placeholder="Masukkan password baru"
+                    required
+                >
                 @error('password')
-                    <p class="error">{{ $message }}</p>
+                    <p class="reset-error" role="alert">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="field">
+            <div class="reset-field">
                 <label for="password_confirmation">Konfirmasi password</label>
-                <input id="password_confirmation" type="password" wire:model="password_confirmation" autocomplete="new-password" required>
+                <input
+                    id="password_confirmation"
+                    class="reset-input"
+                    type="password"
+                    wire:model="password_confirmation"
+                    autocomplete="new-password"
+                    placeholder="Ulangi password baru"
+                    required
+                >
                 @error('password_confirmation')
-                    <p class="error">{{ $message }}</p>
+                    <p class="reset-error" role="alert">{{ $message }}</p>
                 @enderror
             </div>
 
-            <button type="submit">Simpan password</button>
+            <button class="reset-submit" type="submit" wire:loading.attr="disabled" wire:target="submit">
+                <span wire:loading.remove wire:target="submit">Simpan password</span>
+                <span wire:loading wire:target="submit">Menyimpan...</span>
+            </button>
         </form>
     </section>
 </main>
 
 <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; }
-    body { margin: 0; background: #f3f5fb; }
-    .auth-page { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
-    .auth-card { width: min(100%, 420px); background: #fff; border-radius: 18px; padding: 32px 28px; box-shadow: 0 18px 40px rgba(26, 40, 72, 0.12); }
-    .eyebrow { margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.74rem; font-weight: 700; color: #2a5ab4; }
-    h1 { margin: 0; font-size: 1.8rem; }
-    .intro { margin: 8px 0 20px; color: #53627f; }
-    .field { margin-bottom: 18px; }
-    label { display: block; margin-bottom: 7px; font-weight: 600; }
-    input { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid #b7bfd0; border-radius: 8px; }
-    button { width: 100%; min-height: 46px; border: none; border-radius: 8px; background: #2456a6; color: white; font-weight: 700; cursor: pointer; }
-    .error { margin-top: 8px; color: #c33131; }
-    @media (max-width: 380px) { .auth-card { padding: 24px 18px; } }
+    :root {
+        color-scheme: light;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #172033;
+        background: #f3f6fb;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+
+    .reset-page {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 32px 16px;
+        background:
+            radial-gradient(ellipse at 12% 10%, rgb(36 86 166 / 7%), transparent 34%),
+            #f3f6fb;
+    }
+
+    .reset-card {
+        width: min(100%, 460px);
+        padding: 36px;
+        border: 1px solid #e3e9f2;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 24px 60px rgb(26 40 72 / 12%);
+    }
+
+    .reset-mark {
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 22px;
+        border-radius: 14px;
+        background: #edf3ff;
+        color: #2456a6;
+    }
+
+    .reset-mark svg { width: 25px; height: 25px; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .reset-eyebrow { margin: 0 0 8px; color: #2a5ab4; font-size: 0.76rem; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
+    .reset-header h1 { margin: 0; font-size: clamp(1.55rem, 5vw, 1.85rem); line-height: 1.2; letter-spacing: -0.035em; }
+    .reset-intro { margin: 10px 0 22px; color: #5a6780; line-height: 1.55; }
+
+    .password-guidance {
+        display: flex;
+        gap: 11px;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        padding: 13px 14px;
+        border: 1px solid #e2eaff;
+        border-radius: 12px;
+        background: #f7f9ff;
+        color: #455675;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .password-guidance p { margin: 0; }
+    .password-guidance strong { color: #253e70; }
+    .guidance-dot { width: 8px; height: 8px; flex: 0 0 8px; margin-top: 6px; border-radius: 50%; background: #3970c5; }
+
+    .reset-field { margin-bottom: 18px; }
+    .reset-field label { display: block; margin-bottom: 8px; color: #25314a; font-size: 0.92rem; font-weight: 650; }
+    .reset-input {
+        width: 100%;
+        min-height: 52px;
+        padding: 12px 14px;
+        border: 1px solid #c6cfdd;
+        border-radius: 10px;
+        background: #fbfcff;
+        color: #172033;
+        font: inherit;
+        transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+    }
+
+    .reset-input::placeholder { color: #9aa5b7; }
+    .reset-input:focus { outline: none; border-color: #3970c5; background: #fff; box-shadow: 0 0 0 4px rgb(57 112 197 / 13%); }
+    .reset-error { margin: 8px 0 0; color: #b42318; font-size: 0.88rem; line-height: 1.45; }
+
+    .reset-submit {
+        width: 100%;
+        min-height: 50px;
+        margin-top: 4px;
+        border: 0;
+        border-radius: 10px;
+        background: #2456a6;
+        color: #fff;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color 150ms ease, transform 150ms ease, opacity 150ms ease;
+    }
+
+    .reset-submit:hover:not(:disabled) { background: #1d478f; }
+    .reset-submit:active:not(:disabled) { transform: translateY(1px); }
+    .reset-submit:focus-visible { outline: 3px solid #91b7ff; outline-offset: 3px; }
+    .reset-submit:disabled { cursor: wait; opacity: 0.72; }
+
+    @media (max-width: 480px) {
+        .reset-card { padding: 28px 22px; }
+    }
 </style>

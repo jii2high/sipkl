@@ -15,6 +15,17 @@ class VerifyOtp extends Component
 
     public ?string $message = null;
 
+    public int $resendCooldownSeconds = 0;
+
+    public function mount(): void
+    {
+        $user = $this->otpUser();
+
+        if ($user !== null) {
+            $this->resendCooldownSeconds = app(OtpService::class)->resendCooldownSeconds($user);
+        }
+    }
+
     public function submit(): void
     {
         $this->resetErrorBag();
@@ -27,8 +38,7 @@ class VerifyOtp extends Component
             'code.digits' => 'Kode OTP harus 6 digit angka.',
         ]);
 
-        $email = session('otp_email');
-        $user = $email ? User::query()->where('email', $email)->first() : null;
+        $user = $this->otpUser();
 
         if ($user === null) {
             $this->addError('code', 'Sesi OTP tidak valid. Silakan ulang login.');
@@ -51,11 +61,14 @@ class VerifyOtp extends Component
 
     public function resend(): void
     {
-        $email = session('otp_email');
-        $user = $email ? User::query()->where('email', $email)->first() : null;
+        $this->resetErrorBag();
+        $this->message = null;
+        $this->resendCooldownSeconds = 0;
+
+        $user = $this->otpUser();
 
         if ($user === null) {
-            $this->addError('code', 'Sesi OTP tidak valid. Silakan ulang login.');
+            $this->addError('resend', 'Sesi OTP tidak valid. Silakan ulang login.');
 
             return;
         }
@@ -64,8 +77,16 @@ class VerifyOtp extends Component
             app(OtpService::class)->resend($user);
             $this->message = 'Kode OTP baru telah dikirim. Silakan cek email Anda.';
         } catch (\DomainException $e) {
-            $this->addError('code', $e->getMessage());
+            $this->resendCooldownSeconds = app(OtpService::class)->resendCooldownSeconds($user);
+            $this->addError('resend', $e->getMessage());
         }
+    }
+
+    private function otpUser(): ?User
+    {
+        $email = session('otp_email');
+
+        return $email ? User::query()->where('email', $email)->first() : null;
     }
 
     public function render(): View
