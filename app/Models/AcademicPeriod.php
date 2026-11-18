@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\AcademicPeriodGuard;
 use Database\Factories\AcademicPeriodFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,16 @@ class AcademicPeriod extends Model
     public const UPDATED_AT = null;
 
     protected $table = 'academic_periods';
+
+    /**
+     * Cegah hapus dari jalur mana pun (UI, tinker, job) bila sudah ada data terkait.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (self $period): void {
+            app(AcademicPeriodGuard::class)->pastikanBolehDihapus($period);
+        });
+    }
 
     /**
      * @return array<string, string>

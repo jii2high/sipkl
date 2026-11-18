@@ -37,10 +37,12 @@ php artisan key:generate
 php artisan migrate:fresh --seed
 npm run build
 php artisan filament:assets
-php artisan serve
+composer dev
 ```
 
-Buka `http://localhost:8000/hubin` (Hubin) atau `http://localhost:8000/app` (role lain). Panels memakai `active_role` di sesi; halaman login kustom dibangun di M1 (`/login` masih placeholder).
+> **Penting:** `QUEUE_CONNECTION=database`. Kalau hanya menjalankan `php artisan serve`, email (termasuk OTP) **tidak terkirim** karena job menumpuk di tabel `jobs`. Jalankan `composer dev` / `php artisan dev` (sudah termasuk queue listener), atau `php artisan queue:work` di terminal terpisah.
+
+Buka `http://localhost:8000/login` untuk masuk, lalu `/hubin` (Hubin) atau `/app` (role lain). Panels memakai `active_role` di sesi.
 
 Akun dev (password awal = NIS/NIP):
 

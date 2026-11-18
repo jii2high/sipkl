@@ -172,61 +172,78 @@ Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Turunan dari `PRD.md` v2 dan 
 
 # MILESTONE 2 — Master Data (Hubin)
 
-- [ ] **Task M2.1: Migration `companies`**
+- [x] **Task M2.1: Migration `companies`**
   - **Goal**: Tabel perusahaan dengan signer NULLABLE.
   - **Target Files/Location**: `database/migrations/*_create_companies_table.php`, `app/Models/Company.php`
   - **Instructions**: Ikuti `schema.sql` Bagian 3 (UNIQUE email/website/telp_fax, CHECK signer, `merged_into_id`, `source`).
   - **Acceptance Criteria**: Duplikat email ditolak DB; `verified_at` tanpa nama/email ditolak DB.
+  - **Hasil**: `companies` + `Company` + `CompanyFactory`; 12 test (`tests/Feature/MasterData/CompanySchemaTest.php`) hijau, migration jalan di DB dev. `TIMESTAMP NOT NULL` dipetakan ke `DATETIME` karena batasan MariaDB; CHECK self-merge tidak bisa di DB (butuh `AUTO_INCREMENT`) → dijaga di Action M2.5.
 
-- [ ] **Task M2.2: CompanyNormalizer dan aturan keunikan**
+- [x] **Task M2.2: CompanyNormalizer dan aturan keunikan**
   - **Goal**: Normalisasi + validasi strict vs soft.
   - **Target Files/Location**: `app/Services/CompanyNormalizer.php`, `app/Rules/CompanyUniqueStrict.php`
   - **Instructions**: Lowercase+trim email/website (buang skema `https://`/`www.`/trailing slash), telp hanya digit. Rule strict menolak (422) bila email/website/telp sudah ada (abaikan record yang di-merge/dirinya sendiri).
   - **Acceptance Criteria**: Test AC-12: email sama → 422; nama/alamat mirip → tidak menolak.
+  - **Hasil**: Normalizer + rule strict; 13 test (`tests/Unit/CompanyNormalizerTest.php`, `tests/Feature/MasterData/CompanyUniqueStrictTest.php`) hijau, termasuk abaikan record sendiri/ter-merge dan nilai kosong.
 
-- [ ] **Task M2.3: CompanyResolver (Levenshtein, soft-warning)**
+- [x] **Task M2.3: CompanyResolver (Levenshtein, soft-warning)**
   - **Goal**: Saran perusahaan mirip, dipakai form siswa dan impor.
   - **Target Files/Location**: `app/Services/CompanyResolver.php`, `tests/Unit/CompanyResolverTest.php`
   - **Instructions**: Method `suggest(string $nama, ?string $alamat): Collection` — kandidat via LIKE prefix/token lalu skor Levenshtein ternormalisasi di PHP; abaikan record `merged_into_id`. Ambang dapat dikonfigurasi. Hanya mengembalikan saran, tidak menolak.
   - **Acceptance Criteria**: "CV Ajikyo" menyarankan "CV Ajikiyo" (AC-11 unit).
+  - **Hasil**: Resolver + `config/company.php` (ambang 0.72); 9 test hijau. Kandidat diambil lewat prefiks 4 huruf agar salah ketik di tengah kata tetap terdeteksi; record ter-merge tidak pernah disarankan.
 
-- [ ] **Task M2.4: `CompanyResource` Filament (CRUD)**
+- [x] **Task M2.4: `CompanyResource` Filament (CRUD)**
   - **Goal**: Hubin mengelola perusahaan.
   - **Target Files/Location**: `app/Filament/Hubin/Resources/CompanyResource.php` (+ Pages)
   - **Instructions**: Form + tabel + filter. Validasi M2.2 dan soft-warning M2.3 saat simpan. Hanya `active_role=hubin`.
   - **Acceptance Criteria**: CRUD berjalan; role non-Hubin 403.
+  - **Hasil**: Resource `hubin` (grup Master Data) + `CompanyPolicy` (hanya `active_role=hubin`); form menormalkan email/website/telp saat blur dan saat simpan, soft-warning nama mirip, filter sumber/status merge. 7 test (`tests/Feature/MasterData/CompanyResourceTest.php`) hijau: create normalisasi, duplikat email ditolak, nama mirip tetap lolos, edit tanpa konflik keunikan, non-Hubin 403.
 
-- [ ] **Task M2.5: Aksi merge perusahaan**
+- [x] **Task M2.5: Aksi merge perusahaan**
   - **Goal**: Gabung duplikat tanpa kehilangan histori.
   - **Target Files/Location**: `app/Actions/Company/MergeCompanyAction.php`, aksi di `CompanyResource`
   - **Instructions**: Dalam transaksi: set `merged_into_id` pada sumber, pindahkan referensi (pengajuan_pkl, pengajuan_siswa, plotting, dll. yang sudah ada saat ini) ke target, audit log. Tolak merge ke diri sendiri dan rantai melingkar. Snapshot JSON lama tidak diubah.
   - **Acceptance Criteria**: Test: referensi pindah; snapshot lama utuh; merge diri sendiri ditolak.
+  - **Hasil**: `MergeCompanyAction` (transaksi + `lockForUpdate`): tolak self-merge/sumber ter-merge/target ter-merge, kosongkan email/website/telp sumber (wajib karena UNIQUE DB tidak mengenal record ter-merge), pindahkan referensi via daftar tabel yang dilewati otomatis bila belum ada, catat `activity_log` (`company.merged`) tanpa data sensitif. 6 test (`tests/Feature/MasterData/MergeCompanyActionTest.php`) + 1 test aksi tabel di `CompanyResourceTest` hijau. Catatan: pasangan FK komposit `pengajuan_siswa` → `pengajuan_pkl` perlu penanganan khusus saat M3 (didokumentasikan di docblock).
 
-- [ ] **Task M2.6: `AcademicPeriodResource`**
+- [x] **Task M2.6: `AcademicPeriodResource`**
   - **Goal**: CRUD tahun ajaran + batch.
   - **Target Files/Location**: `app/Filament/Hubin/Resources/AcademicPeriodResource.php`
   - **Instructions**: Field sesuai tabel; toggle `locked_for_new_submission` dan `is_active`; larang hapus periode yang sudah punya data terkait.
   - **Acceptance Criteria**: CRUD berjalan; duplikat (tahun, batch) ditolak; >1 periode aktif diizinkan.
+  - **Hasil**: Resource + `AcademicPeriodPolicy` + `AcademicPeriodGuard`. Form memvalidasi format `YYYY/YYYY`, duplikat (tahun, batch) via rule komposit, dan `tanggal_selesai >= tanggal_mulai`. Larangan hapus ditegakkan di model event (`deleting`) sehingga berlaku dari UI/tinker/job; daftar tabel terkait otomatis dilewati bila belum ada. 10 test (`tests/Feature/MasterData/AcademicPeriodResourceTest.php`) hijau.
 
-- [ ] **Task M2.7: `UserResource` + penugasan role**
+- [x] **Task M2.7: `UserResource` + penugasan role**
   - **Goal**: Kelola akun dan peran.
   - **Target Files/Location**: `app/Filament/Hubin/Resources/UserResource.php`, relation manager `UserRolesRelationManager`
   - **Instructions**: Filter Guru/Siswa. Relation manager menambah/menghapus baris `user_roles` dengan scope (jurusan untuk kaprog, kelas untuk walas). Aksi "Reset OTP/first-login" (set `is_first_login=true`, password = hash NIS/NIP) dengan audit.
   - **Acceptance Criteria**: Kaprog tanpa jurusan ditolak (CHECK + validasi form); reset memaksa alur first-login lagi.
+  - **Hasil**: Resource pengguna + `UserPolicy` + `RolesRelationManager` (scope kaprog/walas/guru pembimbing, validasi wajib terisi) + `ResetFirstLoginAction` (password = NIS/NIP, `is_first_login=true`, audit tanpa password). Akun baru otomatis memakai password NIS/NIP dan wajib login awal. 9 test (`tests/Feature/MasterData/UserResourceTest.php`) hijau.
 
-- [ ] **Task M2.8: Kelola signer industri + verifikasi email**
+- [x] **Task M2.8: Kelola signer industri + verifikasi email**
   - **Goal**: Nama + email terverifikasi Pembimbing/Kepala Industri (AC-52).
   - **Target Files/Location**: `app/Actions/Company/SendSignerVerificationAction.php`, `app/Http/Controllers/SignerEmailVerificationController.php`, bagian form di `CompanyResource`
   - **Instructions**: Hubin mengisi nama+email signer lalu menekan "Kirim verifikasi" → email berisi signed URL berbatas waktu → klik mengisi `*_email_verified_at`. Mengubah nama/email mengosongkan `verified_at`. Tolak nama generik kosong.
   - **Acceptance Criteria**: Test: signer tanpa verifikasi ditandai "belum siap"; ubah email mereset verifikasi.
+  - **Hasil**: `SendSignerVerificationAction` (validasi nama individu + email, signed URL TTL 3 hari terikat hash email), `SignerVerificationMail`, `SignerEmailVerificationController` + route `signer.verifikasi` (`signed`), halaman sukses publik. Aksi header "Verifikasi Pembimbing/Kepala" di EditCompany, status kesiapan signer di form, dan event `updating` di `Company` mengosongkan `verified_at` saat nama/email berubah. 9 test (`tests/Feature/MasterData/SignerVerificationTest.php`) hijau.
 
-- [ ] **Task M2.9: Impor massal (perusahaan, akun, periode)**
+- [x] **Task M2.9: Impor massal (perusahaan, akun, periode)**
   - **Goal**: Hubin mengimpor data memakai resolver yang sama.
   - **Target Files/Location**: `app/Filament/Hubin/Pages/BulkImport.php`, `app/Imports/{CompaniesImport,UsersImport,PeriodsImport}.php`
   - **Instructions**: Template xlsx. Setiap baris divalidasi dengan M2.2/M2.3; baris bermasalah dilaporkan, baris valid tetap masuk. Perusahaan mirip → ditandai "perlu tinjauan", tidak diblokir.
   - **Acceptance Criteria**: Impor 20 baris dengan 3 duplikat email: 17 masuk, 3 dilaporkan (AC-11/12 berlaku di impor).
+  - **Hasil**: Halaman `BulkImport` di panel Hubin (pilih jenis → unduh template xlsx → unggah). `BaseImport` menjalankan tiap baris dalam transaksi sendiri dan melaporkan nomor baris; `ImportReport` merangkum berhasil/gagal/perlu tinjau. `CompaniesImport` memakai normalizer + `CompanyUniqueStrict` + `CompanyResolver` (AC-11/12), `UsersImport` mengenali jurusan/kelas dari kode/nama dan memakai password awal NIS/NIP, `PeriodsImport` menerima `2026/2027`/`2026-2027`, batch 1/2, sel tanggal Excel maupun teks. Template memakai `TemplateExport`; impor menulis `activity_log` `import.massal` tanpa isi berkas. 9 test (`tests/Feature/MasterData/BulkImportTest.php`) hijau, termasuk skenario 20 baris/3 duplikat email → 17 masuk.
 
 **Checkpoint M2**: Hubin membuat/mengubah perusahaan, akun, periode; uji duplikat strict, warning nama/alamat, merge, impor, signer verifikasi, dan akses non-Hubin ditolak.
+
+**Hasil Checkpoint M2 (2026-11-18)**:
+- `php vendor/bin/pest` → 163 test, 530 assertion, semua lulus; 70 di antaranya berada di `tests/Feature/MasterData/` (schema, strict-unique, resolver, resource, merge, periode, akun, signer, impor).
+- Duplikat strict email/website/telepon dan normalisasi data dibuktikan `CompanySchemaTest` + `CompanyUniqueStrictTest`; saran nama/alamat mirip (AC-11) di `CompanyResolverTest` dan alur merge di `MergeCompanyActionTest`.
+- Impor massal: 20 baris dengan 3 duplikat email → 17 masuk, 3 dilaporkan (AC-12); perusahaan mirip tetap masuk dan ditandai "perlu tinjau" (AC-11) — `BulkImportTest`.
+- Signer industri: kirim verifikasi, klik tautan bertanda tangan, dan reset saat email berubah — `SignerVerificationTest`; akses non-Hubin ke resource/halaman master data `403` — `CompanyResourceTest`, `UserResourceTest`, `AcademicPeriodResourceTest`, `BulkImportTest`.
+- `php vendor/bin/pint` bersih.
+- Belum diverifikasi: uji manual di browser sungguhan (termasuk unggah xlsx lewat UI) dan impor dengan berkas `.csv` nyata; keduanya baru diuji lewat feature test.
 
 ---
 

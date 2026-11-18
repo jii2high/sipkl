@@ -3,7 +3,6 @@
 use App\Jobs\SendEmailNotificationJob;
 use App\Livewire\Public\ForcePasswordReset;
 use App\Livewire\Public\VerifyOtp;
-use App\Mail\OtpMail;
 use App\Models\User;
 use App\Services\OtpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -46,6 +45,19 @@ it('shows resend cooldown feedback separately from OTP validation errors', funct
         ->assertHasErrors(['code' => 'required'])
         ->assertSee('Kode OTP wajib diisi.')
         ->assertDontSee('OTP telah dikirim terlalu sering.');
+});
+
+it('menampilkan enam kotak OTP terpisah dengan auto-pindah fokus', function () {
+    $user = User::factory()->create();
+    session(['otp_email' => $user->email]);
+
+    Livewire::test(VerifyOtp::class)
+        ->assertSee('otp-boxes', false)
+        ->assertSee('x-for="(digit, index) in digits"', false)
+        ->assertSee('entangle(\'code\')', false)
+        ->assertSee('one-time-code', false)
+        ->assertDontSee('letter-spacing: 0.8rem', false)
+        ->assertDontSee('maxlength="6"', false);
 });
 
 it('memverifikasi OTP dan mengharuskan reset password pada first login', function () {
