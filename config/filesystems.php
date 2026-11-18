@@ -33,19 +33,7 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => false,
-            'throw' => false,
-            'report' => false,
-        ],
-
-        /*
-         * Disk dokumen SIPKL (PD-09). Di luar public/, tanpa URL langsung;
-         * unduhan hanya lewat PrivateFileController yang memanggil Policy.
-         */
-        'private' => [
-            'driver' => 'local',
-            'root' => storage_path('app/private'),
-            'serve' => false,
+            'serve' => true,
             'throw' => false,
             'report' => false,
         ],

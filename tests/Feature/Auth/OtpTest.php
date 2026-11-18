@@ -1,123 +1,57 @@
 <?php
 
-use App\Jobs\SendEmailNotificationJob;
-use App\Mail\OtpMail;
+use App\Exceptions\OtpException;
 use App\Models\OtpCode;
-use App\Models\User;
 use App\Services\OtpService;
-use Illuminate\Contracts\Queue\ShouldBeEncrypted;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Queue;
 
-uses(RefreshDatabase::class);
+test('percobaan OTP keempat menginvalidasi kode', function () {
+    $user = pklUser();
+    $otp = app(OtpService::class);
+    $benar = $otp->issue($user);
+    $salah = $benar === '000000' ? '111111' : '000000';
 
-it('menerbitkan OTP enam digit yang hanya disimpan sebagai hash dan mengantrekan email terenkripsi', function () {
-    Queue::fake();
-    $this->travelTo(now()->startOfSecond());
-    $user = User::factory()->create();
+    foreach (range(1, 3) as $ignored) {
+        expect(fn () => $otp->verify($user, $salah))->toThrow(OtpException::class);
+    }
 
-    $otp = app(OtpService::class)->issue($user);
+    expect(fn () => $otp->verify($user, $salah))->toThrow(OtpException::class);
 
-    expect($otp->code_hash)->toMatch('/^[a-f0-9]{64}$/')
-        ->and($otp->attempt_count)->toBe(0)
-        ->and($otp->expires_at->equalTo(now()->addMinute()))->toBeTrue();
-
-    Queue::assertPushed(SendEmailNotificationJob::class, function (SendEmailNotificationJob $job) use ($user, $otp): bool {
-        $email = $job->notification;
-
-        return $job->recipient->is($user)
-            && $job instanceof ShouldBeEncrypted
-            && $email instanceof OtpMail
-            && hash('sha256', extractOtpForTesting($email)) === $otp->code_hash;
-    });
-
-    expect($user->notifications()->sole()->data)->toBe([
-        'pesan' => 'Kode verifikasi SIPKL telah dikirim ke email Anda.',
-    ]);
+    expect(OtpCode::query()->latest('id')->first()->invalidated_at)->not->toBeNull();
 });
 
-it('menginvalidasi OTP lama saat menerbitkan OTP baru', function () {
-    Queue::fake();
-    $user = User::factory()->create();
-    $service = app(OtpService::class);
-    $first = $service->issue($user);
-    $second = $service->issue($user);
+test('OTP yang kedaluwarsa ditolak', function () {
+    $user = pklUser();
+    $otp = app(OtpService::class);
+    $code = $otp->issue($user);
 
-    expect($first->fresh()->invalidated_at)->not->toBeNull()
-        ->and($second->fresh()->invalidated_at)->toBeNull()
-        ->and($user->otpCodes()->whereNull('invalidated_at')->whereNull('verified_at')->count())->toBe(1);
+    $this->travel((int) config('pkl.otp.internal.ttl_seconds') + 1)->seconds();
+
+    expect(fn () => $otp->verify($user, $code))->toThrow(OtpException::class);
 });
 
-it('memverifikasi OTP yang benar satu kali saja', function () {
-    Queue::fake();
-    $user = User::factory()->create();
-    $service = app(OtpService::class);
-    $otp = $service->issue($user);
-    $code = extractOtpForTesting(Queue::pushed(SendEmailNotificationJob::class)->first()->notification);
+test('resend keenam dalam 30 menit ditolak sampai cooldown selesai', function () {
+    $user = pklUser();
+    $otp = app(OtpService::class);
 
-    expect($service->verify($user, $code))->toBeTrue()
-        ->and($otp->fresh()->verified_at)->not->toBeNull()
-        ->and($service->verify($user, $code))->toBeFalse();
+    // Satu kirim awal + 5 resend = 6 kirim diizinkan dalam jendela.
+    foreach (range(1, 6) as $ignored) {
+        $otp->issue($user);
+    }
+
+    expect(fn () => $otp->issue($user))->toThrow(OtpException::class);
+
+    try {
+        $otp->issue($user);
+    } catch (OtpException $exception) {
+        expect($exception->getMessage())->toContain('Tunggu');
+    }
 });
 
-it('menolak dan menginvalidasi OTP yang kedaluwarsa', function () {
-    Queue::fake();
-    $user = User::factory()->create();
-    $otp = app(OtpService::class)->issue($user);
-    $this->travel(61)->seconds();
+test('kode OTP tidak disimpan sebagai plaintext', function () {
+    $user = pklUser();
+    $code = app(OtpService::class)->issue($user);
 
-    expect(app(OtpService::class)->verify($user, '123456'))->toBeFalse()
-        ->and($otp->fresh()->invalidated_at)->not->toBeNull()
-        ->and($otp->fresh()->attempt_count)->toBe(0);
+    expect(OtpCode::query()->first()->code_hash)
+        ->not->toBe($code)
+        ->toBe(hash('sha256', $code));
 });
-
-it('menginvalidasi OTP pada percobaan keempat setelah tiga verifikasi salah', function () {
-    Queue::fake();
-    $user = User::factory()->create();
-    $service = app(OtpService::class);
-    $otp = $service->issue($user);
-
-    expect($service->verify($user, '000000'))->toBeFalse()
-        ->and($service->verify($user, '000000'))->toBeFalse()
-        ->and($service->verify($user, '000000'))->toBeFalse()
-        ->and($otp->fresh()->attempt_count)->toBe(3)
-        ->and($otp->fresh()->invalidated_at)->toBeNull()
-        ->and($service->verify($user, '000000'))->toBeFalse()
-        ->and($otp->fresh()->invalidated_at)->not->toBeNull()
-        ->and($otp->fresh()->attempt_count)->toBe(3);
-});
-
-it('menolak OTP yang benar pada percobaan keempat setelah tiga percobaan gagal', function () {
-    Queue::fake();
-    $user = User::factory()->create();
-    $service = app(OtpService::class);
-    $otp = $service->issue($user);
-    $code = extractOtpForTesting(Queue::pushed(SendEmailNotificationJob::class)->first()->notification);
-
-    $service->verify($user, '000000');
-    $service->verify($user, '000000');
-    $service->verify($user, '000000');
-
-    expect($service->verify($user, $code))->toBeFalse()
-        ->and($otp->fresh()->invalidated_at)->not->toBeNull()
-        ->and($otp->fresh()->verified_at)->toBeNull();
-});
-
-it('menolak penerbitan OTP untuk akun nonaktif atau yang sudah menyelesaikan first-login', function () {
-    Queue::fake();
-    $service = app(OtpService::class);
-    $nonaktif = User::factory()->nonaktif()->create();
-    $selesai = User::factory()->sudahGantiPassword()->create();
-
-    expect(fn () => $service->issue($nonaktif))->toThrow(DomainException::class)
-        ->and(fn () => $service->issue($selesai))->toThrow(DomainException::class)
-        ->and(OtpCode::query()->count())->toBe(0);
-});
-
-function extractOtpForTesting(OtpMail $notification): string
-{
-    $reflection = new ReflectionProperty($notification, 'code');
-    $reflection->setAccessible(true);
-
-    return $reflection->getValue($notification);
-}

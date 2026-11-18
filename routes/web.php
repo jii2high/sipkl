@@ -1,35 +1,31 @@
 <?php
 
-use App\Http\Controllers\PrivateFileController;
-use App\Http\Controllers\SignerEmailVerificationController;
-use App\Livewire\Public\ForcePasswordReset;
-use App\Livewire\Public\Login;
-use App\Livewire\Public\VerifyOtp;
+use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\ThemePreferenceController;
+use App\Livewire\Auth\ForcePasswordChange;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\OtpChallenge;
+use App\Livewire\Public\VerifyDocument;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn () => view('public.home'))->name('home');
 
+// Pintu masuk tunggal (PRD F1, TRD.md §7.1). Panel Filament tidak punya login sendiri.
 Route::get('/login', Login::class)->name('login');
-Route::get('/verify-otp', VerifyOtp::class)->name('verify-otp');
-Route::get('/force-password-reset', ForcePasswordReset::class)->name('force-password-reset');
+Route::get('/login/otp', OtpChallenge::class)->name('login.otp');
+Route::get('/login/password', ForcePasswordChange::class)->name('login.password');
 
-/*
-| Verifikasi email signer industri (TASKS M2.8). Signed URL berbatas waktu,
-| bisa diakses tanpa login karena signer tidak punya akun.
-*/
-Route::get('/verifikasi-signer/{company}/{tipe}', SignerEmailVerificationController::class)
-    ->whereNumber('company')
-    ->whereIn('tipe', ['pembimbing', 'kepala'])
-    ->middleware('signed')
-    ->name('signer.verifikasi');
+// Verifikasi QR surat (BR-F12-3). Publik, dibatasi per IP (TRD.md §16).
+Route::get('/verify/{token}', VerifyDocument::class)
+    ->middleware('throttle:'.config('pkl.document.verify_throttle'))
+    ->name('verify');
 
-/*
-| Satu-satunya jalur unduh dokumen private (AC-49). Otorisasi per objek lewat
-| Policy `download-private-file`; tidak ada URL publik ke storage/app/private.
-*/
-Route::get('/files/{path}', PrivateFileController::class)
-    ->where('path', '.*')
-    ->middleware('auth')
-    ->name('files.download');
+Route::middleware('auth')->group(function (): void {
+    // Preferensi tema per akun (DESIGN.md "Perilaku tema").
+    Route::post('/theme', ThemePreferenceController::class)->name('theme.update');
+
+    // Unduhan surat dari disk privat; otorisasi lewat DocumentPolicy (TRD.md §7.4).
+    Route::get('/documents/{jenis}/{id}', DocumentDownloadController::class)
+        ->whereNumber('id')
+        ->name('documents.download');
+});

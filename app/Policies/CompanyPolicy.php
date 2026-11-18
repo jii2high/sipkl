@@ -2,47 +2,49 @@
 
 namespace App\Policies;
 
+use App\Enums\Role;
 use App\Models\Company;
 use App\Models\User;
-use App\Policies\Concerns\ScopesByActiveRole;
 
 /**
- * Otorisasi master data perusahaan (TASKS M2.4).
- *
- * Hanya `active_role=hubin` yang boleh mengelola perusahaan; role lain selalu
- * ditolak walaupun UI-nya kebetulan menampilkan tombol (PRD §1.5 butir 5).
+ * Otorisasi master data perusahaan (TRD.md §7.3). Pengelolaan dan merge hanya
+ * Hubin; peran lain baru mendapat akses baca pada task yang membutuhkannya (T4.1).
  */
-class CompanyPolicy
+class CompanyPolicy extends Policy
 {
-    use ScopesByActiveRole;
-
     public function viewAny(User $user): bool
     {
-        return $this->activeRole()->is('hubin');
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
     public function view(User $user, Company $company): bool
     {
-        return $this->activeRole()->is('hubin');
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
     public function create(User $user): bool
     {
-        return $this->activeRole()->is('hubin');
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
     public function update(User $user, Company $company): bool
     {
-        return $this->activeRole()->is('hubin');
+        return $this->hasActiveRole($user, Role::Hubin->value);
+    }
+
+    /** Merge memindahkan referensi; hanya Hubin yang boleh memicunya (BR-F2-4). */
+    public function merge(User $user): bool
+    {
+        return $this->hasActiveRole($user, Role::Hubin->value);
+    }
+
+    public function import(User $user): bool
+    {
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
     public function delete(User $user, Company $company): bool
     {
-        return $this->activeRole()->is('hubin');
-    }
-
-    public function deleteAny(User $user): bool
-    {
-        return $this->activeRole()->is('hubin');
+        return false;
     }
 }

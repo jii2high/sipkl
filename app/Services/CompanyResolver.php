@@ -3,144 +3,139 @@
 namespace App\Services;
 
 use App\Models\Company;
-use Illuminate\Support\Collection;
+use App\Support\CompanyCheck;
+use App\Support\ContactNormalizer;
 
 /**
- * Saran perusahaan mirip dengan skor Levenshtein (TASKS M2.3, AC-11).
+ * Penilai duplikat perusahaan (TRD.md §3.2, BR-F2-1/2). Satu resolver dipakai form
+ * Hubin, form pengajuan siswa (T4.1), dan impor (T2.1) supaya aturannya identik:
  *
- * Kandidat diambil murah lewat LIKE (prefix nama + token nama/alamat), lalu
- * diskor di PHP. Method ini HANYA menyarankan — tidak pernah menolak input.
- * Perusahaan yang sudah di-merge tidak pernah disarankan.
+ * - strict-unique: `email`, `website`, `telp_fax` setelah normalisasi → bentrok
+ *   berarti ditolak (KP-F2-1).
+ * - soft-warning: nama dan alamat yang mirip (Levenshtein) hanya memunculkan
+ *   peringatan agar Hubin memutuskan sendiri.
  */
 final class CompanyResolver
 {
-    private readonly float $threshold;
-
-    private readonly int $maxCandidates;
-
-    private readonly int $limit;
-
-    public function __construct(?float $threshold = null, ?int $maxCandidates = null, ?int $limit = null)
+    /**
+     * Periksa data perusahaan mentah. `$ignoreId` mengabaikan baris yang sedang
+     * disunting agar tidak dianggap bentrok dengan dirinya sendiri.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    public function inspect(array $input, ?int $ignoreId = null): CompanyCheck
     {
-        $this->threshold = $threshold ?? (float) config('company.similarity_threshold', 0.72);
-        $this->maxCandidates = $maxCandidates ?? (int) config('company.max_candidates', 100);
-        $this->limit = $limit ?? (int) config('company.max_suggestions', 5);
+        $keys = ContactNormalizer::companyKeys($input);
+
+        return new CompanyCheck(
+            strict: $this->strictMatches($keys, $ignoreId),
+            warnings: $this->warnings($input, $ignoreId),
+        );
+    }
+
+    /** Kunci unik yang dinormalisasi, untuk disimpan pada kolom pencocokan. */
+    public function keys(array $input): array
+    {
+        return ContactNormalizer::companyKeys($input);
     }
 
     /**
-     * @return Collection<int, array{perusahaan: Company, skor: float}>
+     * @param  array{email: ?string, website: ?string, telp_fax: ?string}  $keys
+     * @return array<string, Company>
      */
-    public function suggest(string $nama, ?string $alamat = null): Collection
+    private function strictMatches(array $keys, ?int $ignoreId): array
     {
-        $nama = trim($nama);
+        $matches = [];
 
-        if ($nama === '' || $this->limit <= 0) {
-            return collect();
+        foreach ($keys as $field => $value) {
+            if ($value === null) {
+                continue;
+            }
+
+            // Perusahaan hasil merge tetap memegang kunci UNIQUE-nya, jadi tetap
+            // dihitung supaya pesan aplikasi sama dengan penolakan database.
+            $company = Company::query()
+                ->when($ignoreId !== null, fn ($query) => $query->whereKeyNot($ignoreId))
+                ->where($field, $value)
+                ->first();
+
+            if ($company !== null) {
+                $matches[$field] = $company;
+            }
         }
 
-        $tokens = $this->tokens($nama.' '.($alamat ?? ''));
-
-        if ($tokens === []) {
-            return collect();
-        }
-
-        $kandidat = Company::query()
-            ->belumMerge()
-            ->where(function ($query) use ($tokens, $nama) {
-                $query->where('nama', 'like', $this->escapeLike($nama).'%');
-
-                // Token utuh tidak cukup untuk salah ketik di tengah kata
-                // ("Ajikyo" vs "Ajikiyo"), jadi kandidat diambil lewat prefiks
-                // 4 huruf pertama dan skor Levenshtein yang menyaring sisanya.
-                foreach ($tokens as $token) {
-                    $prefix = mb_substr($token, 0, 4);
-
-                    $query->orWhere('nama', 'like', '%'.$this->escapeLike($prefix).'%')
-                        ->orWhere('alamat', 'like', '%'.$this->escapeLike($prefix).'%');
-                }
-            })
-            ->orderBy('id')
-            ->limit($this->maxCandidates)
-            ->get(['id', 'nama', 'alamat', 'email', 'website', 'telp_fax', 'merged_into_id']);
-
-        return $kandidat
-            ->map(fn (Company $company): array => [
-                'perusahaan' => $company,
-                'skor' => round($this->skor($nama, $alamat, $company), 4),
-            ])
-            ->filter(fn (array $saran): bool => $saran['skor'] >= $this->threshold)
-            ->sortByDesc('skor')
-            ->take($this->limit)
-            ->values();
+        return $matches;
     }
 
     /**
-     * Skor 0..1: kemiripan nama, dengan bonus kecil bila alamat juga mirip.
+     * Peringatan kemiripan nama/alamat (BR-F2-2). Ambang Levenshtein ada di
+     * `config/pkl.php` agar tidak menjadi angka ajaib di sini.
+     *
+     * @param  array<string, mixed>  $input
+     * @return array<int, string>
      */
-    public function skor(string $nama, ?string $alamat, Company $company): float
+    private function warnings(array $input, ?int $ignoreId): array
     {
-        $skorNama = $this->kemiripan($this->rapikan($nama), $this->rapikan((string) $company->nama));
+        $nama = $this->fold((string) ($input['nama'] ?? ''));
+        $alamat = $this->fold((string) ($input['alamat'] ?? ''));
 
-        if ($skorNama === 0.0) {
-            return 0.0;
+        if ($nama === '') {
+            return [];
         }
 
-        $alamat = $alamat === null ? '' : trim($alamat);
+        $distanceMax = (int) config('pkl.company.similarity_distance_max');
+        $ratioMin = (int) config('pkl.company.similarity_ratio_min');
+        $warnings = [];
 
-        if ($alamat === '' || $company->alamat === null) {
-            return $skorNama;
+        foreach ($this->candidateQuery($ignoreId)->get(['id', 'nama', 'alamat']) as $company) {
+            if ($this->isSimilar($nama, $this->fold((string) $company->nama), $distanceMax, $ratioMin)) {
+                $warnings[] = __('pkl.company.similar_name', ['nama' => $company->nama]);
+
+                continue;
+            }
+
+            if ($alamat !== '' && $this->isSimilar($alamat, $this->fold((string) $company->alamat), $distanceMax, $ratioMin)) {
+                $warnings[] = __('pkl.company.similar_address', ['nama' => $company->nama]);
+            }
         }
 
-        $skorAlamat = $this->kemiripan($this->rapikan($alamat), $this->rapikan((string) $company->alamat));
-
-        if ($skorAlamat < 0.8) {
-            return $skorNama;
-        }
-
-        return min(1.0, $skorNama + 0.05);
+        return $warnings;
     }
 
-    /**
-     * 1 - (jarak Levenshtein / panjang terpanjang), dibatasi 0..1.
-     */
-    private function kemiripan(string $a, string $b): float
+    private function isSimilar(string $a, string $b, int $distanceMax, int $ratioMin): bool
     {
         if ($a === '' || $b === '') {
-            return 0.0;
+            return false;
         }
 
-        if ($a === $b) {
-            return 1.0;
+        $longest = max(strlen($a), strlen($b));
+
+        if ($longest === 0) {
+            return false;
         }
 
-        $panjang = max(strlen($a), strlen($b));
+        $distance = levenshtein($a, $b);
 
-        return max(0.0, 1.0 - (levenshtein($a, $b) / $panjang));
+        if ($distance <= $distanceMax) {
+            return true;
+        }
+
+        return (1 - $distance / $longest) * 100 >= $ratioMin;
     }
 
-    private function rapikan(string $value): string
+    /** Baris yang masih berdiri sendiri (bukan hasil merge), untuk peringatan. */
+    private function candidateQuery(?int $ignoreId)
     {
-        $value = mb_strtolower(trim($value));
-        $value = preg_replace('/[^\p{L}\p{N}\s]+/u', ' ', $value) ?? $value;
-
-        return trim(preg_replace('/\s+/', ' ', $value) ?? $value);
+        return Company::query()
+            ->whereNull('merged_into_id')
+            ->when($ignoreId !== null, fn ($query) => $query->whereKeyNot($ignoreId));
     }
 
-    /**
-     * @return list<string>
-     */
-    private function tokens(string $value): array
+    /** Huruf kecil, tanda baca diseragamkan jadi spasi tunggal. */
+    private function fold(string $value): string
     {
-        $kata = preg_split('/\s+/', $this->rapikan($value)) ?: [];
+        $value = strtolower(trim($value));
 
-        return array_values(array_unique(array_filter(
-            $kata,
-            fn (string $token): bool => mb_strlen($token) >= 4,
-        )));
-    }
-
-    private function escapeLike(string $value): string
-    {
-        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+        return trim(preg_replace('/[^a-z0-9]+/', ' ', $value) ?? $value);
     }
 }

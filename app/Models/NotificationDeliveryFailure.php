@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * schema.sql Bagian 13 — kegagalan pengiriman notifikasi yang perlu ditangani Hubin.
+ * Kegagalan pengiriman notifikasi yang permanen (BR-F14-2) agar tampak oleh Hubin.
+ * Hanya metadata teknis yang disimpan; isi notifikasi dan rahasia tidak pernah masuk
+ * ke tabel ini (BR-F14-4, TRD.md §12).
  */
 #[Fillable([
     'channel',
@@ -24,9 +25,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class NotificationDeliveryFailure extends Model
 {
-    public const UPDATED_AT = null;
+    public const CREATED_AT = null;
 
-    public $timestamps = false;
+    public const UPDATED_AT = null;
 
     protected $table = 'notification_delivery_failures';
 
@@ -41,13 +42,5 @@ class NotificationDeliveryFailure extends Model
             'last_failed_at' => 'datetime',
             'resolved_at' => 'datetime',
         ];
-    }
-
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function recipient(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'recipient_user_id');
     }
 }
