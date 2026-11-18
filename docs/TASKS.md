@@ -66,7 +66,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 
 # M0 — Fondasi
 
-### [ ] T0.1 — Bootstrap proyek, konfigurasi, dan tema  · Ukuran: L
+### [✓] T0.1 — Bootstrap proyek, konfigurasi, dan tema  · Ukuran: L
 **Cakupan**
 - Inisialisasi Laravel + Filament dengan dua panel (`hubin` di `/hubin`, `app` di `/app`), Livewire, Pest, dan paket di `TRD.md` §2 (activitylog, dompdf, endroid/qr-code, maatwebsite/excel). Kunci versi di `composer.json`.
 - `config/pkl.php` berisi seluruh konstanta bisnis `TRD.md` §4 (kuota 6, TTL, batas upload, dst.).
@@ -103,7 +103,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 
 # M1 — Akses
 
-### [ ] T1.1 — Autentikasi, OTP first-login, dan role switch (F1)  · Ukuran: L
+### [✓] T1.1 — Autentikasi, OTP first-login, dan role switch (F1)  · Ukuran: L
 **Cakupan**
 - Halaman Livewire kustom: login, tantangan OTP, paksa ganti password. Validasi domain `@smkn1kotabekasi.sch.id` sebelum OTP; respons sama untuk akun ada/tidak ada.
 - `OtpService` internal: 6 digit, ter-hash, TTL 60 detik, maks 3 percobaan (ke-4 menginvalidasi lewat `invalidated_at`), resend 5x/30 menit lalu cooldown 30 menit; limiter `otp-verify` dan `otp-resend` terpisah; komponen `OtpInput`.
@@ -143,7 +143,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 
 # M3 — Dokumen Dasar
 
-### [ ] T3.1 — Nomor surat, PDF + QR, verifikasi publik, penyimpanan file (F12)  · Ukuran: L
+### [✓] T3.1 — Nomor surat, PDF + QR, verifikasi publik, penyimpanan file (F12)  · Ukuran: L
 **Cakupan**
 - `LetterNumberService`: counter per (tahun ajaran, jenis) dengan `FOR UPDATE` dalam transaksi pembuatan dokumen; unik per tahun ajaran.
 - `DocumentService`: PDF via queue (dompdf) + QR (endroid) + `document_qr_tokens` (hash). Kegagalan tidak meninggalkan nomor terpakai tanpa dokumen; retry idempoten memakai nomor yang sama.
