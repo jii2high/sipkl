@@ -12,15 +12,16 @@ class AcademicPeriodFactory extends Factory
 {
     protected $model = AcademicPeriod::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
-        $tahun = fake()->unique()->numberBetween(2026, 2035);
-
         return [
-            'tahun_ajaran' => $tahun.'/'.($tahun + 1),
+            'tahun_ajaran' => '2025/2026',
             'batch' => fake()->randomElement(['1', '2']),
-            'tanggal_mulai' => $tahun.'-07-01',
-            'tanggal_selesai' => $tahun.'-12-31',
+            'tanggal_mulai' => '2026-01-05',
+            'tanggal_selesai' => '2026-04-30',
             'is_active' => true,
             'locked_for_new_submission' => false,
         ];

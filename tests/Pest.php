@@ -1,50 +1,44 @@
 <?php
 
+use App\Models\Jurusan;
+use App\Models\Kelas;
+use App\Models\User;
+use App\Models\UserRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /*
 |--------------------------------------------------------------------------
-| Test Case
+| Pest
 |--------------------------------------------------------------------------
-|
-| The closure you provide to your test functions is always bound to a specific PHPUnit test
-| case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
-| need to change it using the "pest()" function to bind different classes or traits.
-|
+| Tes Feature memakai aplikasi + database MySQL nyata (sipkl_test) dan
+| di-reset per tes. Tes Unit berjalan tanpa database.
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
-/*
-|--------------------------------------------------------------------------
-| Expectations
-|--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
-*/
-
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Functions
-|--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
-*/
-
-function something()
+/**
+ * Buat pengguna beserta perannya. Scope jurusan/kelas diisi bila peran
+ * mewajibkannya (CHECK `ck_role_scope`: kaprog butuh jurusan, walas butuh kelas).
+ *
+ * @param  array<int, string>  $roles
+ * @param  array<string, mixed>  $attributes
+ */
+function pklUser(array $roles = ['guru_pembimbing'], array $attributes = []): User
 {
-    // ..
+    $user = User::factory()->create($attributes);
+
+    foreach ($roles as $role) {
+        $scope = match ($role) {
+            'kaprog' => ['jurusan_id' => Jurusan::factory()->create()->id],
+            'walas' => ['kelas_id' => Kelas::factory()->create()->id],
+            default => [],
+        };
+
+        UserRole::query()->create(['user_id' => $user->id, 'role' => $role] + $scope);
+    }
+
+    return $user;
 }

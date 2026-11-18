@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Services\ActiveRole;
+use App\Enums\Role;
+use App\Enums\Theme;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -14,29 +15,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['nis_nip', 'name', 'email', 'password', 'user_type', 'jurusan_id', 'kelas_id', 'is_first_login', 'is_active'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable([
+    'nis_nip',
+    'name',
+    'email',
+    'password',
+    'user_type',
+    'jurusan_id',
+    'kelas_id',
+    'is_first_login',
+    'is_active',
+    'theme_preference',
+])]
+#[Hidden(['password'])]
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Panel `hubin` hanya untuk active_role 'hubin'; panel `app` untuk role lain.
-     * User tanpa active_role yang sah selalu ditolak (PRD §1.5 butir 5).
-     */
-    public function canAccessPanel(Panel $panel): bool
-    {
-        $activeRole = app(ActiveRole::class);
-
-        if (! $activeRole->isValid()) {
-            return false;
-        }
-
-        return $panel->getId() === 'hubin'
-            ? $activeRole->is('hubin')
-            : ! $activeRole->is('hubin');
-    }
+    /** @var array<int, string>|null Cache per request daftar peran pengguna. */
+    private ?array $roleCache = null;
 
     /**
      * @return array<string, string>
@@ -48,7 +46,37 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'is_first_login' => 'boolean',
             'is_active' => 'boolean',
+            'theme_preference' => Theme::class,
         ];
+    }
+
+    // Tabel `users` (docs/schema.sql) tidak punya kolom `remember_token`: sesi login
+    // selalu berbasis sesi server, tanpa cookie "ingat saya" (PRD F1 tidak memintanya).
+    public function getRememberToken(): ?string
+    {
+        return null;
+    }
+
+    public function setRememberToken($value): void
+    {
+        //
+    }
+
+    /**
+     * Tujuan email notifikasi. Di lingkungan `local`, seluruh email dialihkan ke
+     * `pkl.mail.override_to` (bila diisi) agar OTP dapat diuji tanpa domain sekolah.
+     *
+     * @return array<string, string>|string
+     */
+    public function routeNotificationForMail(): array|string
+    {
+        $override = config('pkl.mail.override_to');
+
+        if (config('app.env') === 'local' && is_string($override) && $override !== '') {
+            return [$override => $this->name];
+        }
+
+        return $this->email;
     }
 
     /**
@@ -67,19 +95,69 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(OtpCode::class);
     }
 
-    /**
-     * @return BelongsTo<Jurusan, $this>
-     */
+    /** @return BelongsTo<Jurusan, $this> */
     public function jurusan(): BelongsTo
     {
         return $this->belongsTo(Jurusan::class);
     }
 
-    /**
-     * @return BelongsTo<Kelas, $this>
-     */
+    /** @return BelongsTo<Kelas, $this> */
     public function kelas(): BelongsTo
     {
         return $this->belongsTo(Kelas::class);
+    }
+
+    /**
+     * Daftar nilai peran (string) milik pengguna; di-cache per instance.
+     *
+     * @return array<int, string>
+     */
+    public function roleValues(): array
+    {
+        return $this->roleCache ??= $this->roles()->pluck('role')->all();
+    }
+
+    public function hasRole(Role|string ...$roles): bool
+    {
+        $wanted = array_map(fn (Role|string $role) => $role instanceof Role ? $role->value : $role, $roles);
+
+        return array_intersect($wanted, $this->roleValues()) !== [];
+    }
+
+    /** Peran aktif default setelah login, menurut prioritas di `Role::defaultPriority()`. */
+    public function defaultActiveRole(): ?string
+    {
+        $owned = $this->roleValues();
+
+        foreach (Role::defaultPriority() as $role) {
+            if (in_array($role->value, $owned, true)) {
+                return $role->value;
+            }
+        }
+
+        return null;
+    }
+
+    /** URL panel untuk peran (Hubin di `/hubin`, sisanya di `/app`). */
+    public function panelHomeUrl(?string $role = null): string
+    {
+        $role ??= $this->defaultActiveRole();
+
+        return $role === Role::Hubin->value ? url('/hubin') : url('/app');
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return match ($panel->getId()) {
+            'hubin' => $this->hasRole(Role::Hubin),
+            'app' => $this->hasRole(
+                Role::Siswa,
+                Role::Walas,
+                Role::GuruPembimbing,
+                Role::Kaprog,
+                Role::Kepsek,
+            ),
+            default => false,
+        };
     }
 }

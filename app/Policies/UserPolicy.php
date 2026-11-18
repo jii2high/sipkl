@@ -2,45 +2,53 @@
 
 namespace App\Policies;
 
+use App\Enums\Role;
 use App\Models\User;
-use App\Policies\Concerns\ScopesByActiveRole;
 
 /**
- * Otorisasi master data pengguna (TASKS M2.7).
- *
- * Hanya `active_role=hubin` yang boleh mengelola akun dan peran. Akun tidak
- * dihapus lewat UI karena jejak pengajuan/nilai nanti menunjuk ke `users.id`.
+ * Otorisasi pengelolaan akun (T2.2). Hubin mengelola akun; akun tidak pernah
+ * dihapus (jejak akademik), hanya dinonaktifkan lewat `SetAccountActive`.
  */
-class UserPolicy
+class UserPolicy extends Policy
 {
-    use ScopesByActiveRole;
-
     public function viewAny(User $user): bool
     {
-        return $this->activeRole()->is('hubin');
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
-    public function view(User $user, User $target): bool
+    public function view(User $user, User $account): bool
     {
-        return $this->activeRole()->is('hubin');
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
     public function create(User $user): bool
     {
-        return $this->activeRole()->is('hubin');
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
-    public function update(User $user, User $target): bool
+    public function update(User $user, User $account): bool
     {
-        return $this->activeRole()->is('hubin');
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
-    public function delete(User $user, User $target): bool
+    /** Reset akses OTP akun lain (T2.2). */
+    public function resetOtp(User $user, User $account): bool
     {
-        return false;
+        return $this->hasActiveRole($user, Role::Hubin->value);
     }
 
-    public function deleteAny(User $user): bool
+    /** Aktifkan/nonaktifkan akun (T2.2, BR-F1). */
+    public function toggleActive(User $user, User $account): bool
+    {
+        return $this->hasActiveRole($user, Role::Hubin->value);
+    }
+
+    public function import(User $user): bool
+    {
+        return $this->hasActiveRole($user, Role::Hubin->value);
+    }
+
+    public function delete(User $user, User $account): bool
     {
         return false;
     }

@@ -2,16 +2,18 @@
 
 namespace App\Providers\Filament;
 
-use App\Http\Middleware\EnsureFirstLoginCompleted;
-use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\AuthenticateSession;
+use App\Http\Middleware\EnsureActiveRole;
+use App\Http\Middleware\PanelAuthenticate;
+use App\Http\Middleware\PanelAuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -19,10 +21,6 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-/**
- * Panel aplikasi untuk Siswa, Walas, Guru Pembimbing, Kaprog, dan Kepsek
- * (PRD §1.4 — navigasi mengikuti session `active_role`).
- */
 class AppPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -30,11 +28,28 @@ class AppPanelProvider extends PanelProvider
         return $panel
             ->id('app')
             ->path('app')
-            ->authGuard('web')
-            ->darkMode(false)
+            // Panel utama (portal siswa/guru); `hubin` khusus peran Hubin.
+            ->default()
+            ->brandName('SIM PKL Siswa & Guru')
+            // Warna mengikuti token Design.md: royal blue (primary), turquoise (accent),
+            // semantik Tailwind yang sama dengan nilai Design.md.
             ->colors([
-                'primary' => Color::hex('#2456a6'),
+                'primary' => Color::Blue,
+                'info' => Color::Sky,
+                'success' => Color::Green,
+                'warning' => Color::Amber,
+                'danger' => Color::Red,
             ])
+            ->darkMode(true)
+            // Login ditangani halaman Livewire kustom `/login` (T1.1).
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): View => view('filament.role-switcher'),
+            )
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): View => view('filament.theme-switcher'),
+            )
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\Filament\App\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\Filament\App\Pages')
             ->pages([
@@ -48,16 +63,16 @@ class AppPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                AuthenticateSession::class,
+                PanelAuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 PreventRequestForgery::class,
                 SubstituteBindings::class,
-                EnsureFirstLoginCompleted::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                PanelAuthenticate::class,
+                EnsureActiveRole::class,
             ]);
     }
 }

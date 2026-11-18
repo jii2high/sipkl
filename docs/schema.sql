@@ -79,6 +79,7 @@ CREATE TABLE users (
     kelas_id          BIGINT UNSIGNED NULL,
     is_first_login    BOOLEAN NOT NULL DEFAULT TRUE,
     is_active         BOOLEAN NOT NULL DEFAULT TRUE,
+    theme_preference  ENUM('light','dark','system') NULL,  -- Q-K: preferensi tema; NULL = ikuti sistem
     created_at        TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (jurusan_id) REFERENCES jurusan(id),
@@ -156,7 +157,8 @@ CREATE TABLE companies (
     UNIQUE KEY uq_company_website (website),
     UNIQUE KEY uq_company_telp_fax (telp_fax),
     INDEX idx_company_nama (nama),                              -- bantu resolver fuzzy (kandidat awal)
-    CONSTRAINT ck_company_not_self_merge CHECK (merged_into_id IS NULL OR merged_into_id <> id),
+    -- "merge ke diri sendiri ditolak" tidak dijaga CHECK: MySQL 8.4 menolak CHECK yang
+    -- menyentuh kolom AUTO_INCREMENT (error 3818). Ditegakkan di Action MergeCompany (T2.1).
     CONSTRAINT ck_company_pi_signer CHECK (
         pembimbing_industri_email_verified_at IS NULL
         OR (pembimbing_industri_nama IS NOT NULL AND pembimbing_industri_email IS NOT NULL)),
@@ -486,15 +488,16 @@ CREATE TABLE document_signatures (
 -- ============================================================================
 -- token mentah = random kuat >=32 byte; simpan SHA-256 hex. Satu link aktif per (type, target).
 -- reference_id (polimorfik):
---   pengesahan_p_industri / pengesahan_k_industri -> document_signatures.id
---   sidang_penguji                                -> jadwal_sidang.id
---   penilaian_industri                            -> form_submissions.id
---   revisi_nilai_sidang                           -> form_submissions.id
+--   signer_step3 / signer_step4 -> document_signatures.id
+--   examiner_sidang              -> jadwal_sidang.id
+--   examiner_unlock              -> form_submissions.id
+--   industry_assessment          -> form_submissions.id
+-- Nama tipe mengikuti TRD.md §9.1 (sumber kebenaran di atas skema ini).
 CREATE TABLE magic_links (
     id                   BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     token_hash           CHAR(64) NOT NULL UNIQUE,
-    type                 ENUM('pengesahan_p_industri','pengesahan_k_industri','sidang_penguji',
-                              'penilaian_industri','revisi_nilai_sidang') NOT NULL,
+    type                 ENUM('examiner_sidang','examiner_unlock','signer_step3',
+                              'signer_step4','industry_assessment') NOT NULL,
     reference_id         BIGINT UNSIGNED NOT NULL,
     pin_hash             CHAR(64) NULL,                    -- sidang & revisi nilai (PIN 4 digit)
     pin_attempt_count    TINYINT UNSIGNED NOT NULL DEFAULT 0, -- maks 3
@@ -698,24 +701,25 @@ CREATE TABLE document_qr_tokens (
 -- ============================================================================
 -- BAGIAN 13: AUDIT LOG, NOTIFIKASI
 -- ============================================================================
--- Skema setara spatie/laravel-activitylog. Jangan simpan kredensial/OTP/PIN/token mentah di properties.
+-- Skema setara spatie/laravel-activitylog v5 (kolom `attribute_changes`, kolom `event`;
+-- tanpa `batch_uuid`). Jangan simpan kredensial/OTP/PIN/token mentah di properties.
 -- Aktor eksternal: causer NULL, isi properties.magic_link_id + properties.correlation_id.
 CREATE TABLE activity_log (
-    id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    log_name      VARCHAR(100) NULL,
-    description   TEXT NOT NULL,
-    subject_type  VARCHAR(150) NULL,
-    event         VARCHAR(100) NULL,
-    subject_id    BIGINT UNSIGNED NULL,
-    causer_type   VARCHAR(150) NULL,
-    causer_id     BIGINT UNSIGNED NULL,
-    properties    JSON NULL,
-    batch_uuid    CHAR(36) NULL,
-    created_at    TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_subject (subject_type, subject_id),
-    INDEX idx_causer (causer_type, causer_id),
-    INDEX idx_log_name (log_name)
+    id                BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    log_name          VARCHAR(100) NULL,
+    description       TEXT NOT NULL,
+    subject_type      VARCHAR(150) NULL,
+    subject_id        BIGINT UNSIGNED NULL,
+    event             VARCHAR(100) NULL,
+    causer_type       VARCHAR(150) NULL,
+    causer_id         BIGINT UNSIGNED NULL,
+    attribute_changes JSON NULL,
+    properties        JSON NULL,
+    created_at        TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX activity_log_log_name_index (log_name),
+    INDEX idx_activity_subject (subject_type, subject_id),
+    INDEX idx_activity_causer (causer_type, causer_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE notifications (

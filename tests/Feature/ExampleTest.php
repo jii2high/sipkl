@@ -1,19 +1,19 @@
 <?php
 
-namespace Tests\Feature;
+test('beranda publik dapat dibuka', function () {
+    $this->get('/')->assertOk();
+});
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+test('halaman login kustom dapat dibuka', function () {
+    $this->get('/login')->assertOk();
+});
 
-class ExampleTest extends TestCase
-{
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
-    {
-        $response = $this->get('/');
+test('tamu diarahkan ke /login, bukan login panel', function () {
+    $this->get('/app')->assertRedirect('/login');
+    $this->get('/hubin')->assertRedirect('/login');
+});
 
-        $response->assertStatus(200);
-    }
-}
+test('panel login bawaan Filament sudah tidak ada', function () {
+    $this->get('/app/login')->assertNotFound();
+    $this->get('/hubin/login')->assertNotFound();
+});

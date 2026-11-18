@@ -1,164 +1,100 @@
 <?php
 
-use App\Livewire\Public\Login;
-use App\Models\User;
-use App\Models\UserRole;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\RateLimiter;
+use App\Livewire\Auth\ForcePasswordChange;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\OtpChallenge;
+use App\Models\OtpCode;
+use App\Notifications\OtpNotification;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
-uses(RefreshDatabase::class);
+test('email berdomain lain ditolak sebelum OTP', function () {
+    $user = pklUser(['guru_pembimbing'], ['is_first_login' => true, 'password' => 'password']);
+    Notification::fake();
 
-beforeEach(function () {
-    RateLimiter::clear('login:ip:'.hash('sha256', '127.0.0.1'));
+    $component = Livewire::test(Login::class)
+        ->set('email', 'nama@example.com')
+        ->set('password', 'password')
+        ->call('submit');
+
+    $component->assertHasErrors('email');
+    expect($component->errors()->first('email'))->toContain(config('pkl.school.email_domain'))
+        ->and(OtpCode::query()->count())->toBe(0);
+
+    Notification::assertNothingSent();
 });
 
-it('menampilkan halaman login responsif dengan form email dan password', function () {
-    $this->get('/login')
-        ->assertOk()
-        ->assertSee('name="viewport"', false)
-        ->assertSee('type="email"', false)
-        ->assertSee('autocomplete="current-password"', false)
-        ->assertSee('max-width: 380px', false);
+test('akun tidak ada, kata sandi salah, dan akun nonaktif memberi respons sama', function () {
+    $aktif = pklUser(['guru_pembimbing'], ['password' => 'password']);
+    $nonaktif = pklUser(['guru_pembimbing'], ['password' => 'password', 'is_active' => false]);
+
+    $salahSandi = Livewire::test(Login::class)->set('email', $aktif->email)->set('password', 'keliru')->call('submit');
+    $takAda = Livewire::test(Login::class)->set('email', 'hantu@smkn1kotabekasi.sch.id')->set('password', 'keliru')->call('submit');
+    $nonaktifTest = Livewire::test(Login::class)->set('email', $nonaktif->email)->set('password', 'password')->call('submit');
+
+    expect($salahSandi->errors()->first('email'))->toBe(__('pkl.email.not_found'))
+        ->and($takAda->errors()->first('email'))->toBe(__('pkl.email.not_found'))
+        ->and($nonaktifTest->errors()->first('email'))->toBe(__('pkl.email.not_found'));
 });
 
-it('menolak domain email selain domain sekolah sebelum autentikasi', function () {
-    Livewire::test(Login::class)
-        ->set('email', 'user@example.com')
-        ->set('password', 'password-benar')
-        ->call('submit')
-        ->assertHasErrors(['email' => 'regex']);
-
-    expect(Auth::guest())->toBeTrue()
-        ->and(DB::table('otp_codes')->count())->toBe(0);
-});
-
-it('menolak NIS/NIP sebagai identifier email', function () {
-    Livewire::test(Login::class)
-        ->set('email', '123456')
-        ->set('password', 'password-benar')
-        ->call('submit')
-        ->assertHasErrors('email');
-
-    expect(Auth::guest())->toBeTrue()
-        ->and(DB::table('otp_codes')->count())->toBe(0);
-});
-
-it('memberikan pesan kredensial generik untuk password salah dan akun yang tidak dikenal', function () {
-    $known = User::factory()->create(['email' => 'known@smkn1kotabekasi.sch.id']);
-
-    $knownResult = Livewire::test(Login::class)
-        ->set('email', $known->email)
-        ->set('password', 'salah')
-        ->call('submit')
-        ->assertHasErrors('credentials');
-
-    RateLimiter::clear('login:account:'.hash('sha256', $known->email));
-
-    $unknownResult = Livewire::test(Login::class)
-        ->set('email', 'unknown@smkn1kotabekasi.sch.id')
-        ->set('password', 'salah')
-        ->call('submit')
-        ->assertHasErrors('credentials');
-
-    $genericError = 'Email atau password tidak sesuai.';
-
-    $knownResult->assertSee($genericError);
-    $unknownResult->assertSee($genericError);
-});
-
-it('menolak akun nonaktif dengan pesan kredensial generik', function () {
-    $user = User::factory()->nonaktif()->create();
+test('login tanpa first-login langsung masuk dan menetapkan peran aktif', function () {
+    $user = pklUser(['guru_pembimbing'], ['is_first_login' => false, 'password' => 'password']);
 
     Livewire::test(Login::class)
         ->set('email', $user->email)
-        ->set('password', $user->nis_nip)
+        ->set('password', 'password')
         ->call('submit')
-        ->assertSee('Email atau password tidak sesuai.')
-        ->assertHasErrors('credentials');
+        ->assertRedirect(url('/app'));
 
-    expect(Auth::guest())->toBeTrue();
+    expect(auth()->check())->toBeTrue()
+        ->and(session('active_role'))->toBe('guru_pembimbing');
 });
 
-it('membatasi percobaan berulang untuk kombinasi account dan IP', function () {
-    $user = User::factory()->create(['email' => 'limit@smkn1kotabekasi.sch.id']);
-
-    for ($attempt = 0; $attempt < 5; $attempt++) {
-        Livewire::test(Login::class)
-            ->set('email', $user->email)
-            ->set('password', 'salah')
-            ->call('submit')
-            ->assertHasErrors('credentials');
-    }
+test('login pertama mengirim OTP dan mengarahkan ke tantangan OTP', function () {
+    $user = pklUser(['guru_pembimbing'], ['is_first_login' => true, 'password' => 'password']);
+    Notification::fake();
 
     Livewire::test(Login::class)
         ->set('email', $user->email)
-        ->set('password', 'salah')
+        ->set('password', 'password')
         ->call('submit')
-        ->assertSee('Terlalu banyak percobaan masuk. Silakan coba lagi sebentar.');
+        ->assertRedirect(route('login.otp'));
+
+    Notification::assertSentTo($user, OtpNotification::class);
+    expect(OtpCode::query()->count())->toBe(1)
+        ->and(session('auth.pending_user_id'))->toBe($user->id);
 });
 
-it('membatasi percobaan untuk akun yang sama meski IP-nya berbeda', function () {
-    $email = 'account-limit@smkn1kotabekasi.sch.id';
-    $accountKey = 'login:account:'.hash('sha256', $email);
-
-    for ($attempt = 0; $attempt < 5; $attempt++) {
-        RateLimiter::hit($accountKey, 60);
-    }
-
-    Livewire::test(Login::class)
-        ->set('email', $email)
-        ->set('password', 'salah')
-        ->call('submit')
-        ->assertSee('Terlalu banyak percobaan masuk. Silakan coba lagi sebentar.');
-});
-
-it('menerapkan batas IP lintas alamat email berbeda', function () {
-    for ($attempt = 0; $attempt < 5; $attempt++) {
-        Livewire::test(Login::class)
-            ->set('email', "user{$attempt}@smkn1kotabekasi.sch.id")
-            ->set('password', 'salah')
-            ->call('submit')
-            ->assertHasErrors('credentials');
-    }
-
-    Livewire::test(Login::class)
-        ->set('email', 'user5@smkn1kotabekasi.sch.id')
-        ->set('password', 'salah')
-        ->call('submit')
-        ->assertSee('Terlalu banyak percobaan masuk. Silakan coba lagi sebentar.');
-});
-
-it('mengirim first-login ke verifikasi OTP', function () {
-    Queue::fake();
-    $user = User::factory()->create();
-
-    Livewire::test(Login::class)
-        ->set('email', strtoupper($user->email))
-        ->set('password', $user->nis_nip)
-        ->call('submit')
-        ->assertRedirect(route('verify-otp'))
-        ->assertSet('password', '');
-
-    expect(Auth::guest())->toBeTrue()
-        ->and(session('otp_pending'))->toBeTrue()
-        ->and(session('otp_email'))->toBe($user->email)
-        ->and(DB::table('otp_codes')->count())->toBe(1);
-});
-
-it('authenticates a returning Hubin account and selects its role', function () {
-    $user = User::factory()->hubin()->sudahGantiPassword()->create();
-    UserRole::create(['user_id' => $user->id, 'role' => 'hubin']);
+test('alur first-login lengkap: OTP lalu wajib ganti kata sandi sampai masuk', function () {
+    $user = pklUser(['guru_pembimbing'], ['is_first_login' => true, 'password' => 'password']);
+    Notification::fake();
 
     Livewire::test(Login::class)
         ->set('email', $user->email)
-        ->set('password', $user->nis_nip)
-        ->call('submit')
-        ->assertRedirect('/hubin')
-        ->assertSet('password', '');
+        ->set('password', 'password')
+        ->call('submit');
 
-    expect(Auth::id())->toBe($user->id)
-        ->and(session('active_role'))->toBe('hubin');
+    $code = null;
+    Notification::assertSentTo($user, OtpNotification::class, function (OtpNotification $notification) use (&$code): bool {
+        $code = $notification->code;
+
+        return true;
+    });
+
+    expect($code)->not->toBeNull();
+
+    Livewire::test(OtpChallenge::class)
+        ->set('code', $code)
+        ->call('verify')
+        ->assertRedirect(route('login.password'));
+
+    Livewire::test(ForcePasswordChange::class)
+        ->set('password', 'SandiBaru123')
+        ->set('password_confirmation', 'SandiBaru123')
+        ->call('submit')
+        ->assertRedirect(url('/app'));
+
+    expect(auth()->check())->toBeTrue()
+        ->and($user->fresh()->is_first_login)->toBeFalse()
+        ->and(session('active_role'))->toBe('guru_pembimbing');
 });

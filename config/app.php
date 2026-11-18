@@ -65,20 +65,7 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Display Timezone
-    |--------------------------------------------------------------------------
-    |
-    | Database tetap menyimpan UTC. Nilai ini dipakai untuk semua perhitungan
-    | operasional (Asia/Jakarta, PRD §1.5 butir 9) dan harus diakses lewat
-    | App\Services\JakartaTime, bukan ad-hoc.
-    |
-    */
-
-    'display_timezone' => env('APP_DISPLAY_TIMEZONE', 'Asia/Jakarta'),
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------

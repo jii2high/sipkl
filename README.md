@@ -1,73 +1,58 @@
-# SIPKL — Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-Aplikasi digitalisasi alur PKL: pengajuan → persuratan → bimbingan → pengesahan laporan (5-TTD) → sidang → penilaian, dengan status real-time per peran dan mekanisme anti-manipulasi (kunci nilai, token ter-hash, snapshot immutable, audit log).
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-Dokumen acuan (urutan prioritas):
+## About Laravel
 
-1. `docs/PRD.md` — sumber kebenaran perilaku produk.
-2. `docs/TASKS.md` — pecahan milestone + aturan eksekusi.
-3. `docs/schema.sql` — rancangan referensi MySQL (bukan script yang dijalankan langsung).
-4. `AGENTS.md` — konteks kerja untuk AI agent.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-## Versi terpasang (M0.1–M0.11)
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-| Komponen | Versi |
-|---|---|
-| PHP | 8.4.13 |
-| Laravel | 13.42.0 |
-| Filament | 5.11.4 (panel `hubin`, `app`) |
-| Livewire | 4.4.8 |
-| Pest | 4.7.8 (+ pest-plugin-laravel, pest-plugin-livewire) |
-| spatie/laravel-activitylog | 5.1.5 |
-| barryvdh/laravel-dompdf | 3.1.2 (dompdf) |
-| endroid/qr-code | 6.1.3 |
-| maatwebsite/excel | 4.0.6 |
-| Composer / Node.js | 2.9.5 / 26.5.0 |
-| Database dev | MariaDB 10.4.32 (XAMPP, port 3306, DB `sistem_pkl`) |
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-Stack yang dikunci (PRD §1.4): Laravel + Filament multi-panel (`/hubin`, `/app`) + Blade/Livewire, MySQL, queue/cache/session driver `database`, Pest untuk test. Jangan menambah paket/abstraksi di luar daftar `TASKS.md` tanpa task.
+## Learning Laravel
 
-## Setup lokal
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-```powershell
-composer install
-npm install
-copy .env.example .env
-php artisan key:generate
-php artisan migrate:fresh --seed
-npm run build
-php artisan filament:assets
-composer dev
+In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+
+You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+
+## Agentic Development
+
+Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+
+```bash
+composer require laravel/boost --dev
+
+php artisan boost:install
 ```
 
-> **Penting:** `QUEUE_CONNECTION=database`. Kalau hanya menjalankan `php artisan serve`, email (termasuk OTP) **tidak terkirim** karena job menumpuk di tabel `jobs`. Jalankan `composer dev` / `php artisan dev` (sudah termasuk queue listener), atau `php artisan queue:work` di terminal terpisah.
+Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
-Buka `http://localhost:8000/login` untuk masuk, lalu `/hubin` (Hubin) atau `/app` (role lain). Panels memakai `active_role` di sesi.
+## Contributing
 
-Akun dev (password awal = NIS/NIP):
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-| Akun | Email | Role |
-|---|---|---|
-| Hubin | `hubin001@smkn1kotabekasi.sch.id` | hubin |
-| Kepsek | `kepsek001@smkn1kotabekasi.sch.id` | kepsek |
-| Kaprog RPL | `kaprpl01@smkn1kotabekasi.sch.id` | kaprog (RPL) |
-| Walas XI RPL 1 | `walrpl11@smkn1kotabekasi.sch.id` | walas |
-| Guru + Walas XI RPL 2 | `guru001@smkn1kotabekasi.sch.id` | guru_pembimbing, walas |
-| Siswa ×6 | `siswa001` … `siswa006` @smkn1kotabekasi.sch.id | siswa |
+## Code of Conduct
 
-## Catatan database
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-PRD §1.4 mengunci **MySQL 8.0.16+**. Lingkungan dev saat ini memakai **MariaDB 10.4.32** (server XAMPP yang sudah dipakai), dengan dua penyesuaian agar skema tetap jalan:
+## Security Vulnerabilities
 
-1. Kolom `TIMESTAMP NOT NULL` dari `schema.sql` dipetakan ke `DATETIME NOT NULL` (`explicit_defaults_for_timestamp=OFF` di MariaDB; DATETIME juga tidak dikonversi zona waktu server sehingga benar-benar UTC).
-2. `activity_log` mendapat kolom `attribute_changes` yang diwajibkan spatie/laravel-activitylog v5 (tidak ada di `schema.sql`).
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-Sebelum go-live, migrasi dan constraint wajib diuji ulang di MySQL 8.
+## License
 
-## Test
-
-```powershell
-php vendor/bin/pest
-```
-
-Test memakai DB `sistem_pkl_test` (lihat `phpunit.xml`). Buat DB-nya sekali dengan `CREATE DATABASE sistem_pkl_test`.
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
