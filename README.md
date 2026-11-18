@@ -1,58 +1,149 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SIPKL — Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi pengelolaan Praktik Kerja Lapangan: pengajuan siswa, plotting pembimbing,
+surat menyurat bertanda QR, bimbingan, penilaian, sampai rekap. Dibangun dengan
+Laravel + Filament (panel `app` dan `hubin`), Livewire/Blade, Tailwind, dan MySQL.
 
-## About Laravel
+Status: M1–M3 selesai (login OTP, master data, nomor surat + PDF + verifikasi
+publik). Rencana dan aturan main ada di `docs/TASKS.md`; perilaku produk di
+`docs/PRD.md`; keputusan teknis di `docs/TRD.md`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Panduan ini hanya untuk **lingkungan lokal**.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Prasyarat
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Kebutuhan | Versi |
+|---|---|
+| PHP | 8.4, ekstensi `mbstring`, `pdo_mysql`, `gd`, `zip`, `fileinfo` |
+| Composer | 2.x |
+| Node.js | 22.x (dipakai Vite 8) |
+| MySQL | 8.0.16 atau lebih baru (`JSON`, `CHECK`, generated column) |
 
-## Learning Laravel
+Ekstensi `gd` wajib: dipakai membuat QR surat dan menyematkan tanda tangan ke PDF.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Instalasi
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env          # PowerShell: Copy-Item .env.example .env
+php artisan key:generate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Buat dua database (satu untuk aplikasi, satu untuk tes):
 
-## Contributing
+```bash
+mysql -u root -e "CREATE DATABASE sipkl CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -e "CREATE DATABASE sipkl_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Sesuaikan `.env`, lalu jalankan migrasi beserta data awal:
 
-## Code of Conduct
+```bash
+php artisan migrate --seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Pasang dan bangun aset frontend:
 
-## Security Vulnerabilities
+```bash
+npm install
+npm run build
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+`composer run setup` tersedia sebagai jalan pintas langkah di atas, tetapi **tidak**
+menjalankan seeder. Jalankan `php artisan migrate --seed` terpisah.
 
-## License
+### Variabel `.env` yang perlu diperiksa
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Variabel | Keterangan |
+|---|---|
+| `APP_URL` | Alamat aplikasi, mis. `http://localhost:8000`. Dipakai saat membentuk tautan QR verifikasi surat. |
+| `DB_*` | Koneksi MySQL. Default `sipkl`, user `root`, tanpa sandi. |
+| `APP_TIMEZONE` | Biarkan `UTC`. Tanggal kalender operasional dihitung di `Asia/Jakarta` oleh kode. |
+| `PKL_EMAIL_DOMAIN` | Domain email yang boleh login (default `smkn1kotabekasi.sch.id`). |
+| `PKL_MAIL_OVERRIDE_TO` | Isi dengan email nyata Anda. Seluruh email lokal dialihkan ke alamat ini agar OTP bisa dibaca. Kosongkan untuk mematikan. |
+| `MAIL_MAILER` | Default `log`. Isi email masuk ke `storage/logs/laravel.log`. |
+| `QUEUE_CONNECTION` | Default `database`. Jangan diganti ke `sync` saat menguji PDF dan notifikasi. |
+
+### Akun demo
+
+`php artisan migrate --seed` mengisi jurusan, kelas, periode akademik, FAQ, dan
+satu akun per peran. Daftar akun ada di `database/seeders/AccountSeeder.php`.
+
+Kata sandi awal setiap akun = NIS/NIP-nya, dan `is_first_login = true`, jadi
+aplikasi langsung meminta ganti kata sandi pada login pertama. Jangan menjalankan
+`--seed` di lingkungan selain lokal.
+
+## Menjalankan
+
+Tiga proses terpisah, masing-masing di terminalnya sendiri:
+
+```bash
+php artisan serve        # aplikasi di http://127.0.0.1:8000
+npm run dev              # Vite (Tailwind/Livewire) saat mengembangkan tampilan
+php artisan queue:work   # worker antrean
+```
+
+Worker antrean wajib hidup: penerbitan PDF surat, QR, dan pengiriman notifikasi
+berjalan lewat queue `database`. Tanpa worker, surat terbit di database tetapi
+berkas PDF tidak pernah dibuat.
+
+### Alamat penting
+
+| Alamat | Fungsi |
+|---|---|
+| `/` | Beranda publik |
+| `/login` | Satu-satunya pintu masuk semua peran; setelahnya OTP dan/atau ganti sandi |
+| `/app` | Panel peran non-Hubin (siswa, walas, kaprog, guru pembimbing, kepsek) |
+| `/hubin` | Panel Hubin (desktop) |
+| `/verify/{token}` | Verifikasi surat publik hasil pindai QR |
+| `/documents/{jenis}/{id}` | Unduh PDF surat; wajib login dan berwenang |
+
+## Berkas privat
+
+Semua unggahan (scan tanda tangan, lampiran bimbingan, surat balasan, dokumentasi
+visitasi) disimpan di `storage/app/private` lewat disk `local`. Tidak ada
+`php artisan storage:link` yang diperlukan, dan berkas tidak dapat diakses langsung
+dari URL. Unduhan selalu melewati controller berotorisasi.
+
+Pastikan direktori `storage/` dan `bootstrap/cache/` dapat ditulis proses PHP.
+
+## Tes
+
+```bash
+php artisan test
+```
+
+Tes berjalan di database `sipkl_test` (lihat `phpunit.xml`), memakai
+`QUEUE_CONNECTION=sync` dan `MAIL_MAILER=array`, jadi tidak mengganggu data lokal.
+`APP_KEY` harus terisi karena token QR verifikasi dihitung dari kunci itu.
+
+CI di `.github/workflows/ci.yml` menjalankan langkah yang sama di MySQL 8.4.
+
+## Catatan penting
+
+- **Jangan mengganti `APP_KEY` setelah surat terbit.** Token QR adalah
+  `HMAC-SHA256(APP_KEY, "jenis:id")`; kunci baru membuat semua tautan verifikasi
+  lama menunjuk ke pesan "dokumen tidak ditemukan".
+- **Penerbitan surat ditahan tanpa scan tanda tangan Kepala Sekolah.** Unggah
+  lewat panel Hubin, menu **scan TTD Kepsek**, sebelum menerbitkan surat; tanpa
+  itu permintaan ditolak dengan status 409.
+- Aset Filament terkompilasi ikut di repo (`public/js/filament`,
+  `public/fonts/filament`). Bila hilang atau setelah menaikkan versi Filament,
+  jalankan `php artisan filament:assets`.
+- Tanda tangan hasil pindai berformat PDF tidak dapat disematkan ke PDF surat
+  (dompdf hanya menerima gambar). Gunakan PNG atau JPG bila ingin tanda tangan
+  tampil.
+- Nomor surat berurutan per tahun ajaran dan jenis surat, disimpan di tabel
+  `nomor_surat_counters`. Mengosongkan tabel itu akan mengulang nomor dari awal.
+
+## Troubleshooting
+
+| Gejala | Penyebab dan tindakan |
+|---|---|
+| QR atau PDF gagal dibuat | Ekstensi `gd` belum aktif. Periksa `php -m`. |
+| Surat tertahan 409 "menunggu scan TTD Kepala Sekolah" | Belum ada `signature_assets` aktif. Unggah lewat panel Hubin. |
+| Surat tidak muncul berkasnya | Worker `queue:work` tidak jalan, atau `QUEUE_CONNECTION` bukan `database`. |
+| Email OTP tidak diterima | `MAIL_MAILER=log`; baca `storage/logs/laravel.log`, atau isi `PKL_MAIL_OVERRIDE_TO`. |
+| Perubahan `.env` tidak terbaca | `php artisan config:clear` lalu ulangi. |
+| Migrasi gagal soal `JSON`/`CHECK` | MySQL terlalu lama. Pakai 8.0.16 atau lebih baru. |
+| Panel tampil tanpa gaya | `npm run build` belum dijalankan, atau aset Filament hilang. |

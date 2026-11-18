@@ -45,14 +45,13 @@ class AccountSeeder extends Seeder
                 'user' => ['nis_nip' => '197001011997011005', 'name' => 'Hendra Wijaya', 'user_type' => 'kepsek'],
                 'roles' => [['role' => 'kepsek', 'jurusan_id' => null, 'kelas_id' => null]],
             ],
-            // Akun penguji manual: alamat email nyata (bukan turunan NIS/NIP) dengan
-            // tiga peran di panel `app` agar pemilih peran aktif ikut teruji.
+            // Akun penguji manual dengan tiga peran di panel `app` agar pemilih
+            // peran aktif ikut teruji. Seperti akun lain, email = NIS/NIP.
             [
                 'user' => [
                     'nis_nip' => '197001011997011006',
-                    'name' => 'Fajri Muhammad',
+                    'name' => 'Penguji Manual',
                     'user_type' => 'guru',
-                    'email' => 'fajri.muhammad@'.config('pkl.school.email_domain'),
                 ],
                 'roles' => [
                     ['role' => 'guru_pembimbing', 'jurusan_id' => null, 'kelas_id' => null],
