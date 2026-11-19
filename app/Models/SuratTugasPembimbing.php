@@ -10,12 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Table(name: 'surat_tugas_pembimbing')]
 #[Fillable([
     'guru_pembimbing_plotting_id',
+    'guru_id',
     'tahun_ajaran',
     'nomor_urut',
     'nomor_surat',
     'signature_asset_id',
     'signed_at',
     'file_path',
+    'superseded_at',
 ])]
 class SuratTugasPembimbing extends Model
 {
@@ -29,6 +31,7 @@ class SuratTugasPembimbing extends Model
         return [
             'nomor_urut' => 'integer',
             'signed_at' => 'datetime',
+            'superseded_at' => 'datetime',
         ];
     }
 
@@ -36,5 +39,11 @@ class SuratTugasPembimbing extends Model
     public function plotting(): BelongsTo
     {
         return $this->belongsTo(GuruPembimbingPlotting::class, 'guru_pembimbing_plotting_id');
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function guru(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'guru_id');
     }
 }

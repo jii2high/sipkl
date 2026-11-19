@@ -148,7 +148,8 @@
         input,
         select,
         textarea {
-            font-size: 16px;
+            /* Filament menimpa aturan base; paksa 16px cegah zoom iOS. */
+            font-size: 16px !important;
         }
     }
 
@@ -254,6 +255,11 @@
     .pkl-chip-info {
         background-color: var(--primary-soft);
         color: var(--primary);
+    }
+
+    :root.dark .pkl-chip-info,
+    :root[data-theme='dark'] .pkl-chip-info {
+        color: #93c5fd;
     }
 
     .pkl-chip-neutral {

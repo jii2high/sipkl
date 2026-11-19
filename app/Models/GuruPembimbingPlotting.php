@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Table(name: 'guru_pembimbing_plotting', timestamps: false)]
 #[Fillable(['company_id', 'academic_period_id', 'guru_id', 'plotted_by', 'plotted_at'])]
@@ -35,5 +37,18 @@ class GuruPembimbingPlotting extends Model
     public function guru(): BelongsTo
     {
         return $this->belongsTo(User::class, 'guru_id');
+    }
+
+    /** @return HasMany<SuratTugasPembimbing, $this> */
+    public function suratTugasHistory(): HasMany
+    {
+        return $this->hasMany(SuratTugasPembimbing::class, 'guru_pembimbing_plotting_id');
+    }
+
+    /** @return HasOne<SuratTugasPembimbing, $this> */
+    public function suratTugas(): HasOne
+    {
+        return $this->hasOne(SuratTugasPembimbing::class, 'guru_pembimbing_plotting_id')
+            ->whereNull('superseded_at');
     }
 }

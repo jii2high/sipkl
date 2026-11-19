@@ -50,9 +50,21 @@ class SuratTugasVisitasi extends Model
         return $this->belongsTo(User::class, 'guru_id');
     }
 
+    /** @return BelongsTo<User, $this> */
+    public function kaprog(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'kaprog_id');
+    }
+
     /** @return HasMany<SuratTugasVisitasiCompany, $this> */
     public function companies(): HasMany
     {
         return $this->hasMany(SuratTugasVisitasiCompany::class, 'surat_tugas_visitasi_id');
+    }
+
+    /** @return HasMany<VisitasiDokumentasi, $this> */
+    public function dokumentasi(): HasMany
+    {
+        return $this->hasMany(VisitasiDokumentasi::class, 'surat_tugas_visitasi_id');
     }
 }

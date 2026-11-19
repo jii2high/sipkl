@@ -7,48 +7,61 @@
 
 <div
     x-data="{
+        length: @js($length),
         digits: Array(@js($length)).fill(''),
-        get code() { return this.digits.join(''); },
-        focusBox(i) { (this.$refs.boxes[i] ?? null)?.focus(); },
+        boxes() { return Array.from(this.$refs.row.querySelectorAll('input[data-otp]')); },
         commit() {
-            this.$refs.hidden.value = this.code;
+            this.$refs.hidden.value = this.digits.join('');
             this.$refs.hidden.dispatchEvent(new Event('input', { bubbles: true }));
         },
-        onInput(i, event) {
-            const box = event.target;
-            box.value = (box.value.match(/\d/g) ?? []).slice(-1).join('');
-            this.digits[i] = box.value;
+        fill(value) {
+            const text = (value ?? '').replace(/\D/g, '').slice(0, this.length);
+            if (! text) return;
+            this.digits = Array(this.length).fill('').map((_, j) => text[j] ?? '');
+            this.boxes().forEach((box, j) => { box.value = this.digits[j]; });
             this.commit();
-            if (box.value && i < @js($length - 1)) this.focusBox(i + 1);
+            this.boxes()[Math.min(text.length, this.length - 1)]?.focus();
         },
-        onKeydown(i, event) {
-            if (event.key === 'Backspace' && ! event.target.value && i > 0) this.focusBox(i - 1);
+        onInput(index, event) {
+            const box = event.target;
+            const raw = box.value.replace(/\D/g, '');
+            // Autofill (mis. iOS) dapat menaruh seluruh kode di kotak pertama.
+            if (raw.length > 1) { this.fill(raw); return; }
+            box.value = raw;
+            this.digits[index] = raw;
+            this.commit();
+            if (raw) this.boxes()[index + 1]?.focus();
+        },
+        onKeydown(index, event) {
+            if (event.key === 'Backspace' && ! event.target.value && index > 0) {
+                this.boxes()[index - 1]?.focus();
+            }
         },
         onPaste(event) {
-            const text = (event.clipboardData?.getData('text') ?? '').replace(/\D/g, '').slice(0, @js($length));
-            if (! text) return;
             event.preventDefault();
-            this.digits = Array(@js($length)).fill('').map((_, j) => text[j] ?? '');
-            this.$refs.boxes.forEach((box, j) => { box.value = this.digits[j]; });
-            this.commit();
-            this.focusBox(Math.min(text.length, @js($length - 1)));
+            this.fill(event.clipboardData?.getData('text'));
         },
-        reset() { this.digits = Array(@js($length)).fill(''); this.$refs.boxes.forEach((b) => { b.value = ''; }); this.$refs.hidden.value = ''; }
+        reset() {
+            this.digits = Array(this.length).fill('');
+            this.boxes().forEach((box) => { box.value = ''; });
+            this.$refs.hidden.value = '';
+        }
     }"
     x-on:otp-resent.window="reset()"
 >
     <input type="hidden" x-ref="hidden" {{ $attributes->wire('model') }}>
 
-    <div class="flex justify-between gap-2" @paste="onPaste($event)">
-        <template x-for="i in @js($length)" :key="i">
+    <div x-ref="row" class="flex justify-center gap-2" @paste="onPaste($event)">
+        <template x-for="i in length" :key="i">
             <input
                 type="text"
                 inputmode="numeric"
                 autocomplete="one-time-code"
                 maxlength="1"
-                x-ref="boxes"
+                data-otp
                 aria-label="Digit OTP"
                 class="pkl-input h-12 w-10 shrink-0 text-center font-mono text-[1.25rem]"
+                @focus="$event.target.select()"
                 @input="onInput(i - 1, $event)"
                 @keydown="onKeydown(i - 1, $event)"
             >

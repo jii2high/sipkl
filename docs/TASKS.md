@@ -187,7 +187,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 
 # M5 — Plotting & Visitasi
 
-### [ ] T5.1 — Plotting guru, Surat Tugas Pembimbing, dan visitasi (F4 + F5)  · Ukuran: L
+### [x] T5.1 — Plotting guru, Surat Tugas Pembimbing, dan visitasi (F4 + F5)  · Ukuran: L
 **Cakupan**
 - **Plotting**: daftar company dengan placement resmi (≥ 1 siswa `sedang_pkl` pada company+periode), pilih guru dengan indikator beban kerja dan soft-warning multi-wilayah; 1 company + 1 periode = 1 guru; `AssignGuru` otomatis menerbitkan Surat Tugas Pembimbing (tanpa approval Hubin); siswa susulan mewarisi guru; `ReplaceGuru` membuat surat baru + audit; surat ditahan bila TTD Kepsek belum ada (notifikasi Hubin).
 - **Visitasi**: Kaprog mengajukan (multi-select perusahaan atau general) atau Hubin membuat manual; Hubin approve/reject (alasan wajib); nomor surat terbit; masa berlaku default 7 hari, inklusif 23:59:59 Jakarta; `ExpireVisitasiJob` harian; guru mengunggah dokumentasi (jpg/png ≤ 5MB); pengajuan untuk perusahaan bukan milik guru ditolak; reject boleh diajukan ulang sebagai record baru.
@@ -360,7 +360,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 | M0 — akun seeder | Kata sandi awal = NIS/NIP dengan `is_first_login = true` (BR-F1-2); satu akun per peran (siswa, walas, guru_pembimbing, kaprog, hubin, kepsek). |
 | M0 — daftar jurusan | Seeder memakai contoh `docs/schema.sql` (RPL, TKR, TP) dengan satu kelas per tingkat. Daftar jurusan resmi menunggu konfirmasi Hubin. |
 | M0 — `v_kuota_perusahaan` | Dibuat dengan `CREATE OR REPLACE VIEW` agar `migrate:fresh` tetap berhasil (view tidak ikut terhapus oleh drop tabel). |
-| M0 — database tes | Tes berjalan di MySQL `sipkl_test` (bukan SQLite) melalui `phpunit.xml`, supaya CHECK, generated column, dan FK komposit benar-benar diuji. |
+| M0 — database tes | Tes berjalan di MySQL `sistem_pkl_test` (bukan SQLite) melalui `phpunit.xml`, supaya CHECK, generated column, dan FK komposit benar-benar diuji. |
 | M0 — panel Filament | `->login()` diaktifkan pada kedua panel; panel `app` ditetapkan `->default()`. Dasbor hanya dapat dibuka di environment `local` sampai `T1.1` membuat model `User` mengimplementasikan `FilamentUser` dengan `canAccessPanel()` (aturan peran per panel). Panel login bawaan bersifat sementara sampai `T1.1` menggantinya dengan halaman Livewire kustom. |
 | M1 — status | DoD + seluruh KP-F1 teruji (Pest hijau). Halaman `/login`, `/login/otp`, `/login/password` dibuat sebagai Livewire kustom; login panel bawaan (`/app/login`, `/hubin/login`) dihapus dan tamu diarahkan ke `/login` lewat `PanelAuthenticate`. **CV halaman auth (360px/1280px, terang/gelap) menunggu cek manual di peramban.** |
 | M1 — hitungan resend | `otp.resend_max = 5` dimaknai 5 kirim ulang di atas kirim awal: 1 kirim awal + 5 resend = 6 kirim diizinkan per jendela 30 menit; kirim ke-7 ditolak (resend ke-6), sesuai KP-F1-2. Dihitung lewat RateLimiter `otp-resend` (bukan kolom tambahan). |
