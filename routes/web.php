@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\ThemePreferenceController;
+use App\Http\Controllers\VisitasiDocumentationDownloadController;
 use App\Livewire\Auth\ForcePasswordChange;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\OtpChallenge;
@@ -28,4 +29,8 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/documents/{jenis}/{id}', DocumentDownloadController::class)
         ->whereNumber('id')
         ->name('documents.download');
+
+    Route::get('/visitasi-dokumentasi/{id}', VisitasiDocumentationDownloadController::class)
+        ->whereNumber('id')
+        ->name('visitasi.documentation.download');
 });

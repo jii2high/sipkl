@@ -33,7 +33,7 @@ Buat dua database (satu untuk aplikasi, satu untuk tes):
 
 ```bash
 mysql -u root -e "CREATE DATABASE sipkl CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -u root -e "CREATE DATABASE sipkl_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -e "CREATE DATABASE sistem_pkl_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
 Sesuaikan `.env`, lalu jalankan migrasi beserta data awal:
@@ -57,7 +57,7 @@ menjalankan seeder. Jalankan `php artisan migrate --seed` terpisah.
 | Variabel | Keterangan |
 |---|---|
 | `APP_URL` | Alamat aplikasi, mis. `http://localhost:8000`. Dipakai saat membentuk tautan QR verifikasi surat. |
-| `DB_*` | Koneksi MySQL. Default `sipkl`, user `root`, tanpa sandi. |
+| `DB_*` | Koneksi MySQL. Default `sistem_pkl`, user `root`, tanpa sandi. |
 | `APP_TIMEZONE` | Biarkan `UTC`. Tanggal kalender operasional dihitung di `Asia/Jakarta` oleh kode. |
 | `PKL_EMAIL_DOMAIN` | Domain email yang boleh login (default `smkn1kotabekasi.sch.id`). |
 | `PKL_MAIL_OVERRIDE_TO` | Isi dengan email nyata Anda. Seluruh email lokal dialihkan ke alamat ini agar OTP bisa dibaca. Kosongkan untuk mematikan. |
@@ -75,12 +75,13 @@ aplikasi langsung meminta ganti kata sandi pada login pertama. Jangan menjalanka
 
 ## Menjalankan
 
-Tiga proses terpisah, masing-masing di terminalnya sendiri:
+Empat proses terpisah, masing-masing di terminalnya sendiri:
 
 ```bash
 php artisan serve        # aplikasi di http://127.0.0.1:8000
 npm run dev              # Vite (Tailwind/Livewire) saat mengembangkan tampilan
 php artisan queue:work   # worker antrean
+php artisan schedule:work # scheduler lokal, termasuk kedaluwarsa surat visitasi
 ```
 
 Worker antrean wajib hidup: penerbitan PDF surat, QR, dan pengiriman notifikasi
@@ -113,7 +114,7 @@ Pastikan direktori `storage/` dan `bootstrap/cache/` dapat ditulis proses PHP.
 php artisan test
 ```
 
-Tes berjalan di database `sipkl_test` (lihat `phpunit.xml`), memakai
+Tes berjalan di database `sistem_pkl_test` (lihat `phpunit.xml`), memakai
 `QUEUE_CONNECTION=sync` dan `MAIL_MAILER=array`, jadi tidak mengganggu data lokal.
 `APP_KEY` harus terisi karena token QR verifikasi dihitung dari kunci itu.
 

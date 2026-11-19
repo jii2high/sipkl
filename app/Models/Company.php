@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'nama',
@@ -37,5 +38,17 @@ class Company extends Model
             'pembimbing_industri_email_verified_at' => 'datetime',
             'kepala_industri_email_verified_at' => 'datetime',
         ];
+    }
+
+    /** @return HasMany<PengajuanSiswa, $this> */
+    public function pengajuanSiswa(): HasMany
+    {
+        return $this->hasMany(PengajuanSiswa::class);
+    }
+
+    /** @return HasMany<GuruPembimbingPlotting, $this> */
+    public function plottings(): HasMany
+    {
+        return $this->hasMany(GuruPembimbingPlotting::class);
     }
 }

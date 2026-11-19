@@ -339,18 +339,22 @@ CREATE TABLE nomor_surat_counters (
 
 CREATE TABLE surat_tugas_pembimbing (
     id                          BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    guru_pembimbing_plotting_id BIGINT UNSIGNED NOT NULL UNIQUE,   -- 1 plotting = 1 surat; periode lewat plotting
+    guru_pembimbing_plotting_id BIGINT UNSIGNED NOT NULL,           -- satu plotting menyimpan riwayat surat pengganti
+    guru_id                     BIGINT UNSIGNED NOT NULL,           -- snapshot guru penerima surat
     tahun_ajaran                VARCHAR(9) NOT NULL,
     nomor_urut                  INT UNSIGNED NOT NULL,
     nomor_surat                 VARCHAR(100) NOT NULL,
     signature_asset_id          BIGINT UNSIGNED NOT NULL,          -- TTD Kepsek otomatis (AC-20)
     signed_at                   TIMESTAMP NOT NULL,
     file_path                   VARCHAR(500) NULL,
+    superseded_at               TIMESTAMP NULL,
     created_at                  TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (guru_pembimbing_plotting_id) REFERENCES guru_pembimbing_plotting(id),
+    FOREIGN KEY (guru_id) REFERENCES users(id),
     FOREIGN KEY (signature_asset_id) REFERENCES signature_assets(id),
     UNIQUE KEY uq_stp_nomor_urut (tahun_ajaran, nomor_urut),
-    UNIQUE KEY uq_stp_nomor_surat (tahun_ajaran, nomor_surat)
+    UNIQUE KEY uq_stp_nomor_surat (tahun_ajaran, nomor_surat),
+    INDEX idx_stp_current (guru_pembimbing_plotting_id, superseded_at)
 ) ENGINE=InnoDB;
 
 CREATE TABLE surat_tugas_visitasi (

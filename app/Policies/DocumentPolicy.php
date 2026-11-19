@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\Role;
+use App\Models\Company;
 use App\Models\PengajuanPkl;
 use App\Models\SuratTugasPembimbing;
 use App\Models\SuratTugasVisitasi;
@@ -22,6 +23,16 @@ class DocumentPolicy extends Policy
             return true;
         }
 
+        if ($document instanceof SuratTugasPembimbing
+            && $this->hasActiveRole($user, Role::Kaprog->value)) {
+            return (int) $document->plotting?->plotted_by === (int) $user->getKey();
+        }
+
+        if ($document instanceof SuratTugasVisitasi
+            && $this->hasActiveRole($user, Role::Kaprog->value)) {
+            return (int) $document->kaprog_id === (int) $user->getKey();
+        }
+
         if ($document instanceof PengajuanPkl && $this->hasActiveRole($user, Role::Siswa->value)) {
             return $document->students()->where('siswa_id', $user->getKey())->exists();
         }
@@ -31,7 +42,7 @@ class DocumentPolicy extends Policy
         }
 
         if ($document instanceof SuratTugasPembimbing) {
-            return $document->plotting?->guru_id === $user->getKey();
+            return (int) $document->guru_id === (int) $user->getKey();
         }
 
         if ($document instanceof SuratTugasVisitasi) {
@@ -47,5 +58,49 @@ class DocumentPolicy extends Policy
     {
         return $this->hasActiveRole($user, Role::Hubin->value)
             && $group->status === 'terbentuk';
+    }
+
+    public function viewAny(User $user): bool
+    {
+        return $this->hasActiveRole($user, Role::Kaprog->value, Role::Hubin->value, Role::GuruPembimbing->value);
+    }
+
+    public function view(User $user, SuratTugasVisitasi $visitasi): bool
+    {
+        return match ($this->activeRole($user)) {
+            Role::Hubin->value => true,
+            Role::Kaprog->value => (int) $visitasi->kaprog_id === (int) $user->getKey(),
+            Role::GuruPembimbing->value => (int) $visitasi->guru_id === (int) $user->getKey(),
+            default => false,
+        };
+    }
+
+    public function create(User $user): bool
+    {
+        return $this->hasActiveRole($user, Role::Kaprog->value, Role::Hubin->value);
+    }
+
+    public function approve(User $user, SuratTugasVisitasi $visitasi): bool
+    {
+        return $this->hasActiveRole($user, Role::Hubin->value)
+            && $visitasi->status === 'diajukan';
+    }
+
+    public function issue(User $user, SuratTugasVisitasi $visitasi): bool
+    {
+        return $this->hasActiveRole($user, Role::Hubin->value)
+            && in_array($visitasi->status, ['disetujui', 'dicetak', 'aktif'], true);
+    }
+
+    public function reject(User $user, SuratTugasVisitasi $visitasi): bool
+    {
+        return $this->approve($user, $visitasi);
+    }
+
+    public function upload(User $user, SuratTugasVisitasi $visitasi): bool
+    {
+        return $this->hasActiveRole($user, Role::GuruPembimbing->value)
+            && (int) $visitasi->guru_id === (int) $user->getKey()
+            && in_array($visitasi->status, ['disetujui', 'dicetak', 'aktif'], true);
     }
 }

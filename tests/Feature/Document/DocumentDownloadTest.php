@@ -39,6 +39,7 @@ function pklDownloadContext(): array
 
     $surat = SuratTugasPembimbing::query()->create([
         'guru_pembimbing_plotting_id' => $plotting->getKey(),
+        'guru_id' => $guru->getKey(),
         'tahun_ajaran' => '2025/2026',
         'nomor_urut' => 1,
         'nomor_surat' => 'KPG.11.01/0001/SMKN.1-CADISDIK WIL 3',

@@ -95,6 +95,12 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(OtpCode::class);
     }
 
+    /** @return HasMany<GuruPembimbingPlotting, $this> */
+    public function plottings(): HasMany
+    {
+        return $this->hasMany(GuruPembimbingPlotting::class, 'guru_id');
+    }
+
     /** @return BelongsTo<Jurusan, $this> */
     public function jurusan(): BelongsTo
     {

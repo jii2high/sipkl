@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\ExpireVisitasiJob;
 use App\Jobs\ProvisionalReminderJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -14,3 +15,8 @@ Schedule::job(new ProvisionalReminderJob)
     ->dailyAt('07:00')
     ->timezone('Asia/Jakarta')
     ->name('pengingat-provisional');
+
+Schedule::job(new ExpireVisitasiJob)
+    ->dailyAt('01:00')
+    ->timezone('Asia/Jakarta')
+    ->name('kedaluwarsa-visitasi');

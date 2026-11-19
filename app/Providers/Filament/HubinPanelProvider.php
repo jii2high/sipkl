@@ -37,6 +37,11 @@ class HubinPanelProvider extends PanelProvider
                 'danger' => Color::Red,
             ])
             ->darkMode(true)
+            // Token dan aturan sentuh Design.md juga berlaku di panel Filament.
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): View => view('filament.panel-assets'),
+            )
             // Login ditangani halaman Livewire kustom `/login` (T1.1).
             ->renderHook(
                 PanelsRenderHook::TOPBAR_END,

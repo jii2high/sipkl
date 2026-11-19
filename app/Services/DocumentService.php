@@ -85,6 +85,10 @@ final class DocumentService
     {
         $this->assertDocument($document, $jenisSurat);
 
+        if (! $document->exists && $document instanceof SuratTugasPembimbing) {
+            return $this->issueNewSupervisorLetter($document, $tahunAjaran, $issuedBy);
+        }
+
         if ($document->getAttribute('nomor_surat') !== null) {
             return $document;
         }
@@ -131,6 +135,43 @@ final class DocumentService
         // PDF dibuat di queue; kegagalan tidak membuat nomor terpakai tanpa dokumen
         // (BR-F12-4). Retry memakai nomor dan path yang sama.
         GenerateDocumentPdfJob::dispatch($jenisSurat, (int) $document->getKey());
+
+        return $document;
+    }
+
+    private function issueNewSupervisorLetter(SuratTugasPembimbing $document, string $tahunAjaran, ?User $issuedBy): SuratTugasPembimbing
+    {
+        $signature = $this->activeSignature() ?? $this->hold();
+
+        DB::transaction(function () use ($document, $tahunAjaran, $issuedBy, $signature): void {
+            $number = $this->numbers->allocate($tahunAjaran, self::JENIS_TUGAS_PEMBIMBING);
+
+            $document->fill([
+                'tahun_ajaran' => $tahunAjaran,
+                'guru_id' => $document->plotting()->value('guru_id'),
+                'nomor_urut' => $number['nomor_urut'],
+                'nomor_surat' => $number['nomor_surat'],
+                'signature_asset_id' => $signature->getKey(),
+                'signed_at' => now(),
+            ])->save();
+
+            $this->ensureQrToken(self::JENIS_TUGAS_PEMBIMBING, (int) $document->getKey(), $number['nomor_surat']);
+
+            app(AuditService::class)->log(
+                description: 'Surat tugas pembimbing diterbitkan',
+                subject: $document,
+                event: 'document_issued',
+                properties: [
+                    'jenis_surat' => self::JENIS_TUGAS_PEMBIMBING,
+                    'tahun_ajaran' => $tahunAjaran,
+                    'nomor_surat' => $number['nomor_surat'],
+                ],
+                causer: $issuedBy,
+            );
+        });
+
+        $document->refresh();
+        GenerateDocumentPdfJob::dispatch(self::JENIS_TUGAS_PEMBIMBING, (int) $document->getKey());
 
         return $document;
     }
@@ -483,8 +524,8 @@ final class DocumentService
 
         return [
             'guru' => [
-                'nama' => $plotting?->guru?->name,
-                'nip' => $plotting?->guru?->nis_nip,
+                'nama' => $document->guru?->name,
+                'nip' => $document->guru?->nis_nip,
             ],
             'company' => [
                 'nama' => $plotting?->company?->nama,

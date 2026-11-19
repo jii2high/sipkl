@@ -11,7 +11,7 @@ use Tests\TestCase;
 |--------------------------------------------------------------------------
 | Pest
 |--------------------------------------------------------------------------
-| Tes Feature memakai aplikasi + database MySQL nyata (sipkl_test) dan
+| Tes Feature memakai aplikasi + database MySQL nyata (sistem_pkl_test) dan
 | di-reset per tes. Tes Unit berjalan tanpa database.
 */
 
