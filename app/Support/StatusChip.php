@@ -64,6 +64,18 @@ final class StatusChip
         return self::CHIPS[$status][1] ?? 'neutral';
     }
 
+    /** Tone Design.md → warna komponen Filament yang setara. */
+    public static function color(string $status): string
+    {
+        return match (self::tone($status)) {
+            'success' => 'success',
+            'warning' => 'warning',
+            'danger' => 'danger',
+            'info' => 'info',
+            default => 'gray',
+        };
+    }
+
     /** Status tanpa pemetaan tetap tampil terbaca, bukan kunci mentah. */
     private static function humanize(string $status): string
     {

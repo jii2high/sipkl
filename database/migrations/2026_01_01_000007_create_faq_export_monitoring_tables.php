@@ -131,8 +131,8 @@ return new class extends Migration
                 related_id         BIGINT UNSIGNED NULL,
                 attempt_count      TINYINT UNSIGNED NOT NULL,
                 failure_summary    TEXT NOT NULL,
-                first_failed_at    TIMESTAMP NOT NULL,
-                last_failed_at     TIMESTAMP NOT NULL,
+                first_failed_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                last_failed_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 resolved_at        TIMESTAMP NULL,
                 FOREIGN KEY (recipient_user_id) REFERENCES users(id),
                 INDEX idx_notification_failure_monitor (resolved_at, last_failed_at)

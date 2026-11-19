@@ -2,6 +2,7 @@
 
 use App\Exceptions\DocumentIssuanceHeld;
 use App\Exceptions\InvalidTransition;
+use App\Exceptions\QuotaExceeded;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -47,6 +48,20 @@ return Application::configure(basePath: dirname(__DIR__))
                 'status' => 409,
                 'message' => $exception->getMessage(),
             ], 409);
+        });
+
+        // Kuota company+periode penuh (BR-F3-3): 409 tanpa efek samping.
+        $exceptions->render(function (QuotaExceeded $exception, Request $request) {
+            $status = $exception->httpStatus();
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $exception->getMessage()], $status);
+            }
+
+            return response()->view('errors.domain', [
+                'status' => $status,
+                'message' => $exception->getMessage(),
+            ], $status);
         });
     })
     ->registered(function (Application $app): void {

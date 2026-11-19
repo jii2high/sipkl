@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\Role;
+use App\Models\PengajuanPkl;
 use App\Models\SuratTugasPembimbing;
 use App\Models\SuratTugasVisitasi;
 use App\Models\User;
@@ -21,6 +22,10 @@ class DocumentPolicy extends Policy
             return true;
         }
 
+        if ($document instanceof PengajuanPkl && $this->hasActiveRole($user, Role::Siswa->value)) {
+            return $document->students()->where('siswa_id', $user->getKey())->exists();
+        }
+
         if (! $this->hasActiveRole($user, Role::GuruPembimbing->value)) {
             return false;
         }
@@ -35,5 +40,12 @@ class DocumentPolicy extends Policy
 
         // Surat pengantar (company group) belum punya pemilik per guru/siswa di T3.1.
         return false;
+    }
+
+    /** Menerbitkan surat pengantar per company group (T4.2). */
+    public function issueLetter(User $user, PengajuanPkl $group): bool
+    {
+        return $this->hasActiveRole($user, Role::Hubin->value)
+            && $group->status === 'terbentuk';
     }
 }

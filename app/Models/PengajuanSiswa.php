@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\PengajuanStatus;
+use App\Enums\Role;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -58,5 +61,67 @@ class PengajuanSiswa extends Model
     public function siswa(): BelongsTo
     {
         return $this->belongsTo(User::class, 'siswa_id');
+    }
+
+    /** @return BelongsTo<Company, $this> */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /** @return BelongsTo<AcademicPeriod, $this> */
+    public function academicPeriod(): BelongsTo
+    {
+        return $this->belongsTo(AcademicPeriod::class);
+    }
+
+    /** @return BelongsTo<PengajuanPkl, $this> */
+    public function pengajuanPkl(): BelongsTo
+    {
+        return $this->belongsTo(PengajuanPkl::class, 'pengajuan_pkl_id');
+    }
+
+    /** Pengajuan masih dihitung aktif (BR-F3-1). */
+    public function isActive(): bool
+    {
+        return ! in_array($this->status, [
+            PengajuanStatus::Rejected->value,
+            PengajuanStatus::Withdrawn->value,
+        ], true);
+    }
+
+    /** Kontak perusahaan boleh tampil utuh setelah Kaprog menyetujui (PRD F3 alur 1). */
+    public function contactUnlocked(): bool
+    {
+        return ! in_array($this->status, [
+            PengajuanStatus::Draft->value,
+            PengajuanStatus::MenungguVerifikasiKaprog->value,
+            PengajuanStatus::DitolakKaprog->value,
+        ], true);
+    }
+
+    /**
+     * Batasi query sesuai scope peran aktif (TRD.md §7.3). Dipakai daftar/antrean
+     * Filament agar data di luar scope tidak pernah terkirim ke browser.
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeVisibleTo(Builder $query, User $user, ?string $role = null): Builder
+    {
+        $role ??= session('active_role');
+
+        return match ($role) {
+            Role::Siswa->value => $query->where('siswa_id', $user->getKey()),
+            Role::Kaprog->value => $query->whereHas(
+                'siswa',
+                fn (Builder $student) => $student->where('jurusan_id', $user->roleScopeId(Role::Kaprog)),
+            ),
+            Role::Walas->value => $query->whereHas(
+                'siswa',
+                fn (Builder $student) => $student->where('kelas_id', $user->roleScopeId(Role::Walas)),
+            ),
+            default => $query->whereRaw('1 = 0'),
+        };
     }
 }

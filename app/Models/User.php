@@ -124,6 +124,23 @@ class User extends Authenticatable implements FilamentUser
         return array_intersect($wanted, $this->roleValues()) !== [];
     }
 
+    /**
+     * Id scope peran (jurusan untuk Kaprog, kelas untuk Walas) dari `user_roles`.
+     * Peran tanpa scope atau baris peran yang tidak ada menghasilkan null.
+     */
+    public function roleScopeId(Role|string $role): ?int
+    {
+        $role = $role instanceof Role ? $role->value : $role;
+
+        $row = $this->roles()->where('role', $role)->first();
+
+        return match ($role) {
+            Role::Kaprog->value => $row?->jurusan_id !== null ? (int) $row->jurusan_id : null,
+            Role::Walas->value => $row?->kelas_id !== null ? (int) $row->kelas_id : null,
+            default => null,
+        };
+    }
+
     /** Peran aktif default setelah login, menurut prioritas di `Role::defaultPriority()`. */
     public function defaultActiveRole(): ?string
     {
