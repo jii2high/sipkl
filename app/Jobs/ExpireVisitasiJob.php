@@ -23,6 +23,7 @@ class ExpireVisitasiJob implements ShouldQueue
 
         SuratTugasVisitasi::query()
             ->whereIn('status', ['disetujui', 'dicetak', 'aktif'])
+            ->whereNotNull('nomor_surat')
             ->where('tanggal_selesai', '<', JakartaTime::today()->toDateString())
             ->chunkById(100, function ($visitasiList) use ($expire): void {
                 foreach ($visitasiList as $visitasi) {

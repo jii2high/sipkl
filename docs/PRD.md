@@ -296,10 +296,10 @@ Format tiap fitur: **Aktor → Alur → Aturan bisnis (BR) → Edge case → Kri
 
 **Aktor**: Kaprog, Hubin, Guru.
 
-**Alur**: Kaprog mengajukan (multi-select perusahaan atau general) atau Hubin membuat manual → Hubin approve/reject (alasan wajib bila reject) → nomor surat terbit → Kaprog mencetak → guru memakai selama masa berlaku dan mengunggah dokumentasi (jpg/png ≤ 5MB).
+**Alur**: Kaprog mengajukan (multi-select perusahaan atau general) atau Hubin membuat manual → Hubin approve/reject (alasan wajib bila reject; keputusan tidak menunggu TTD) → surat terbit (nomor + PDF) bila scan TTD Kepsek tersedia, bila belum surat ditahan tanpa nomor sampai TTD diunggah → Kaprog mencetak → guru memakai selama masa berlaku dan mengunggah dokumentasi (jpg/png ≤ 5MB).
 
 **Aturan bisnis**
-- BR-F5-1: Default masa berlaku 7 hari; `tanggal_selesai` inklusif 23:59:59 Jakarta.
+- BR-F5-1: Default masa berlaku 7 hari dihitung dari tanggal surat terbit; `tanggal_selesai` inklusif 23:59:59 Jakarta (Q-L).
 - BR-F5-2: Job harian menandai `kedaluwarsa`; guru tidak bisa memakai surat kedaluwarsa.
 - BR-F5-3: Reject → Kaprog boleh mengajukan ulang.
 - BR-F5-4: Pengajuan untuk perusahaan yang bukan milik guru ditolak.
@@ -614,6 +614,7 @@ Default tetap dipakai sampai PO memutuskan. Kolom **Status** membedakan yang but
 | Q-I | Status kelulusan sidang: siapa/rumus? | Opsional, diisi manual Kaprog; kosong bila tidak ada | Default dipakai |
 | Q-J | Penggantian guru setelah plotting: perlu surat baru? | Ya, surat baru dengan jejak audit | Default dipakai |
 | **Q-K** *(baru)* | Apa definisi 5 kolom kanban Walas? v2 hanya menyebut "5 kolom". | Lima kolom mengikuti posisi pengajuan siswa: (1) Pengajuan & verifikasi, (2) Surat & balasan perusahaan, (3) PKL & bimbingan, (4) Pengesahan laporan (5-TTD), (5) Sidang & selesai | **Perlu keputusan PO** (usulan, bukan dari sumber) |
+| **Q-L** *(baru)* | Masa berlaku visitasi dihitung dari tanggal approve atau tanggal terbit surat? | Dari tanggal terbit surat; surat yang tertahan (TTD Kepsek belum diunggah) tidak memotong masa berlaku, dan tanggal dibekukan saat nomor dialokasikan | **Keputusan PO: dari tanggal terbit** |
 
 # LAMPIRAN C — GLOSARIUM
 

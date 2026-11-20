@@ -73,13 +73,15 @@
                                 <x-status-badge :status="$visitasi->status" />
                             </div>
                             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $visitasi->is_general ? 'Seluruh perusahaan bimbingan' : $visitasi->companies->pluck('company.nama')->filter()->join(', ') }}</p>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Berlaku {{ $visitasi->tanggal_mulai->format('d/m/Y') }}–{{ $visitasi->tanggal_selesai->format('d/m/Y') }}</p>
                             @if ($visitasi->nomor_surat)
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Berlaku {{ $visitasi->tanggal_mulai->format('d/m/Y') }}–{{ $visitasi->tanggal_selesai->format('d/m/Y') }}</p>
                                 <a class="mt-2 inline-block text-sm text-primary-600 underline" href="{{ route('documents.download', ['jenis' => 'surat_tugas_visitasi', 'id' => $visitasi->id]) }}">Unduh {{ $visitasi->nomor_surat }}</a>
+                            @else
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Masa berlaku dihitung saat surat terbit.</p>
                             @endif
                             @if ($visitasi->rejection_note)<p class="mt-2 text-sm text-danger-700">Alasan: {{ $visitasi->rejection_note }}</p>@endif
                         </div>
-                        @if (session('active_role') === 'guru_pembimbing' && in_array($visitasi->status, ['disetujui', 'dicetak', 'aktif'], true) && $visitasi->tanggal_selesai->toDateString() >= now()->timezone('Asia/Jakarta')->toDateString())
+                        @if (session('active_role') === 'guru_pembimbing' && $visitasi->nomor_surat && in_array($visitasi->status, ['disetujui', 'dicetak', 'aktif'], true) && $visitasi->tanggal_selesai->toDateString() >= now()->timezone('Asia/Jakarta')->toDateString())
                             <x-filament::button class="min-h-11" color="gray" wire:click="selectUpload({{ $visitasi->id }})">Unggah dokumentasi</x-filament::button>
                         @endif
                     </div>

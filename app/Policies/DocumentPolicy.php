@@ -101,6 +101,7 @@ class DocumentPolicy extends Policy
     {
         return $this->hasActiveRole($user, Role::GuruPembimbing->value)
             && (int) $visitasi->guru_id === (int) $user->getKey()
+            && $visitasi->nomor_surat !== null
             && in_array($visitasi->status, ['disetujui', 'dicetak', 'aktif'], true);
     }
 }

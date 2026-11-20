@@ -4,10 +4,14 @@ use App\Actions\Plotting\AssignGuru;
 use App\Actions\Plotting\IssueSuratTugasPembimbing;
 use App\Actions\Plotting\ReplaceGuru;
 use App\Actions\Visitasi\ApproveVisitasi;
+use App\Actions\Visitasi\IssueSuratTugasVisitasi;
 use App\Actions\Visitasi\RejectVisitasi;
 use App\Actions\Visitasi\RequestVisitasi;
 use App\Actions\Visitasi\UploadDokumentasi;
 use App\Enums\PengajuanStatus;
+use App\Filament\App\Pages\PlottingGuru;
+use App\Filament\App\Pages\Visitasi as VisitasiPage;
+use App\Filament\Hubin\Pages\KelolaVisitasi;
 use App\Jobs\ExpireVisitasiJob;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
@@ -23,13 +27,12 @@ use App\Models\User;
 use App\Models\UserRole;
 use App\Models\VisitasiDokumentasi;
 use App\Notifications\Notification as PklNotification;
-use App\Filament\App\Pages\PlottingGuru;
-use App\Filament\App\Pages\Visitasi as VisitasiPage;
-use App\Filament\Hubin\Pages\KelolaVisitasi;
 use App\Services\PlottingService;
 use App\Support\JakartaTime;
 use Filament\Facades\Filament;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -404,4 +407,166 @@ test('hubin visitasi page renders', function () {
     Livewire::test(KelolaVisitasi::class)
         ->assertOk()
         ->assertSee('Pengelolaan Visitasi');
+});
+
+test('approve visitasi tanpa TTD kepsek tetap disetujui dan Hubin diberi tahu', function () {
+    $context = plottingContext(withSignature: false);
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    Notification::fake();
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+
+    $visitasi->refresh();
+
+    expect($visitasi->status)->toBe('disetujui')
+        ->and($visitasi->nomor_surat)->toBeNull()
+        ->and($visitasi->approved_at)->not->toBeNull();
+
+    Notification::assertSentTo($context['hubin'], PklNotification::class);
+});
+
+test('penerbitan surat visitasi membekukan masa berlaku sejak hari terbit', function () {
+    $context = plottingContext(withSignature: false);
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+    expect($visitasi->refresh()->nomor_surat)->toBeNull();
+
+    $this->travel(3)->days();
+
+    Storage::disk('local')->put('signature/ttd-terbit.png', UploadedFile::fake()->image('ttd-terbit.png')->getContent());
+    SignatureAsset::query()->create([
+        'owner_user_id' => pklUser(['kepsek'])->getKey(),
+        'file_path' => 'signature/ttd-terbit.png',
+        'is_active' => true,
+        'uploaded_by' => $context['hubin']->getKey(),
+    ]);
+
+    app(IssueSuratTugasVisitasi::class)->handle($visitasi->refresh(), $context['hubin']);
+    $visitasi->refresh();
+
+    $start = JakartaTime::today();
+
+    expect($visitasi->nomor_surat)->not->toBeNull()
+        ->and($visitasi->tanggal_mulai->toDateString())->toBe($start->toDateString())
+        ->and($visitasi->tanggal_selesai->toDateString())->toBe($start->addDays(6)->toDateString())
+        ->and(Storage::disk('local')->allFiles('documents/surat_tugas_visitasi'))->not->toBeEmpty();
+});
+
+test('menerbitkan ulang surat visitasi memakai nomor dan tanggal yang sama', function () {
+    $context = plottingContext();
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+    $visitasi->refresh();
+
+    $nomor = $visitasi->nomor_surat;
+    $mulai = $visitasi->tanggal_mulai->toDateString();
+
+    $this->travel(2)->days();
+    app(IssueSuratTugasVisitasi::class)->handle($visitasi->refresh(), $context['hubin']);
+    $visitasi->refresh();
+
+    expect($visitasi->nomor_surat)->toBe($nomor)
+        ->and($visitasi->tanggal_mulai->toDateString())->toBe($mulai)
+        ->and(DocumentQrToken::query()->where('document_type', 'surat_tugas_visitasi')->count())->toBe(1);
+});
+
+test('penerbitan dini hari memakai tanggal Jakarta bukan UTC', function () {
+    $context = plottingContext(withSignature: false);
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+
+    $this->travelTo(Carbon::parse('2026-11-20 02:30:00', 'Asia/Jakarta'));
+
+    Storage::disk('local')->put('signature/ttd-subuh.png', UploadedFile::fake()->image('ttd-subuh.png')->getContent());
+    SignatureAsset::query()->create([
+        'owner_user_id' => pklUser(['kepsek'])->getKey(),
+        'file_path' => 'signature/ttd-subuh.png',
+        'is_active' => true,
+        'uploaded_by' => $context['hubin']->getKey(),
+    ]);
+
+    app(IssueSuratTugasVisitasi::class)->handle($visitasi->refresh(), $context['hubin']);
+    $visitasi->refresh();
+
+    expect($visitasi->tanggal_mulai->toDateString())->toBe('2026-11-20')
+        ->and($visitasi->tanggal_selesai->toDateString())->toBe('2026-11-26');
+});
+
+test('job kedaluwarsa mengabaikan visitasi tanpa nomor', function () {
+    $context = plottingContext(withSignature: false);
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+    $visitasi->update(['tanggal_mulai' => '2026-11-01', 'tanggal_selesai' => '2026-11-02']);
+
+    Cache::flush();
+    ExpireVisitasiJob::dispatchSync();
+
+    expect($visitasi->refresh()->status)->toBe('disetujui');
+});
+
+test('dokumentasi visitasi ditolak saat surat belum bernomor', function () {
+    $context = plottingContext(withSignature: false);
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+
+    grantActiveRole('guru_pembimbing');
+
+    expect(fn () => app(UploadDokumentasi::class)->handle(
+        $visitasi->refresh(),
+        $context['company']->getKey(),
+        JakartaTime::today()->toDateString(),
+        UploadedFile::fake()->image('kunjungan.jpg'),
+        $context['guru'],
+        null,
+    ))->toThrow(AuthorizationException::class);
+});
+
+test('tombol terbitkan surat hubin menerbitkan nomor setelah TTD tersedia', function () {
+    $context = plottingContext(withSignature: false);
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+
+    Storage::disk('local')->put('signature/ttd-tombol.png', UploadedFile::fake()->image('ttd-tombol.png')->getContent());
+    SignatureAsset::query()->create([
+        'owner_user_id' => pklUser(['kepsek'])->getKey(),
+        'file_path' => 'signature/ttd-tombol.png',
+        'is_active' => true,
+        'uploaded_by' => $context['hubin']->getKey(),
+    ]);
+
+    Filament::setCurrentPanel(Filament::getPanel('hubin'));
+    $this->actingAs($context['hubin'])->withSession(['active_role' => 'hubin']);
+
+    Livewire::test(KelolaVisitasi::class)
+        ->call('issueLetter', $visitasi->getKey())
+        ->assertOk();
+
+    expect($visitasi->refresh()->nomor_surat)->not->toBeNull();
 });

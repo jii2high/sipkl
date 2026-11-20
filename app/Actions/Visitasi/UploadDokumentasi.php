@@ -29,6 +29,11 @@ final class UploadDokumentasi extends Action
         Gate::forUser($guru)->authorize('upload', $visitasi);
         $companyId = (int) $companyId;
         $visitasi->refresh();
+
+        if ($visitasi->nomor_surat === null) {
+            throw ValidationException::withMessages(['visitasi' => 'Surat visitasi belum diterbitkan.']);
+        }
+
         $today = JakartaTime::today()->toDateString();
 
         if ($visitasi->tanggal_selesai->toDateString() < $today) {
@@ -59,6 +64,10 @@ final class UploadDokumentasi extends Action
         try {
             return $this->transaction(function () use ($visitasi, $companyId, $date, $guru, $note, $path): VisitasiDokumentasi {
                 $locked = SuratTugasVisitasi::query()->whereKey($visitasi->getKey())->lockForUpdate()->firstOrFail();
+
+                if ($locked->nomor_surat === null) {
+                    throw ValidationException::withMessages(['visitasi' => 'Surat visitasi belum diterbitkan.']);
+                }
 
                 if (! in_array($locked->status, ['disetujui', 'dicetak', 'aktif'], true)
                     || $locked->tanggal_selesai->toDateString() < JakartaTime::today()->toDateString()) {

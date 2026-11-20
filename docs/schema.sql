@@ -385,7 +385,7 @@ CREATE TABLE surat_tugas_visitasi (
     CONSTRAINT ck_stv_tanggal CHECK (tanggal_selesai >= tanggal_mulai),
     CONSTRAINT ck_stv_kaprog CHECK (diajukan_oleh <> 'kaprog' OR kaprog_id IS NOT NULL),
     CONSTRAINT ck_stv_reject_note CHECK (status <> 'ditolak' OR rejection_note IS NOT NULL),
-    CONSTRAINT ck_stv_nomor CHECK (status IN ('diajukan','ditolak') OR nomor_surat IS NOT NULL)
+    CONSTRAINT ck_stv_nomor CHECK (status IN ('diajukan','ditolak','disetujui') OR nomor_surat IS NOT NULL)  -- [Q-L] 'disetujui' boleh tanpa nomor; nomor & masa berlaku saat terbit
 ) ENGINE=InnoDB;
 
 CREATE TABLE surat_tugas_visitasi_companies (

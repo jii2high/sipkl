@@ -7,7 +7,6 @@ use App\Actions\Visitasi\IssueSuratTugasVisitasi;
 use App\Actions\Visitasi\RejectVisitasi;
 use App\Actions\Visitasi\RequestVisitasi;
 use App\Enums\Role;
-use App\Exceptions\DocumentIssuanceHeld;
 use App\Models\Company;
 use App\Models\SuratTugasVisitasi;
 use App\Models\User;
@@ -111,10 +110,6 @@ class KelolaVisitasi extends Page
 
         try {
             app(ApproveVisitasi::class)->handle($visitasi, auth()->user());
-        } catch (DocumentIssuanceHeld $exception) {
-            Notification::make()->title($exception->getMessage())->warning()->send();
-
-            return;
         } catch (ValidationException $exception) {
             $this->showValidation($exception);
 

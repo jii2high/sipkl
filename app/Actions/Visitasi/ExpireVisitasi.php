@@ -17,6 +17,7 @@ final class ExpireVisitasi extends Action
             $locked = SuratTugasVisitasi::query()->whereKey($visitasi->getKey())->lockForUpdate()->first();
 
             if ($locked === null
+                || $locked->nomor_surat === null
                 || ! in_array($locked->status, ['disetujui', 'dicetak', 'aktif'], true)
                 || $locked->tanggal_selesai->toDateString() >= JakartaTime::today()->toDateString()) {
                 return 0;
