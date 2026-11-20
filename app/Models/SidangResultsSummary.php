@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
     'academic_period_id',
     'nilai_total_per_kategori',
     'status_kelulusan',
+    'catatan_kelulusan',
     'nama_penguji',
     'tanggal_sidang',
     'synced_at',

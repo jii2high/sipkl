@@ -528,8 +528,8 @@ CREATE TABLE magic_links (
 CREATE TABLE external_sessions (
     id                  BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     magic_link_id       BIGINT UNSIGNED NOT NULL,
-    otp_code_hash       CHAR(64) NOT NULL,
-    otp_expires_at      TIMESTAMP NOT NULL,
+    otp_code_hash       CHAR(64) NULL,                       -- NULL untuk sesi PIN penguji
+    otp_expires_at      TIMESTAMP NULL,
     otp_attempt_count   TINYINT UNSIGNED NOT NULL DEFAULT 0,
     verified_at         TIMESTAMP NULL,
     session_expires_at  TIMESTAMP NULL,                    -- verified_at + 24 jam (elapsed)
@@ -666,7 +666,9 @@ CREATE TABLE form_submission_siswa (
     CONSTRAINT ck_pivot_type CHECK (form_type = 'penilaian_industri')
 ) ENGINE=InnoDB;
 
--- Revisi nilai sidang: approver tunggal Kaprog; Kaprog TIDAK mengedit nilai. Penilaian industri tanpa revisi.
+-- Revisi nilai sidang: penguji mengajukan dari portal, Kaprog menyetujui (Q-I).
+-- Penilaian industri tanpa revisi. `approved_by_kaprog_id` dan kolom tautan unlock
+-- NULL selama status masih `menunggu_persetujuan`.
 CREATE TABLE nilai_sidang_revisions (
     id                     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     form_submission_id     BIGINT UNSIGNED NOT NULL,
@@ -674,10 +676,10 @@ CREATE TABLE nilai_sidang_revisions (
     jawaban_baru           JSON NULL,                      -- NULL sampai penguji submit ulang
     reported_by            ENUM('penguji','siswa') NOT NULL,
     reason                 TEXT NOT NULL,
-    approved_by_kaprog_id  BIGINT UNSIGNED NOT NULL,
-    unlock_magic_link_id   BIGINT UNSIGNED NOT NULL,
-    unlock_expires_at      TIMESTAMP NOT NULL,             -- +24 jam elapsed
-    status                 ENUM('menunggu_revisi','selesai','auto_relocked') NOT NULL DEFAULT 'menunggu_revisi',
+    approved_by_kaprog_id  BIGINT UNSIGNED NULL,
+    unlock_magic_link_id   BIGINT UNSIGNED NULL,
+    unlock_expires_at      TIMESTAMP NULL,                 -- +24 jam elapsed
+    status                 ENUM('menunggu_persetujuan','menunggu_revisi','selesai','auto_relocked') NOT NULL DEFAULT 'menunggu_persetujuan',
     created_at             TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (form_submission_id) REFERENCES form_submissions(id),
     FOREIGN KEY (approved_by_kaprog_id) REFERENCES users(id),
@@ -797,6 +799,7 @@ CREATE TABLE sidang_results_summary (
     academic_period_id        BIGINT UNSIGNED NOT NULL,
     nilai_total_per_kategori  JSON NOT NULL,
     status_kelulusan          VARCHAR(50) NULL,
+    catatan_kelulusan         TEXT NULL,                   -- Q-I: catatan manual Kaprog
     nama_penguji              VARCHAR(150) NOT NULL,
     tanggal_sidang            DATE NOT NULL,
     synced_at                 TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,

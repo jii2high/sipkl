@@ -3,6 +3,7 @@
 use App\Jobs\ExpireMagicLinksJob;
 use App\Jobs\ExpireVisitasiJob;
 use App\Jobs\ProvisionalReminderJob;
+use App\Jobs\RelockScoreJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -25,3 +26,8 @@ Schedule::job(new ExpireVisitasiJob)
 Schedule::job(new ExpireMagicLinksJob)
     ->hourly()
     ->name('kedaluwarsa-magic-link');
+
+// Window revisi nilai sidang ditutup otomatis setelah 24 jam (KP-F9-4).
+Schedule::job(new RelockScoreJob)
+    ->hourly()
+    ->name('kunci-ulang-nilai-sidang');
