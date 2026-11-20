@@ -32,7 +32,7 @@ php artisan key:generate
 Buat dua database (satu untuk aplikasi, satu untuk tes):
 
 ```bash
-mysql -u root -e "CREATE DATABASE sipkl CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -e "CREATE DATABASE sistem_pkl CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 mysql -u root -e "CREATE DATABASE sistem_pkl_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
