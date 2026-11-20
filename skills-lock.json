@@ -3,14 +3,14 @@
   "skills": {
     "antislop": {
       "source": "miqdadbadjuber/anti-slop",
-      "commit": "57b92d497a67c226b060b71c6f263c8631f37da4",
+      "commit": "44b3547ed6d6f21eed777271602da113efc53c94",
       "sourceType": "github",
       "skillPath": "skills/antislop/SKILL.md",
-      "computedHash": "5db1f692cb9722e0f642e9a378d8c44b011a102726efb41bf0003c8c37f0a137"
+      "computedHash": "4edc2d79b9dc05d48cef291ccda1d5ea5d832d5a67030e843f4f40280ae650fe"
     },
     "antislop-code": {
       "source": "miqdadbadjuber/anti-slop",
-      "commit": "57b92d497a67c226b060b71c6f263c8631f37da4",
+      "commit": "44b3547ed6d6f21eed777271602da113efc53c94",
       "sourceType": "github",
       "skillPath": "skills/antislop-code/SKILL.md",
       "computedHash": "4a2d3d64037896a3ab4e2c3df026e7a59fa92458617c65a2e0ed7fc3c456266a"
