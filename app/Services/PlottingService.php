@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Enums\Role;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
+use App\Models\GuruPembimbingPlotting;
+use App\Models\PengajuanSiswa;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -102,6 +104,33 @@ final class PlottingService
                     ->where('status', 'sedang_pkl')
                     ->whereHas('siswa', fn (Builder $student) => $student->where('jurusan_id', $jurusanId))))
             ->orderBy('name')
+            ->get();
+    }
+
+    /** Guru adalah pembimbing resmi untuk company+periode pengajuan ini (F6). */
+    public function isPembimbingOf(User $guru, PengajuanSiswa $pengajuan): bool
+    {
+        if ($pengajuan->company_id === null || $pengajuan->academic_period_id === null) {
+            return false;
+        }
+
+        return GuruPembimbingPlotting::query()
+            ->where('company_id', $pengajuan->company_id)
+            ->where('academic_period_id', $pengajuan->academic_period_id)
+            ->where('guru_id', $guru->getKey())
+            ->exists();
+    }
+
+    /** Siswa `sedang_pkl` yang dibimbing guru (semua company plotting-nya). @return Collection<int, PengajuanSiswa> */
+    public function studentsForGuru(User $guru): Collection
+    {
+        return PengajuanSiswa::query()
+            ->where('status', 'sedang_pkl')
+            ->whereHas('company.plottings', fn (Builder $query) => $query
+                ->where('guru_id', $guru->getKey())
+                ->whereColumn('guru_pembimbing_plotting.academic_period_id', 'pengajuan_siswa.academic_period_id'))
+            ->with(['siswa', 'company', 'bimbinganSubmissions', 'laporanVersions'])
+            ->orderBy('id')
             ->get();
     }
 }

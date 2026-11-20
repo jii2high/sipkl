@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'pengajuan_siswa_id',
@@ -32,5 +33,11 @@ class BimbinganSubmission extends Model
             'is_archived' => 'boolean',
             'archived_at' => 'datetime',
         ];
+    }
+
+    /** @return BelongsTo<PengajuanSiswa, $this> */
+    public function pengajuanSiswa(): BelongsTo
+    {
+        return $this->belongsTo(PengajuanSiswa::class, 'pengajuan_siswa_id');
     }
 }

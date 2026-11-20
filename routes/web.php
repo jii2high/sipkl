@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\BimbinganFileDownloadController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\LaporanFileDownloadController;
 use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\VisitasiDocumentationDownloadController;
 use App\Livewire\Auth\ForcePasswordChange;
@@ -29,6 +31,16 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/documents/{jenis}/{id}', DocumentDownloadController::class)
         ->whereNumber('id')
         ->name('documents.download');
+
+    // Unduhan berkas bimbingan (F6); otorisasi lewat BimbinganSubmissionPolicy.
+    Route::get('/bimbingan/{id}/unduh', BimbinganFileDownloadController::class)
+        ->whereNumber('id')
+        ->name('bimbingan.download');
+
+    // Unduhan laporan final 5-TTD (F7); otorisasi lewat LaporanVersionPolicy.
+    Route::get('/laporan/{version}/unduh', LaporanFileDownloadController::class)
+        ->whereNumber('version')
+        ->name('laporan.download');
 
     Route::get('/visitasi-dokumentasi/{id}', VisitasiDocumentationDownloadController::class)
         ->whereNumber('id')

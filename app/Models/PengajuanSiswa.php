@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Table(name: 'pengajuan_siswa')]
 #[Fillable([
@@ -79,6 +80,24 @@ class PengajuanSiswa extends Model
     public function pengajuanPkl(): BelongsTo
     {
         return $this->belongsTo(PengajuanPkl::class, 'pengajuan_pkl_id');
+    }
+
+    /** @return HasMany<BimbinganSubmission, $this> */
+    public function bimbinganSubmissions(): HasMany
+    {
+        return $this->hasMany(BimbinganSubmission::class);
+    }
+
+    /** @return HasMany<LaporanVersion, $this> */
+    public function laporanVersions(): HasMany
+    {
+        return $this->hasMany(LaporanVersion::class);
+    }
+
+    /** @return HasMany<DocumentSignature, $this> */
+    public function documentSignatures(): HasMany
+    {
+        return $this->hasMany(DocumentSignature::class);
     }
 
     /** Pengajuan masih dihitung aktif (BR-F3-1). */

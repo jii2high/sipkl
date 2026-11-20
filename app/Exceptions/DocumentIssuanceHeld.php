@@ -15,4 +15,9 @@ class DocumentIssuanceHeld extends RuntimeException
     {
         return new self(__('pkl.document.held_no_signature'));
     }
+
+    public static function noVerifiedSigner(): self
+    {
+        return new self(__('pkl.document.held_no_verified_signer'));
+    }
 }

@@ -200,7 +200,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 
 # M6 — Bimbingan & Pengesahan
 
-### [ ] T6.1 — Bimbingan laporan dan ACC final (F6)  · Ukuran: M
+### [x] T6.1 — Bimbingan laporan dan ACC final (F6)  · Ukuran: M
 **Cakupan**
 - Unggah bimbingan berulang (file pdf/doc/docx ≤ 10MB via `FileStorageService`, MIME dari isi, private) dan feedback guru (revisi/diterima).
 - Guard server: `is_provisional = false` dan ≥ 4 interaksi (yang tidak ter-archive) untuk "Bagian Akhir"; berlaku juga untuk request langsung ke endpoint.
@@ -211,7 +211,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 **Rujukan**: BR-F6-1…4; KP-F6-1…4; PRD §1.5(2).
 **Selesai bila**: KP-F6 lolos (provisional ditolak langsung ke endpoint; file `.exe` berekstensi `.pdf` ditolak); CV.
 
-### [ ] T6.2 — Infrastruktur akses eksternal: magic link, OTP eksternal, portal (F11)  · Ukuran: L
+### [x] T6.2 — Infrastruktur akses eksternal: magic link, OTP eksternal, portal (F11)  · Ukuran: L
 **Cakupan**
 - `MagicLinkService`: token ≥ 32 byte acak, simpan SHA-256, single-use, revocable, 1 aktif per (type, target) dengan `active_key`; reissue = revoke lama + terbit baru atomik; tipe `examiner_sidang`, `examiner_unlock`, `signer_step3`, `signer_step4`, `industry_assessment`.
 - `OtpService` eksternal (email, 5 menit, maks 3 percobaan) dan PIN 4 digit untuk penguji (3 salah → invalid); sesi eksternal 24 jam turunan token (revoke menutup sesi turunan); binding perangkat longgar (verifikasi tambahan, bukan penolakan keras).
@@ -221,7 +221,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 **Rujukan**: BR-F11-1…5, BR-F9-1, BR-F9-2; KP-F11-1…4; PRD §1.5(6).
 **Selesai bila**: KP-F11 lolos (token mentah tidak ada di DB/log; link tidak valid, kedaluwarsa, dan tidak ada menghasilkan pesan sama); CV pada layout eksternal.
 
-### [ ] T6.3 — Rantai pengesahan 5-TTD (F7)  · Ukuran: L
+### [x] T6.3 — Rantai pengesahan 5-TTD (F7)  · Ukuran: L
 **Cakupan**
 - Enum + transisi `laporan_signatures` (`pending → signed | rejected`), kode step 1–5. `SignStep` memastikan step N hanya setelah N-1 `signed`; `RejectStep` (catatan ≥ 10) tidak mereset step sebelumnya; `UploadRevisiLaporan` membuat versi baru dan kembali langsung ke step yang menolak.
 - Step 2 Kaprog dan step 5 Kepsek (single dan bulk; tiap laporan diproses independen, hasil per item dikembalikan); step 3/4 lewat magic link + OTP (`IssueSignerLink`, `ReissueSignerLink`) hanya setelah step sebelumnya `signed`.
@@ -399,10 +399,21 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 | T4.2 - tanggal PKL | `AcceptByCompany` memakai tanggal periode sebagai default; Kaprog dapat mengubah lewat form. Tanggal disimpan sebagai DATE (bukan timestamp) agar tidak bergeser zona waktu. |
 | T4.2 - surat pengantar | Unduhan untuk siswa memakai `DocumentPolicy::download` pada `PengajuanPkl` (anggota group). Nomor + PDF + QR tetap satu pintu di `DocumentService`; halaman Hubin hanya memanggil `IssueSuratPengantar`. |
 | T4.2 - penolakan penerimaan | `RejectByCompany` menolak satu siswa saja dan menyimpan catatan di `activity_log`; tidak ada kolom baru. Berbeda dari Gate 1/2, panjang catatan tidak dipaksa ≥ 10 karakter karena perusahaan yang menolak, bukan verifikasi sekolah. |
-| T4.2 - hook bimbingan | Hook arsip bimbingan pada `ApproveWithdrawal` sengaja masih komentar; tabel bimbingan baru ada di T6.1. Jangan lupa mengisi hook saat T6.1 dikerjakan. |
+| T4.2 - hook bimbingan | Hook arsip bimbingan pada `ApproveWithdrawal` sengaja masih komentar; tabel bimbingan baru ada di T6.1. Jangan lupa mengisi hook saat T6.1 dikerjakan. **Selesai di T6.1** (lihat baris "M6 - hook bimbingan T4.2"). |
 | T4.2 - UI | Halaman Hubin: `/hubin/antrean-surat-pengantar` dan `/hubin/konfirmasi-dokumen-fisik`. Antrean Kaprog `/app/antrean-pengajuan` kini memuat verifikasi, penerimaan setelah balasan, dan persetujuan penarikan; kolom kuota memakai komponen `quota-bar`. Halaman siswa menampilkan unggah surat balasan, unduh surat pengantar, dan form penarikan. |
 | T5.1 - approve vs terbit surat | Keputusan Hubin dipisah dari penerbitan surat: `ApproveVisitasi` hanya transisi `diajukan → disetujui` + audit, penerbitan dicoba setelah commit. Bila scan TTD Kepsek belum ada, surat ditahan (`disetujui` tanpa nomor) dan Hubin diberi tahu sekali lewat `DocumentService::hold()`; tombol "Terbitkan surat" di halaman Hubin menerbitkannya. `IssueSuratTugasVisitasi` memanggil `hold()` di luar transaksi agar notifikasi tidak ikut rollback. Migrasi `2026_06_02_000001` melonggarkan `ck_stv_nomor` agar `disetujui` boleh tanpa nomor. |
 | T5.1 - masa berlaku visitasi | Dihitung dari tanggal surat terbit (`IssueSuratTugasVisitasi`), bukan tanggal approve (Q-L); `tanggal_mulai/selesai` dibekukan di transaksi yang sama dengan pengambilan nomor lewat `LetterNumberService`, memakai `JakartaTime::today()`, rumus `mulai + (default_validity_days - 1)`. `ExpireVisitasiJob` dan `ExpireVisitasi` mengabaikan surat tanpa nomor. Guru tidak dapat mengunggah dokumentasi sebelum surat bernomor (`DocumentPolicy::upload` + `UploadDokumentasi`). |
+| M6 - status | T6.1, T6.2, T6.3 selesai (Pest hijau, 205 tes di MySQL; 18 tes baru: 5 bimbingan, 6 akses eksternal, 7 pengesahan). **CV layar bimbingan siswa/guru, portal `/eksternal/*`, dan halaman `Pengesahan Laporan` (360px/1280px, terang/gelap) menunggu cek manual di peramban.** |
+| M6 - `laporan_versions.is_legit` | Kolom ini ada di `docs/schema.sql` (dipakai `SignStep` untuk menandai versi sah saat step 5 `signed`) tetapi belum ada di migrasi. Ditambahkan lewat migrasi `2026_06_03_000001_add_is_legit_to_laporan_versions.php` + fillable/cast model, bukan kolom baru di luar skema. |
+| M6 - hook bimbingan T4.2 | Hook arsip bimbingan pada `ApproveWithdrawal` kini terisi: baris `bimbingan_submissions` siswa itu ditandai `is_archived = true` dalam transaksi yang sama, sehingga hitungan "≥ 4 interaksi" mulai dari 0 pada pengajuan baru (BR-F6-4). |
+| M6 - magic link | Satu link aktif per `(type, reference_id)` dijaga transaksi + `lockForUpdate`, bukan generated column `active_key` seperti `docs/schema.sql`: kolom itu tidak diperlukan karena penerbitan selalu mencabut pendahulunya dalam transaksi yang sama. `reissue` mewajibkan alasan (≥ 10 karakter) bila aktornya pengguna internal dan menulis audit `magic_link_reissued`; `revoke` menulis `magic_link_revoked`. Perangkat diikat longgar (`hash(User-Agent + 2 oktet IP)`) dan perbedaan perangkat memicu verifikasi ulang, bukan penolakan keras. |
+| M6 - OTP eksternal | `services/ExternalOtpService.php` terpisah dari `OtpService` internal karena TTL (5 menit vs 60 detik), sesi 24 jam, dan notifikasi berbeda. Kode disimpan sebagai SHA-256 di `external_sessions.otp_code_hash`, dikirim lewat `ExternalOtpNotification` (kanal email saja, tidak masuk `notifications`), dan sesi dianggap tidak sah bila link induknya dicabut/kedaluwarsa. |
+| M6 - portal eksternal | Guard `EnsureExternalToken` membaca `external_session_id` dari sesi web dan selalu menjawab 410 dengan halaman yang sama untuk link tidak ada, tidak valid, dan kedaluwarsa (pesan `pkl.eksternal.invalid_link`). Rute didaftarkan di `routes/eksternal.php` lewat `withRouting(then: ...)` supaya tetap memakai grup `web` tanpa menyentuh `/app`/`/hubin`. |
+| M6 - layar signer step 3/4 | Portal memakai satu alur (`SignerEntry` → OTP → `SignerStep`) yang dipakai bersama step 3 dan step 4; layar terpisah per step tidak dibuat karena isinya identik. |
+| M6 - Tahap 3/4 ditahan (Q-H) | Bila email signer industri belum terverifikasi, penerbitan tautan melempar `DocumentIssuanceHeld::noVerifiedSigner()` dan Hubin diberi notifikasi sekali per pembukaan step; rantai tetap tersimpan sampai step 2 `signed`. Ini pemakaian default Q-H (PRD Lampiran B), tanpa keputusan PO baru. |
+| M6 - bulk TTD | `BulkApproveSignatures` memproses tiap id dalam percobaan sendiri dan mengembalikan `approved`/`failed` per item; satu kegagalan tidak membatalkan yang lain (DESIGN.md "Bulk action"). Halaman menampilkan hasil per item setelah proses. |
+| M6 - revisi laporan | `UploadRevisiLaporan` membuat `laporan_versions` baru dengan `source_bimbingan_submission_id` disalin dari versi sebelumnya dan satu baris `document_signatures` `pending` pada step yang menolak; baris versi lama tidak diubah sehingga riwayat TTD tetap utuh. |
+| M6 - berkas | Unduhan internal laporan memakai `laporan.download` + `LaporanVersionPolicy`; portal eksternal memakai `eksternal.laporan`, yang hanya melayani sesi turunan tautan untuk baris tanda tangan itu. Keduanya membaca disk `local` (privat). |
 | Selisih struktur form vs `docs/form-penilaian-references/` | _(isi di T7.1)_ |
 | Hasil uji beban ekspor 1.752 siswa | _(isi di T10.1: durasi, ukuran chunk, indeks yang ditambah)_ |
 | Keputusan PO atas Q-A, Q-E, Q-F, Q-K | _(isi saat keputusan keluar atau di T10.2)_ |

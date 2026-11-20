@@ -3,6 +3,7 @@
 namespace App\Actions\Pengajuan;
 
 use App\Enums\PengajuanStatus;
+use App\Models\BimbinganSubmission;
 use App\Models\PengajuanSiswa;
 use App\Models\User;
 
@@ -52,9 +53,12 @@ final class ApproveWithdrawal extends PengajuanAction
                     ],
                 );
 
-                // T6.1: arsipkan histori bimbingan siswa di sini dan mulai hitungan 0
-                // pada record baru. Hook sengaja belum diisi agar T4.2 tidak
-                // bergantung pada tabel bimbingan yang belum ada.
+                // T6.1: arsipkan histori bimbingan siswa; unggahan berikutnya memakai
+                // record baru dan hitungan interaksi mulai dari 0 (BR-F6-4).
+                BimbinganSubmission::query()
+                    ->where('pengajuan_siswa_id', $pengajuan->getKey())
+                    ->where('is_archived', false)
+                    ->update(['is_archived' => true, 'archived_at' => now()]);
             }
 
             return $affected;

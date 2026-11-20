@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\ExpireMagicLinksJob;
 use App\Jobs\ExpireVisitasiJob;
 use App\Jobs\ProvisionalReminderJob;
 use Illuminate\Foundation\Inspiring;
@@ -20,3 +21,7 @@ Schedule::job(new ExpireVisitasiJob)
     ->dailyAt('01:00')
     ->timezone('Asia/Jakarta')
     ->name('kedaluwarsa-visitasi');
+
+Schedule::job(new ExpireMagicLinksJob)
+    ->hourly()
+    ->name('kedaluwarsa-magic-link');

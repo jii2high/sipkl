@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'pengajuan_siswa_id',
@@ -30,5 +31,17 @@ class DocumentSignature extends Model
             'step_order' => 'integer',
             'signed_at' => 'datetime',
         ];
+    }
+
+    /** @return BelongsTo<PengajuanSiswa, $this> */
+    public function pengajuanSiswa(): BelongsTo
+    {
+        return $this->belongsTo(PengajuanSiswa::class, 'pengajuan_siswa_id');
+    }
+
+    /** @return BelongsTo<LaporanVersion, $this> */
+    public function laporanVersion(): BelongsTo
+    {
+        return $this->belongsTo(LaporanVersion::class, 'laporan_version_id');
     }
 }

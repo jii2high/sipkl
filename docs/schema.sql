@@ -445,6 +445,7 @@ CREATE TABLE laporan_versions (
     version_number                  INT UNSIGNED NOT NULL,
     source_bimbingan_submission_id  BIGINT UNSIGNED NULL,  -- v1 = bagian akhir yang di-ACC
     file_path                       VARCHAR(500) NOT NULL,
+    is_legit                        BOOLEAN NOT NULL DEFAULT FALSE, -- TRUE saat step 5 signed (versi terbaru) -> pool Siap Sidang
     created_by                      BIGINT UNSIGNED NOT NULL,
     created_at                      TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (pengajuan_siswa_id) REFERENCES pengajuan_siswa(id),

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'token_hash',
@@ -37,5 +38,11 @@ class MagicLink extends Model
             'revoked_at' => 'datetime',
             'is_active' => 'boolean',
         ];
+    }
+
+    /** @return HasMany<ExternalSession, $this> */
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(ExternalSession::class);
     }
 }
