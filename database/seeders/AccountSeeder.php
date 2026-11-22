@@ -52,6 +52,7 @@ class AccountSeeder extends Seeder
                     'nis_nip' => '197001011997011006',
                     'name' => 'Penguji Manual',
                     'user_type' => 'guru',
+                    'email' => 'fajri.muhammad@'.config('pkl.school.email_domain'),
                 ],
                 'roles' => [
                     ['role' => 'guru_pembimbing', 'jurusan_id' => null, 'kelas_id' => null],
