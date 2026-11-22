@@ -3,6 +3,8 @@
 use App\Http\Controllers\ExternalLaporanDownloadController;
 use App\Livewire\Eksternal\ExaminerEntry;
 use App\Livewire\Eksternal\ExaminerScore;
+use App\Livewire\Eksternal\IndustryAssessment;
+use App\Livewire\Eksternal\IndustryEntry;
 use App\Livewire\Eksternal\RequestNewLink;
 use App\Livewire\Eksternal\SignerEntry;
 use App\Livewire\Eksternal\SignerStep;
@@ -26,10 +28,16 @@ Route::get('/eksternal/penguji/{token}', ExaminerEntry::class)
     ->middleware('throttle:10,1')
     ->name('eksternal.penguji');
 
+Route::get('/eksternal/industri/{token}', IndustryEntry::class)
+    ->middleware('throttle:10,1')
+    ->name('eksternal.industri');
+
 Route::middleware('eksternal')->group(function (): void {
     Route::get('/eksternal/tanda-tangan', SignerStep::class)->name('eksternal.ttd');
 
     Route::get('/eksternal/penguji-nilai', ExaminerScore::class)->name('eksternal.penguji.nilai');
+
+    Route::get('/eksternal/industri-nilai', IndustryAssessment::class)->name('eksternal.industri.nilai');
 
     Route::get('/eksternal/laporan/{signature}', ExternalLaporanDownloadController::class)
         ->whereNumber('signature')

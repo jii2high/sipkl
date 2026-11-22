@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'pembimbing_industri_nama',
     'pembimbing_industri_email',
     'pembimbing_industri_email_verified_at',
+    'last_industry_reminder_at',
     'kepala_industri_nama',
     'kepala_industri_email',
     'kepala_industri_email_verified_at',
@@ -36,6 +37,7 @@ class Company extends Model
     {
         return [
             'pembimbing_industri_email_verified_at' => 'datetime',
+            'last_industry_reminder_at' => 'date',
             'kepala_industri_email_verified_at' => 'datetime',
         ];
     }

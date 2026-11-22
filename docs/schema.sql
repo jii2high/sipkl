@@ -143,6 +143,7 @@ CREATE TABLE companies (
     pembimbing_industri_nama               VARCHAR(150) NULL,
     pembimbing_industri_email              VARCHAR(150) NULL,
     pembimbing_industri_email_verified_at  TIMESTAMP NULL,
+    last_industry_reminder_at              DATE NULL,           -- dedup pengingat H-7 (sekali per tanggal Jakarta)
     kepala_industri_nama                   VARCHAR(150) NULL,
     kepala_industri_email                  VARCHAR(150) NULL,
     kepala_industri_email_verified_at      TIMESTAMP NULL,
