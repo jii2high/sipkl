@@ -45,7 +45,7 @@ test('kata sandi baru yang sah menyimpan hash dan menandai bukan first-login', f
         ->set('password', 'SandiBaru123')
         ->set('password_confirmation', 'SandiBaru123')
         ->call('submit')
-        ->assertRedirect(url('/app'));
+        ->assertRedirect(url('/guru'));
 
     $fresh = $user->fresh();
 
