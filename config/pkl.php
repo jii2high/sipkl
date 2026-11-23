@@ -148,6 +148,18 @@ return [
         'per_page' => 10,
     ],
 
+    // Batas percobaan login per (email + IP) sebelum dikunci sementara (TRD.md A16).
+    'login' => [
+        'max_attempts' => 5,
+        'decay_seconds' => 60,
+    ],
+
+    // Push opt-in best-effort (T10.3). Tanpa endpoint, kanal push tidak dipakai.
+    'push' => [
+        'endpoint' => env('PKL_PUSH_ENDPOINT'),
+        'timeout_seconds' => 5,
+    ],
+
     // Surat & dokumen (F12). Nomor urut diambil dari `nomor_surat_counters` per
     // (tahun ajaran, jenis); format: [kode]/[urut 4 digit]/[suffix].
     'document' => [

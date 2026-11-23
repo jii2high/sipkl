@@ -11,7 +11,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE surat_tugas_visitasi DROP CHECK ck_stv_nomor');
+        // `DROP CONSTRAINT` portabel di MySQL 8.0.19+ dan MariaDB; `DROP CHECK` hanya MySQL.
+        DB::statement('ALTER TABLE surat_tugas_visitasi DROP CONSTRAINT ck_stv_nomor');
 
         DB::statement(<<<'SQL'
             ALTER TABLE surat_tugas_visitasi
@@ -22,7 +23,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE surat_tugas_visitasi DROP CHECK ck_stv_nomor');
+        DB::statement('ALTER TABLE surat_tugas_visitasi DROP CONSTRAINT ck_stv_nomor');
 
         DB::statement(<<<'SQL'
             ALTER TABLE surat_tugas_visitasi

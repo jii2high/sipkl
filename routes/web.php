@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccreditationExportDownloadController;
 use App\Http\Controllers\BimbinganFileDownloadController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\LaporanFileDownloadController;
@@ -8,10 +9,14 @@ use App\Http\Controllers\VisitasiDocumentationDownloadController;
 use App\Livewire\Auth\ForcePasswordChange;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\OtpChallenge;
+use App\Livewire\Public\FaqIndex;
 use App\Livewire\Public\VerifyDocument;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => view('public.home'))->name('home');
+
+// FAQ publik (BR-F16-1): tanpa login, hanya FAQ terbit.
+Route::get('/faq', FaqIndex::class)->name('faq');
 
 // Pintu masuk tunggal (PRD F1, TRD.md §7.1). Panel Filament tidak punya login sendiri.
 Route::get('/login', Login::class)->name('login');
@@ -45,4 +50,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/visitasi-dokumentasi/{id}', VisitasiDocumentationDownloadController::class)
         ->whereNumber('id')
         ->name('visitasi.documentation.download');
+
+    // Unduhan ekspor akreditasi (F13); otorisasi lewat AccreditationExportPolicy.
+    Route::get('/ekspor-akreditasi/{export}/unduh', AccreditationExportDownloadController::class)
+        ->whereNumber('export')
+        ->name('export.download');
 });

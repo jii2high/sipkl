@@ -14,10 +14,18 @@
 
     <header class="border-b border-[var(--border)] bg-[var(--surface)]">
         <div class="mx-auto flex max-w-[960px] items-center justify-between gap-4 px-4 py-3">
-            <a href="{{ url('/') }}" class="text-[1.125rem] font-semibold text-[var(--text)]">
-                SIM PKL {{ config('pkl.school.name') }}
+            <a href="{{ url('/') }}" class="min-w-0 text-[1.125rem] font-semibold text-[var(--text)]">
+                <span class="hidden sm:inline">SIM PKL </span>{{ config('pkl.school.name') }}
             </a>
-            <x-theme-switcher />
+            <nav class="flex shrink-0 items-center gap-3 text-[0.875rem]" aria-label="Navigasi publik">
+                <a href="{{ route('faq') }}" class="rounded-[var(--radius-sm)] px-1 py-2 text-[var(--primary)] hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]">
+                    FAQ
+                </a>
+                <a href="{{ route('login') }}" class="rounded-[var(--radius-sm)] px-1 py-2 text-[var(--primary)] hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]">
+                    Masuk
+                </a>
+                <x-theme-switcher />
+            </nav>
         </div>
     </header>
 

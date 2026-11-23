@@ -65,6 +65,28 @@ test('login pertama mengirim OTP dan mengarahkan ke tantangan OTP', function () 
         ->and(session('auth.pending_user_id'))->toBe($user->id);
 });
 
+test('login dikunci sementara setelah percobaan gagal berulang', function () {
+    $user = pklUser(['guru_pembimbing'], ['is_first_login' => false, 'password' => 'password']);
+
+    for ($attempt = 0; $attempt < (int) config('pkl.login.max_attempts'); $attempt++) {
+        Livewire::test(Login::class)
+            ->set('email', $user->email)
+            ->set('password', 'keliru')
+            ->call('submit')
+            ->assertHasErrors('email');
+    }
+
+    $blocked = Livewire::test(Login::class)
+        ->set('email', $user->email)
+        ->set('password', 'password')
+        ->call('submit');
+
+    $blocked->assertHasErrors('email');
+
+    expect($blocked->errors()->first('email'))->toContain('Terlalu banyak percobaan masuk')
+        ->and(auth()->check())->toBeFalse();
+});
+
 test('alur first-login lengkap: OTP lalu wajib ganti kata sandi sampai masuk', function () {
     $user = pklUser(['guru_pembimbing'], ['is_first_login' => true, 'password' => 'password']);
     Notification::fake();

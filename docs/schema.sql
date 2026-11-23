@@ -80,6 +80,7 @@ CREATE TABLE users (
     is_first_login    BOOLEAN NOT NULL DEFAULT TRUE,
     is_active         BOOLEAN NOT NULL DEFAULT TRUE,
     theme_preference  ENUM('light','dark','system') NULL,  -- Q-K: preferensi tema; NULL = ikuti sistem
+    push_opt_in       BOOLEAN NULL,                        -- T10.3: NULL belum ditanya; jawaban tidak ditimpa otomatis
     created_at        TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (jurusan_id) REFERENCES jurusan(id),

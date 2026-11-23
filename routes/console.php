@@ -4,6 +4,7 @@ use App\Jobs\ExpireMagicLinksJob;
 use App\Jobs\ExpireVisitasiJob;
 use App\Jobs\IndustryAssessmentReminderJob;
 use App\Jobs\ProvisionalReminderJob;
+use App\Jobs\PurgeExpiredExportsJob;
 use App\Jobs\RelockScoreJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -38,3 +39,9 @@ Schedule::job(new ExpireMagicLinksJob)
 Schedule::job(new RelockScoreJob)
     ->hourly()
     ->name('kunci-ulang-nilai-sidang');
+
+// Berkas ekspor akreditasi dihapus setelah masa simpan 30 hari (KP-F13-3).
+Schedule::job(new PurgeExpiredExportsJob)
+    ->dailyAt('02:00')
+    ->timezone('Asia/Jakarta')
+    ->name('hapus-ekspor-kedaluwarsa');

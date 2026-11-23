@@ -26,6 +26,21 @@ test('selisih hari kerja menghitung kedua ujung secara inklusif', function () {
         ->and(JakartaTime::workingDaysBetween('2026-11-21', '2026-11-15'))->toBe(0);
 });
 
+test('selisih hari kerja menormalkan waktu UTC ke Jakarta', function () {
+    $jumat = CarbonImmutable::parse('2026-11-20 02:00:00', 'UTC');
+    $senin = CarbonImmutable::parse('2026-11-23 02:00:00', 'UTC');
+
+    expect(JakartaTime::workingDaysBetween($jumat, $senin))->toBe(2)
+        ->and(JakartaTime::workingDaysElapsed($jumat, $senin))->toBe(1);
+});
+
+test('hari kerja yang berlalu tidak menghitung hari mulai', function () {
+    expect(JakartaTime::workingDaysElapsed('2026-11-23', '2026-11-23'))->toBe(0)
+        ->and(JakartaTime::workingDaysElapsed('2026-11-23', '2026-11-24'))->toBe(1)
+        ->and(JakartaTime::workingDaysElapsed('2026-11-20', '2026-11-23'))->toBe(1)
+        ->and(JakartaTime::workingDaysElapsed('2026-11-21', '2026-11-23'))->toBe(0);
+});
+
 test('kunci tanggal Jakarta memakai batas tengah malam setempat', function () {
     expect(JakartaTime::dateKey(CarbonImmutable::parse('2026-11-18 16:00:00', 'UTC')))->toBe('2026-11-18')
         ->and(JakartaTime::dateKey(CarbonImmutable::parse('2026-11-18 17:00:00', 'UTC')))->toBe('2026-11-19');

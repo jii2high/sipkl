@@ -36,6 +36,7 @@ final class NotificationService
         int $attempts,
         ?Throwable $exception = null,
         array $context = [],
+        ?string $channel = null,
     ): NotificationDeliveryFailure {
         $related = $context['related'] ?? null;
         $now = now();
@@ -59,7 +60,7 @@ final class NotificationService
         }
 
         return NotificationDeliveryFailure::query()->create([
-            'channel' => $this->channel($notifiable, $notification),
+            'channel' => $channel ?? $this->channel($notifiable, $notification),
             'recipient_email' => is_string($recipientEmail) ? $recipientEmail : null,
             'recipient_user_id' => $recipientId,
             'notification_type' => $notification::class,

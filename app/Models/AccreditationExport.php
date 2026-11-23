@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'requested_by',
@@ -35,5 +36,17 @@ class AccreditationExport extends Model
             'completed_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
+    }
+
+    /** @return BelongsTo<AcademicPeriod, $this> */
+    public function academicPeriod(): BelongsTo
+    {
+        return $this->belongsTo(AcademicPeriod::class);
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requested_by');
     }
 }

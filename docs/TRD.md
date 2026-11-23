@@ -190,6 +190,8 @@ Semua angka bisnis dari PRD dipusatkan di satu file agar tidak tersebar sebagai 
 | `export.chunk_size` / `retention_days` / `target_seconds` | 500 / 30 / 300 | F13 |
 | `faq.per_page` | 10 | F16 |
 | `mail.retry_max` | 3 | F14 |
+| `login.max_attempts` / `decay_seconds` | 5 / 60 | F1, 16 |
+| `push.endpoint` / `timeout_seconds` | kosong / 5 | F14 (T10.3) |
 
 ## 5. Domain dan State Machine
 
@@ -495,9 +497,9 @@ Semua job mencatat kegagalan tanpa rahasia (token/PIN/OTP) dan memakai `failed_j
 | Enumerasi | Pesan galat netral di login, magic link, dan `/verify` |
 | Rate limit | `otp-verify`, `otp-resend`, login, PIN penguji, `/verify` per IP |
 | Upload | Deteksi MIME dari **isi** file; batas ukuran per jenis; nama file acak; disk private; tanpa eksekusi |
-| Sesi | Regenerasi ID saat login/ganti peran; cookie `HttpOnly`, `Secure`, `SameSite=Lax` |
+| Sesi | Regenerasi ID saat login/ganti peran; cookie `HttpOnly`, `Secure`, `SameSite=Lax` (aktifkan `SESSION_SECURE_COOKIE`/`SESSION_ENCRYPT` di produksi) |
 | CSRF | Bawaan Laravel/Livewire |
-| Header | HSTS, `X-Content-Type-Options`, CSP yang kompatibel dengan Livewire/Filament, `Referrer-Policy` ketat pada rute eksternal |
+| Header | HSTS, `X-Content-Type-Options`, CSP yang kompatibel dengan Livewire/Filament, `Referrer-Policy` ketat pada rute eksternal. Diimplementasikan middleware `SecurityHeaders` (grup `web`) |
 | Data pribadi | Kontak CP perusahaan di-mask sampai disetujui Kaprog; tidak ada NIK penguji (non-goal) |
 | Antivirus/CDR | Opsional per deployment, bukan syarat |
 | Akses ekspor | Hubin-only, unduh via controller berotorisasi, tautan kedaluwarsa 30 hari |
@@ -533,6 +535,7 @@ Ekspor akreditasi untuk 1.752 siswa diuji beban; target < 5 menit adalah **targe
 - **Backup**: DB dan `storage/app/private` dicadangkan terjadwal; uji pemulihan sebelum go-live.
 - **Pemantauan**: `failed_jobs`, kegagalan email permanen, dan kegagalan ekspor tampil di panel Hubin.
 - **Seed**: peran, jurusan, periode contoh, FAQ awal. Data akun diimpor lewat fitur impor Hubin.
+- **Rilis dan operasional**: perintah rilis, supervisor, cron, cadangan/pemulihan, checklist UAT, dan pemetaan invarian ada di `docs/GO-LIVE.md`.
 
 ## 19. Urutan Implementasi (Langsung, Tanpa Wireframe)
 

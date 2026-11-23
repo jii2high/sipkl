@@ -1,5 +1,7 @@
 <x-filament-panels::page>
-    @php($signatures = $this->signatures())
+    @php
+        $signatures = $this->signatures();
+    @endphp
     <div class="space-y-4 pb-24">
         @if ($bulkResult !== null)
             <div class="rounded-xl bg-white p-4 text-sm shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">

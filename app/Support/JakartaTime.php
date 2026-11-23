@@ -72,8 +72,9 @@ final class JakartaTime
     /** Jumlah hari kerja (Senin-Jumat) dari `$from` sampai `$to`, keduanya inklusif. */
     public static function workingDaysBetween(DateTimeInterface|string $from, DateTimeInterface|string $to): int
     {
-        $start = CarbonImmutable::parse($from, self::TZ)->startOfDay();
-        $end = CarbonImmutable::parse($to, self::TZ)->startOfDay();
+        // Normalisasi ke Jakarta dulu: DateTimeInterface dari DB datang sebagai UTC.
+        $start = self::resolve($from)->setTimezone(self::TZ)->startOfDay();
+        $end = self::resolve($to)->setTimezone(self::TZ)->startOfDay();
 
         if ($end->lessThan($start)) {
             return 0;
@@ -88,6 +89,12 @@ final class JakartaTime
         }
 
         return $days;
+    }
+
+    /** Hari kerja yang sudah berlalu sejak `$since`; hari itu sendiri dihitung 0. */
+    public static function workingDaysElapsed(DateTimeInterface|string $since, DateTimeInterface|string|null $until = null): int
+    {
+        return max(0, self::workingDaysBetween($since, $until ?? self::now()) - 1);
     }
 
     private static function resolve(DateTimeInterface|string|null $moment): CarbonImmutable

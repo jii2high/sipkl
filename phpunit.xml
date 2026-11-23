@@ -17,6 +17,12 @@
             <directory>app</directory>
         </include>
     </source>
+    <groups>
+        <exclude>
+            <!-- Uji beban dijalankan manual lewat `pest` dengan opsi group `load` (KP-F13-4). -->
+            <group>load</group>
+        </exclude>
+    </groups>
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

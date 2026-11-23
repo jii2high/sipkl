@@ -276,7 +276,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 
 # M9 — Monitoring & Publik
 
-### [ ] T9.1 — Dashboard dan kanban monitoring (F15)  · Ukuran: M
+### [x] T9.1 — Dashboard dan kanban monitoring (F15)  · Ukuran: M
 **Cakupan**
 - Kanban Walas read-only 5 kolom, hanya kelasnya (definisi kolom mengikuti Q-K; default di PRD Lampiran B); horizontal-scroll dengan penanda kolom aktif di ponsel.
 - Dashboard Kaprog/Hubin: durasi tunggu per step 5-TTD dan per gate (hari kerja Senin–Jumat, libur nasional tidak dikecualikan), antrean gate dengan peringatan kuota.
@@ -285,7 +285,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 **Rujukan**: BR-F15-1, BR-F15-2; KP-F15-1, KP-F15-2.
 **Selesai bila**: Walas tidak melihat kelas lain dan tidak punya kontrol ubah; perhitungan hari kerja teruji; CV.
 
-### [ ] T9.2 — Landing page dan FAQ publik (F16)  · Ukuran: S
+### [x] T9.2 — Landing page dan FAQ publik (F16)  · Ukuran: S
 **Cakupan**
 - Landing dan `/faq` tanpa login, hanya `is_published = true`; filter kategori, pencarian `LIKE`, 7–10 item per halaman, pesan jelas bila kosong.
 - Hubin CRUD kategori dan FAQ.
@@ -298,7 +298,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 
 # M10 — Ekspor & Penutup
 
-### [ ] T10.1 — Ekspor akreditasi dan uji beban (F13)  · Ukuran: M
+### [x] T10.1 — Ekspor akreditasi dan uji beban (F13)  · Ukuran: M
 **Cakupan**
 - Hubin memicu ekspor → attempt `queued` → `AccreditationExportJob` chunk 500 → validasi kelengkapan → `completed` + notifikasi tautan; gagal/parsial = `failed` dan tidak dapat diunduh; retry = attempt baru; unduh Hubin-only lewat controller; `PurgeExpiredExportsJob` hapus setelah 30 hari.
 - Field sesuai PD-08 saja; snapshot immutable.
@@ -307,7 +307,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 **Rujukan**: BR-F13-1…3; KP-F13-1…4.
 **Selesai bila**: KP-F13 lolos; hasil uji beban tercatat; CV.
 
-### [ ] T10.2 — Pengerasan, UAT, dan kesiapan go-live  · Ukuran: L
+### [x] T10.2 — Pengerasan, UAT, dan kesiapan go-live  · Ukuran: L
 **Cakupan**
 - Audit keamanan sesuai `TRD.md` §16: header (HSTS, CSP yang kompatibel dengan Livewire/Filament, `Referrer-Policy` pada rute eksternal), cookie sesi, rate limit (login, OTP, PIN, `/verify`), tidak ada rahasia di log/audit.
 - Tinjau seluruh invarian PRD §1.5 terhadap tes yang ada; tambah tes yang belum ada.
@@ -318,7 +318,7 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 **Rujukan**: PRD Bagian 3 (NFR), `TRD.md` §16, §18.
 **Selesai bila**: semua tes hijau; checklist go-live terisi; tidak ada butir Q yang menggantung tanpa keputusan tertulis.
 
-### [ ] T10.3 — Push notification opt-in *(opsional)*  · Ukuran: S
+### [x] T10.3 — Push notification opt-in *(opsional)*  · Ukuran: S
 **Cakupan**: push opt-in dan best-effort sebagai kanal tambahan; tidak diprompt ulang setelah ditolak; kegagalan tidak memengaruhi email dan in-app.
 **Rujukan**: BR-F14-1.
 **Selesai bila**: opt-in/out bekerja dan kegagalan push tidak mengganggu kanal lain.
@@ -431,5 +431,23 @@ Bagian yang dapat berjalan paralel: **T6.2** dan **T9.2** (setelah T1.1), **T7.1
 | T8.1 — pengingat H-7 | Baris submission baru ada setelah tautan dibuat, jadi dedup "sekali per tanggal Jakarta per perusahaan" disimpan di kolom baru `companies.last_industry_reminder_at` (DATE NULL, migrasi `2026_06_07_000001`, sudah disalin ke `docs/schema.sql`). Job berjalan harian 07:05 Asia/Jakarta dan mengirim ke guru yang terplot; bila belum ada plotting, pengingat dilewati. |
 | T8.1 — tanpa revisi | `SubmitIndustryAssessment` langsung menulis `is_submitted = true` + `submitted_at`; tidak ada jalur buka ulang seperti revisi nilai sidang (BR-F10-1). Karena `form_submissions` sudah punya `company_id`, `academic_period_id`, UNIQUE `uq_submission_industri`, CHECK shape, dan enum `magic_links.type`, T8.1 tidak menambah migrasi selain kolom penanda pengingat. Form industri tidak di-seed; Kaprog membangunnya lewat Form Builder (T7.1). |
 | T8.1 — portal dan override | Portal memakai OTP email yang sama dengan signer. Submission untuk submit diturunkan dari `magic_link.reference_id` sesi, bukan dari properti publik klien; Action juga menolak sesi yang belum terverifikasi. Halaman Hubin dapat mencabut/menerbitkan ulang tautan aktif dan menerbitkan tautan baru saat tautan sudah kedaluwarsa, sehingga override tidak bergantung pada guru. |
-| Hasil uji beban ekspor 1.752 siswa | _(isi di T10.1: durasi, ukuran chunk, indeks yang ditambah)_ |
-| Keputusan PO atas Q-A, Q-E, Q-F, Q-K | _(isi saat keputusan keluar atau di T10.2)_ |
+| T9.1 - status | T9.1 selesai (Pest hijau, 249 tes di MySQL). KP-F15-1 teruji: kanban `/app/kanban-kelas` dibatasi `visibleTo()` kelas peran Walas, hanya menampilkan siswa kelasnya, dan tidak memuat aksi ubah. KP-F15-2 teruji: `MonitoringService` mengembalikan jumlah, rata-rata, dan durasi terlama per gate dan per step 5-TTD dalam hari kerja Senin-Jumat; halaman `Monitoring` tersedia untuk Kaprog (`/app/monitoring`) dan Hubin (`/hubin/monitoring`) dengan peringatan kuota pada antrean gate. **CV kanban dan dashboard (360px/1280px, terang/gelap) menunggu cek manual di peramban.** |
+| T9.1 - kolom dan durasi | Lima kolom mengikuti usulan Q-K: (1) pengajuan & verifikasi, (2) surat & balasan perusahaan, (3) PKL & bimbingan, (4) pengesahan laporan, (5) sidang & selesai. Kolom 3-5 ditentukan dari versi laporan terbaru (`is_legit`); pengajuan `rejected`/`withdrawn` tidak ditampilkan dan jumlahnya dicatat di bawah papan. Durasi memakai `updated_at` pengajuan (gate/kanban) dan `created_at` tanda tangan pending (step 5-TTD, yaitu saat step dibuka), karena belum ada kolom waktu masuk status per gate; angka ini perkiraan sampai audit log dipakai untuk laporan historis. |
+| T9.1 - helper hari kerja | `JakartaTime::workingDaysBetween()` diperbaiki agar menormalkan `DateTimeInterface` ke Asia/Jakarta sebelum `startOfDay`; sebelumnya nilai UTC dari DB membuat batas hari bergeser dan hasil bisa kurang satu hari. Ditambah `workingDaysElapsed()` (hari mulai dihitung 0) dan tes unit untuk keduanya. |
+| T9.2 - status | T9.2 selesai (Pest hijau, 8 tes FAQ). KP-F16-1 teruji (FAQ `is_published = false` tidak muncul), KP-F16-2 teruji (pencarian tanpa hasil menampilkan pesan jelas + tombol reset), filter kategori, LIKE pada pertanyaan/jawaban, paginasi `config('pkl.faq.per_page')` = 10, landing `/` dengan tautan FAQ/login, dan CRUD Hubin (FAQ + kategori). **CV landing dan `/faq` (360px/1280px, terang/gelap) menunggu cek manual di peramban.** |
+| T9.2 - detail | `/faq` memakai Livewire `FaqIndex` dengan query `is_published = true`, urutan kategori lalu `sort_order`; `created_by` diisi dari `CreateAction::mutateDataUsing` pada halaman Hubin. Kategori yang masih dipakai FAQ tidak menampilkan aksi hapus (FK tetap penjaga terakhir). Landing memakai layout publik yang sudah ada dan tidak menambah aset baru. |
+| M9 - portabilitas migrasi | Migrasi `2026_06_02_000001` memakai `DROP CHECK` yang hanya dikenal MySQL, sehingga `migrate:fresh` gagal di MariaDB (lingkungan pengembangan saat ini). Diganti `DROP CONSTRAINT` yang portabel di MySQL 8.0.19+ dan MariaDB; perilaku constraint tidak berubah. |
+| M9 - perintah tes | `php artisan test` kehabisan memori 128 MB pada tes berkas yang sudah ada. Suite penuh dijalankan dengan `php -d memory_limit=1G vendor/bin/pest`: 249 tes, 839 assertion, hijau. |
+| T10.1 - status | T10.1 selesai (Pest hijau, 257 tes di MySQL; uji beban terpisah). KP-F13-1 (gagal di tengah tidak menyediakan berkas), KP-F13-2 (unduh Hubin-only; aktor lain 403 walau punya tautan), KP-F13-3 (berkas + baris dihapus setelah 30 hari), dan KP-F13-4 (uji beban tercatat) teruji. **CV halaman `Ekspor akreditasi` (360px/1280px, terang/gelap) menunggu cek manual di peramban.** |
+| T10.1 - kolom ekspor | PD-08 tidak ada di repo, jadi kolom ekspor adalah kolom `sidang_results_summary` apa adanya: Nama Siswa, NIS, Jurusan, Perusahaan, Nilai per Kategori (JSON), Status Kelulusan, Penguji, Tanggal Sidang. Snapshot CSV ditulis ke disk privat `exports/`, checksum SHA-256 disimpan, dan nomor berkas memakai id attempt. Bila PO punya daftar PD-08 resmi, urutan/kolomnya disesuaikan di `AccreditationExportJob::HEADERS`. |
+| T10.1 - gagal dan retry | Satu baris yang tidak lengkap (nama/penguji/tanggal/nilai kosong) menggagalkan seluruh attempt: `status = failed`, berkas sementara dihapus, `snapshot_file_path` dibiarkan NULL sehingga tidak ada berkas parsial (BR-F13-2). Retry dari UI membuat baris baru dengan `retry_of_id`, bukan mengulang baris lama; job `tries = 1` supaya retry otomatis queue tidak diam-diam mengulang attempt. |
+| T10.1 - unduhan | Rute `/ekspor-akreditasi/{export}/unduh` (grup `auth`) + `AccreditationExportPolicy`: hanya peran aktif Hubin, attempt `completed`, belum kedaluwarsa, dan berkas benar-benar ada. `PurgeExpiredExportsJob` (harian 02:00 Jakarta) melepas `retry_of_id` yang menunjuk baris kedaluwarsa lalu menghapus berkas dan barisnya. |
+| Hasil uji beban ekspor 1.752 siswa | 1.752 baris `sidang_results_summary` → CSV selesai dalam ~0,6-1,0 detik (chunk `pkl.export.chunk_size` = 500, tanpa indeks tambahan). Jauh di bawah target 300 detik, tetapi angka ini mengukur penulisan berkas dari tabel ringkasan yang sudah terisi; ia **bukan** waktu penuh Sinkronisasi nilai sidang ke `sidang_results_summary`. Tes: `vendor/bin/pest --group load` (dikeluarkan dari suite default lewat `phpunit.xml`). |
+| T10.2 - header keamanan | `SecurityHeaders` dipasang pada grup `web` (juga menjangkau `/eksternal/*`): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy` (`no-referrer` di rute eksternal, `strict-origin-when-cross-origin` di lainnya), CSP yang mengizinkan inline/eval agar Livewire-Alpine dan Filament jalan (`default-src 'self'`, `script-src 'self' 'unsafe-inline' 'unsafe-eval'`, `style-src 'self' 'unsafe-inline'`, `img-src 'self' data: blob:`), dan HSTS hanya saat request HTTPS. Diuji di `tests/Feature/Security/SecurityHeadersTest.php`. |
+| T10.2 - rate limit login | Sebelumnya login belum dibatasi; kini kunci sementara per (email + IP): `config('pkl.login.max_attempts')` = 5, `decay_seconds` = 60, dihitung `RateLimiter` di `Login::submit()`, pesan `pkl.auth.throttled`. Rate limit OTP (`otp-verify`, `otp-resend`), PIN penguji (`throttle:10,1`), minta tautan baru (`throttle:5,1`), dan `/verify` (`throttle:60,1`) sudah ada sejak M1/M3/M6/M7. |
+| T10.2 - status | T10.2 selesai pada sisi kode dan dokumen. (1) **UAT otomatis** per peran ada di `tests/Feature/Uat/RoleSmokeTest.php`: tiap peran membuka halaman intinya (200) dan ditolak di halaman peran lain (403), termasuk Hubin. (2) **Audit invarian PRD 1.5** dipetakan ke tes di `docs/GO-LIVE.md`; satu celah dicatat: invarian kuota belum diuji dua proses bersamaan. (3) **Operasional** (perintah rilis, supervisor, cron, cadangan + prosedur pemulihan) ada di `docs/GO-LIVE.md`; penjadwalan sudah terdaftar di `routes/console.php`. (4) **Seeding produksi** sudah lengkap di `DatabaseSeeder` (jurusan, periode, akun, FAQ) tetapi belum dijalankan di server. (5) **Keputusan Q** ditulis di `docs/GO-LIVE.md` (Q-A, Q-E, Q-F, Q-K memakai default; Q-H dan Q-L tetap). **Yang masih harus dilakukan manusia di server/peramban: tick checklist UAT 360px/1280px terang/gelap, jalankan backup + uji pemulihan, jalankan seeder dan supervisor/cron di server.** |
+| T10.2 - temuan bug | UAT otomatis menemukan satu bug nyata: `resources/views/filament/app/pages/pengesahan-laporan.blade.php` gagal dikompilasi (`ParseError: unexpected endforeach`). Sebab: satu file memakai bentuk satu baris `@php(...)` **dan** blok `@php ... @endphp`; Blade mencocokkan `@php(...)` sebagai awal blok sehingga sisa direktif terlewat. Diperbaiki dengan mengubah bentuk satu baris menjadi blok. Semua view dicompile dan dilint (`php -l`) ulang: 0 gagal. Halaman `Pengesahan Laporan` (Kaprog/Kepsek) kini benar-benar dapat dibuka. |
+| T10.3 - status | T10.3 (opsional) selesai. Kolom baru `users.push_opt_in` (NULL = belum ditanya; TRUE/FALSE = jawaban pengguna, tidak pernah ditimpa otomatis) lewat migrasi `2026_06_08_000001`, disalin ke `docs/schema.sql`. Halaman `/app/pengaturan-notifikasi` (`PengaturanNotifikasi`) satu-satunya tempat meminta jawaban. `PushService` hanya mengirim bila opt-in dan `PKL_PUSH_ENDPOINT` diisi; kegagalan push dicatat ke `notification_delivery_failures` (channel `push`) tanpa melempar, sehingga email/in-app tetap terkirim. Teruji di `tests/Feature/Notification/PushNotificationTest.php`: tanpa opt-in tidak ada HTTP, opt-in mengirim payload + in-app tetap terbuat, kegagalan HTTP tercatat tanpa exception, dan toggle opt-in/out tersimpan. |
+| Baris pengesahan (T10.2) | Halaman `Pengesahan Laporan` dipakai Kaprog dan Kepsek (step 2 dan step 5). Guru tidak membuka halaman ini: step 1 ditandatangani otomatis saat guru ACC laporan final (`ApproveLaporanFinal`). Ini diuji di UAT smoke agar ekspektasi peran tidak salah. |
+| Keputusan Q-A, Q-E, Q-F, Q-K | Tertulis di `docs/GO-LIVE.md` bagian 7. Ringkas: Q-A nomor surat per tahun ajaran; Q-E `nilai_total` = rata-rata item 0-100 (2 desimal) dihitung server; Q-F stack Filament/Livewire/MySQL dipakai; Q-K lima kolom kanban seperti usulan. Keempatnya memakai default dan berjalan; perubahan PO masuk versi berikutnya beserta migrasi/catatan. Q-H dan Q-L tidak berubah. |
+| `docs/GO-LIVE.md` (baru) | Perintah rilis, supervisor `queue:work`, cron `schedule:run`, cadangan + prosedur uji pemulihan, checklist UAT manusia per peran, pemetaan invarian PRD 1.5 ke tes, dan keputusan butir Q. Ini dokumen yang dipakai saat go-live (T10.2). |

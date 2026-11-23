@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Services\NotificationService;
+use App\Services\PushService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +45,9 @@ class SendNotificationJob implements ShouldQueue
     public function handle(): void
     {
         $this->notifiable->notify($this->notification);
+
+        // Push best-effort: kegagalannya dicatat sendiri dan tidak melempar (BR-F14-1).
+        app(PushService::class)->deliver($this->notifiable, $this->notification);
     }
 
     public function failed(?Throwable $exception): void

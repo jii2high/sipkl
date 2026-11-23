@@ -26,6 +26,7 @@ use Illuminate\Notifications\Notifiable;
     'is_first_login',
     'is_active',
     'theme_preference',
+    'push_opt_in',
 ])]
 #[Hidden(['password'])]
 class User extends Authenticatable implements FilamentUser
@@ -47,6 +48,7 @@ class User extends Authenticatable implements FilamentUser
             'is_first_login' => 'boolean',
             'is_active' => 'boolean',
             'theme_preference' => Theme::class,
+            'push_opt_in' => 'boolean',
         ];
     }
 
