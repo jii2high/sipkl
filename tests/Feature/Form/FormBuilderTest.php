@@ -4,12 +4,13 @@ use App\Actions\Form\CreateFormDefinition;
 use App\Actions\Form\DuplicateFormDefinition;
 use App\Actions\Form\PublishFormDefinition;
 use App\Actions\Form\SaveFormStructure;
-use App\Filament\App\Pages\FormBuilder;
+use App\Filament\Kaprog\Pages\FormBuilder;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
 use App\Models\FormDefinition;
 use App\Models\FormSubmission;
 use App\Models\User;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
@@ -139,22 +140,38 @@ test('nonaktifkan form lain tidak mengubah jumlah item form yang sudah dipublika
 
 test('halaman builder menyimpan lalu mempublikasikan form', function () {
     ['kaprog' => $kaprog, 'period' => $period] = pklFormContext();
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
     $this->actingAs($kaprog)->withSession(['active_role' => 'kaprog']);
 
     Livewire::test(FormBuilder::class)
-        ->call('newDefinition')
-        ->set('periodId', $period->getKey())
-        ->set('nama', 'Form Sidang RPL')
-        ->set('sections.0.label', 'Aspek Teknis')
-        ->set('sections.0.items.0.label', 'Penguasaan materi')
-        ->set('hasKehadiran', true)
-        ->call('saveAndPublish')
-        ->assertOk();
+        ->callAction('new', data: [
+            'periodId' => $period->getKey(),
+            'nama' => 'Form Sidang RPL',
+            'formType' => FormDefinition::TYPE_SIDANG,
+            'hasKehadiran' => true,
+        ])
+        ->assertHasNoFormErrors();
 
     $definition = FormDefinition::query()->where('nama', 'Form Sidang RPL')->firstOrFail();
 
-    expect($definition->is_published)->toBeTrue()
+    Livewire::test(FormBuilder::class)
+        ->callAction(TestAction::make('open')->table($definition))
+        ->fillForm([
+            'sections' => [
+                ['label' => 'Aspek Teknis', 'items' => [['label' => 'Penguasaan materi']]],
+            ],
+        ])
+        ->callAction('save')
+        ->assertHasNoFormErrors();
+
+    expect($definition->refresh()->items()->count())->toBe(1);
+
+    Livewire::test(FormBuilder::class)
+        ->callAction(TestAction::make('open')->table($definition))
+        ->callAction('publish')
+        ->assertHasNoFormErrors();
+
+    expect($definition->refresh()->is_published)->toBeTrue()
         ->and($definition->has_kehadiran)->toBeTrue()
         ->and($definition->items()->count())->toBe(1);
 });
