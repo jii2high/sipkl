@@ -175,6 +175,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return match ($panel->getId()) {
             'hubin' => $this->hasRole(Role::Hubin),
+            'kaprog' => $this->hasRole(Role::Kaprog),
+            'guru' => $this->hasRole(Role::GuruPembimbing),
             'app' => $this->hasRole(
                 Role::Siswa,
                 Role::Walas,
