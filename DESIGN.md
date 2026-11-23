@@ -326,7 +326,7 @@ Sistem ini **datar dan tonal**. Kedalaman dibuat lewat perbedaan surface dan bor
 ## Shapes
 
 - Sudut lembut dan konsisten: **6px** (chip kecil, checkbox), **8px** (tombol, input, item nav), **12px** (card, modal), **pill** (chip status, badge).
-- Ikon bergaya garis (stroke 1.5–2px), satu keluarga ikon (Heroicons, bawaan Filament) agar konsisten.
+- Ikon bergaya garis (stroke 1.5–2px), satu keluarga ikon (Heroicons) agar konsisten. Panel Filament memakai string `heroicon-o-*`/`heroicon-s-*`; halaman Blade memakai komponen `<x-heroicon-o-*>` dari `blade-ui-kit/blade-heroicons`.
 - Tidak memakai bentuk dekoratif, gradien, atau ilustrasi berat pada layar operasional. Ilustrasi ringan hanya untuk empty state dan landing.
 
 ## Components
