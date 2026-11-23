@@ -3,8 +3,9 @@
 Dokumen operasional T10.2. Isinya: perintah rilis, konfigurasi server, cadangan/pemulihan,
 checklist UAT manusia, pemetaan invarian PRD 1.5 ke tes, dan keputusan butir Q.
 
-Status per dokumen ini: T10.1 selesai dan teruji; T10.2 kode/uji selesai, **butir manual
-(checklist UAT 5, cadangan 4, keputusan PO 6) harus dijalankan manusia di server/peramban.**
+Status per dokumen ini: T10.1 selesai dan teruji; T10.2 kode/uji selesai. **Checklist UAT 5
+sudah dicentang lewat checkpoint visual R6.3** (bukti di `D:\cv\shots`, temuan di §8);
+**cadangan 4 dan keputusan PO 6 masih harus dijalankan manusia di server/peramban.**
 
 ---
 
@@ -103,19 +104,27 @@ intinya (200) dan ditolak di halaman peran lain (403). Yang tetap manual: lebar 
 
 | Peran | Halaman inti | 360px | 1280px | Terang | Gelap |
 |---|---|---|---|---|---|
-| Siswa | `/siswa`, `/siswa/bimbingan`, `/siswa/jadwal-sidang` | [ ] | [ ] | [ ] | [ ] |
-| Walas | `/walas`, `/walas/kanban` | [ ] | [ ] | [ ] | [ ] |
-| Guru | `/guru/bimbingan-siswa`, `/guru/penilaian-industri`, `/guru/visitasi` | [ ] | [ ] | [ ] | [ ] |
-| Kaprog | `/kaprog/antrean-pengajuan`, `/kaprog/plotting-guru`, `/kaprog/form-builder`, `/kaprog/jadwal-sidang`, `/kaprog/pengesahan-laporan`, `/kaprog/penilaian-sidang`, `/kaprog/monitoring` | [ ] | [ ] | [ ] | [ ] |
-| Kepsek | `/kepsek` (bulk TTD di ponsel) | [ ] | [ ] | [ ] | [ ] |
-| Semua peran berakun | `/notifikasi` (preferensi notifikasi) | [ ] | [ ] | [ ] | [ ] |
-| Hubin | `/hubin/companies`, `/hubin/users`, `/hubin/signature-assets`, `/hubin/faqs`, `/hubin/ekspor-akreditasi`, `/hubin/monitoring` | [ ] | [ ] | [ ] | [ ] |
-| Penguji | `/eksternal/penguji/{token}` (PIN) | [ ] | [ ] | [ ] | [ ] |
-| Industri | `/eksternal/industri/{token}` (OTP) | [ ] | [ ] | [ ] | [ ] |
-| Publik | `/`, `/faq`, `/verify/{token}`, `/login` | [ ] | [ ] | [ ] | [ ] |
+| Siswa | `/siswa`, `/siswa/bimbingan`, `/siswa/jadwal-sidang` | [x] | [x] | [x] | [x] |
+| Walas | `/walas`, `/walas/kanban` | [x] | [x] | [x] | [x] |
+| Guru | `/guru/bimbingan-siswa`, `/guru/penilaian-industri`, `/guru/visitasi` | [x] | [x] | [x] | [x] |
+| Kaprog | `/kaprog/antrean-pengajuan`, `/kaprog/plotting-guru`, `/kaprog/form-builder`, `/kaprog/jadwal-sidang`, `/kaprog/pengesahan-laporan`, `/kaprog/penilaian-sidang`, `/kaprog/monitoring` | [x] | [x] | [x] | [x] |
+| Kepsek | `/kepsek` (bulk TTD di ponsel) | [x] | [x] | [x] | [x] |
+| Semua peran berakun | `/notifikasi` (preferensi notifikasi) | [x] | [x] | [x] | [x] |
+| Hubin | `/hubin/companies`, `/hubin/users`, `/hubin/signature-assets`, `/hubin/faqs`, `/hubin/ekspor-akreditasi`, `/hubin/monitoring` | [x] | [x] | [x] | [x] |
+| Penguji | `/eksternal/penguji/{token}` (PIN) | [x] | [x] | [x] | [x] |
+| Industri | `/eksternal/industri/{token}` (OTP) | [x] | [x] | [x] | [x] |
+| Publik | `/`, `/faq`, `/verify/{token}`, `/login` | [x] | [x] | [x] | [x] |
 
 Per halaman, cek juga: status selalu chip bertulisan, tidak ada tombol utama kedua,
 hubungan kartu/tabel nyaman di 360px.
+
+Bukti R6.3: 354 PNG di `D:\cv\shots` (di luar repo), 9 grup × 360×800 + 1280×900 ×
+terang + gelap, diambil REA `capture_browser_scenario` (Chromium 157 headless) terhadap
+`http://127.0.0.1:8000` dengan basis data uji terpisah `sipkl_cv`. Semua langkah
+`completed`, tanpa galat halaman. Status di seluruh halaman selalu chip bertulisan
+(bukan warna saja), tiap halaman satu tombol utama, navigasi bawah portal 360px
+memakai target sentuh ≥ 44px, dan mode gelap benar di keempat permukaan. Temuan
+kerapian/kontras dicatat di §8 (belum diperbaiki).
 
 ## 6. Pemetaan invarian PRD 1.5 → tes
 
@@ -158,3 +167,31 @@ yang berjalan. Bila PO mengubah, perubahan masuk versi berikutnya dengan catatan
 - Kolom ekspor mengikuti kolom `sidang_results_summary`; daftar resmi PD-08 belum ada di repo.
 - Push (T10.3) best-effort: tanpa `PKL_PUSH_ENDPOINT`, kanal push tidak dipakai; email dan
   in-app tetap jalan.
+
+### Temuan CV R6.3 (UI, belum diperbaiki)
+
+Checkpoint visual R6.3 memotret semua 29 baris checklist §5. Yang lolos: terna terang/gelap,
+chip status bertulisan, satu tombol utama per halaman, target sentuh portal 360px. Temuan
+kerapian berikut dicatat untuk tugas perbaikan terpisah (tidak mengubah Action/Policy/Service):
+
+1. **Kolom tabel terpotong di 1280** — kolom/aksi paling kanan terpotong di tepi viewport:
+   `/hubin/companies` ("Telepon"), `/hubin/users` ("Peran"), `/guru/visitasi` ("Unggah
+   dokumentasi"), `/guru/penilaian-industri` ("Terbitkan"/"Cabut tautan"). Tabel tidak
+   menyusut; label aksi tak terbaca tanpa geser horizontal.
+2. **Baris tabel terlalu tinggi** — `/guru/visitasi` menampilkan "Perusahaan" sampai 5 baris
+   (`PT Telkom Indonesia (Persero) Tbk`), tinggi baris ± 200px. Pola sama di
+   `/guru/penilaian-industri` dan `/kaprog/plotting-guru`; sulit dipindai.
+3. **File input bawaan tak diterjemahkan** — `/siswa/bimbingan` menampilkan `Choose File
+   No file chosen` (teks bawaan peramban, Inggris), menyalahi aturan UI Bahasa Indonesia.
+4. **Header publik di 360** — wordmark `SMKN 1 Kota Bekasi` patah jadi 4 baris dan baris
+   navigasi (FAQ / Masuk / tema / Ikuti sistem) jadi 2 baris; rapat dan mendorong konten.
+5. **Label paginasi hilang di 360** — `/kaprog/form-builder` menyisakan pilihan `10` tanpa
+   teks "per halaman".
+6. **Kata ganti tidak konsisten** — portal siswa memakai "Kamu" ("Kamu bisa menandai bagian
+   akhir laporan"), panel memakai "Anda".
+
+Catatan proses: satu jalur 360px terang pernah gagal `page.goto: net::ERR_ABORTED` pada
+`/siswa` (balapan dengan reload `wire:navigate` Livewire); diulang bersih tanpa galat.
+Sesi peramban REA dipakai ulang dalam satu proses, jadi tema diset eksplisit lewat dua kunci
+localStorage (`filament:theme:mode=light` + `sim-pkl-theme-applied=1`) agar tidak ditimpa
+`theme_preference` akun.
