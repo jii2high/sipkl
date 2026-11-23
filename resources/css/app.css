@@ -207,6 +207,11 @@
         color: var(--primary);
     }
 
+    .pkl-btn-danger {
+        background-color: var(--danger-soft);
+        color: var(--danger);
+    }
+
     .pkl-input {
         width: 100%;
         min-height: 44px;

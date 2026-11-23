@@ -17,6 +17,7 @@ use App\Exceptions\QuotaExceeded;
 use App\Jobs\GroupCompanyJob;
 use App\Jobs\ProvisionalReminderJob;
 use App\Jobs\SendNotificationJob;
+use App\Livewire\Portal\PengajuanSiswa as PortalPengajuan;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
 use App\Models\Jurusan;
@@ -30,9 +31,11 @@ use App\Services\NotificationService;
 use App\Services\QuotaService;
 use App\Support\JakartaTime;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 
 beforeEach(function () {
     Storage::fake('local');
@@ -416,7 +419,7 @@ test('halaman siswa menampilkan unggah surat balasan setelah surat terbit', func
 
     $this->actingAs($this->siswa)
         ->withSession(['active_role' => 'siswa'])
-        ->get('/app/pengajuan-saya')
+        ->get('/siswa')
         ->assertOk()
         ->assertSee('Surat balasan perusahaan')
         ->assertSee('Unggah surat balasan');
@@ -438,4 +441,31 @@ test('antrean Kaprog menampilkan kuota untuk keputusan penerimaan', function () 
         ->assertOk()
         ->assertSee('Kuota perusahaan')
         ->assertSee('0 dari 6');
+});
+
+test('portal siswa mengunggah surat balasan lewat komponen Livewire', function () {
+    $pengajuan = pklSuratGroup($this->siswa, $this->period, $this->company, $this->kaprog, $this->walas);
+    $pengajuan->newQuery()->whereKey($pengajuan->id)->update([
+        'status' => PengajuanStatus::SuratPengantarTerbit->value,
+    ]);
+
+    session(['active_role' => 'siswa']);
+    $this->actingAs($this->siswa);
+
+    $pdf = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+        ."2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+        ."3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\n"
+        ."trailer<</Root 1 0 R>>\n%%EOF\n";
+
+    Livewire::test(PortalPengajuan::class)
+        ->set('suratBalasan', UploadedFile::fake()->createWithContent('balasan.pdf', $pdf))
+        ->set('suratBalasanHasil', 'diterima')
+        ->call('uploadSuratBalasan')
+        ->assertHasNoErrors();
+
+    $pengajuan->refresh();
+
+    expect($pengajuan->status)->toBe(PengajuanStatus::MenungguBalasanPerusahaan->value)
+        ->and($pengajuan->surat_balasan_hasil)->toBe('diterima')
+        ->and($pengajuan->surat_balasan_path)->not->toBeNull();
 });

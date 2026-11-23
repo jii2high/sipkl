@@ -54,7 +54,7 @@ class ProvisionalReminderJob implements ShouldQueue
                         new Notification(
                             'Lengkapi dokumen fisik PKL',
                             'Dokumen fisik PKL kamu belum dikonfirmasi Hubin. Serahkan dokumen ke Hubin agar status provisional selesai.',
-                            url('/app/pengajuan-saya'),
+                            url('/siswa'),
                         ),
                         ['related' => $pengajuan],
                     );

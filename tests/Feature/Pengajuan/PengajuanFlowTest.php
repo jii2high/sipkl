@@ -10,6 +10,7 @@ use App\Actions\Pengajuan\SubmitPengajuan;
 use App\Enums\PengajuanStatus;
 use App\Exceptions\InvalidTransition;
 use App\Jobs\GroupCompanyJob;
+use App\Livewire\Portal\PengajuanSiswa as PortalPengajuan;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
 use App\Models\Jurusan;
@@ -22,10 +23,11 @@ use Filament\Facades\Filament;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
 
     $this->jurusan = Jurusan::factory()->create();
     $this->kelas = Kelas::factory()->create(['jurusan_id' => $this->jurusan->id]);
@@ -311,7 +313,7 @@ test('daftar pengajuan dibatasi scope peran aktif', function () {
 test('halaman siswa dan antrean mengikuti peran aktif', function () {
     $this->actingAs($this->siswa)
         ->withSession(['active_role' => 'siswa'])
-        ->get('/app/pengajuan-saya')
+        ->get('/siswa')
         ->assertOk();
 
     $this->actingAs($this->kaprog)
@@ -323,4 +325,25 @@ test('halaman siswa dan antrean mengikuti peran aktif', function () {
         ->withSession(['active_role' => 'siswa'])
         ->get('/kaprog/antrean-pengajuan')
         ->assertForbidden();
+});
+
+test('portal siswa menyimpan draf lalu mengirim lewat komponen Livewire', function () {
+    session(['active_role' => 'siswa']);
+    $this->actingAs($this->siswa);
+
+    Livewire::test(PortalPengajuan::class)
+        ->set('companyId', $this->company->id)
+        ->call('saveDraft')
+        ->assertHasNoErrors();
+
+    $pengajuan = PengajuanSiswa::query()->where('siswa_id', $this->siswa->id)->firstOrFail();
+
+    expect($pengajuan->status)->toBe(PengajuanStatus::Draft->value);
+
+    Livewire::test(PortalPengajuan::class)
+        ->call('submit')
+        ->assertHasNoErrors();
+
+    expect($pengajuan->refresh()->status)->toBe(PengajuanStatus::MenungguVerifikasiKaprog->value)
+        ->and($pengajuan->snapshot_company_json['nama'])->toBe('PT Contoh Awal');
 });
