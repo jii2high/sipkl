@@ -9,9 +9,9 @@ use App\Actions\Visitasi\RejectVisitasi;
 use App\Actions\Visitasi\RequestVisitasi;
 use App\Actions\Visitasi\UploadDokumentasi;
 use App\Enums\PengajuanStatus;
-use App\Filament\App\Pages\PlottingGuru;
-use App\Filament\App\Pages\Visitasi as VisitasiPage;
 use App\Filament\Hubin\Pages\KelolaVisitasi;
+use App\Filament\Kaprog\Pages\PlottingGuru;
+use App\Filament\Kaprog\Pages\Visitasi as VisitasiPage;
 use App\Jobs\ExpireVisitasiJob;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
@@ -378,7 +378,7 @@ test('visitasi request for company outside guru plotting is rejected', function 
 
 test('plotting page renders eligible companies for kaprog', function () {
     $context = plottingContext();
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
 
     $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
 
@@ -388,15 +388,29 @@ test('plotting page renders eligible companies for kaprog', function () {
         ->assertSee($context['company']->nama);
 });
 
-test('visitasi page renders for kaprog and guru', function () {
+test('kaprog memplot guru dari aksi tabel plotting', function () {
     $context = plottingContext();
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
+
+    $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
+
+    Livewire::test(PlottingGuru::class)
+        ->callAction(TestAction::make('assign')->table($context['company']), [
+            'guruId' => $context['guru']->getKey(),
+        ])
+        ->assertNotified('Plotting guru berhasil disimpan.');
+
+    expect(GuruPembimbingPlotting::query()
+        ->where('company_id', $context['company']->getKey())
+        ->value('guru_id'))->toBe($context['guru']->getKey());
+});
+
+test('visitasi page renders for kaprog', function () {
+    $context = plottingContext();
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
 
     $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
     Livewire::test(VisitasiPage::class)->assertOk()->assertSee('Visitasi PKL');
-
-    $this->actingAs($context['guru'])->withSession(['active_role' => 'guru_pembimbing']);
-    Livewire::test(VisitasiPage::class)->assertOk();
 });
 
 test('hubin visitasi page renders', function () {

@@ -16,16 +16,16 @@ dataset('halaman per peran', [
     'walas' => [
         'app', 'walas',
         ['/app', '/app/kanban-kelas', '/app/pengaturan-notifikasi'],
-        ['/app/monitoring', '/kaprog/form-builder', '/app/plotting-guru'],
+        ['/app/monitoring', '/kaprog/form-builder', '/kaprog/plotting-guru'],
     ],
     'guru_pembimbing' => [
         'app', 'guru_pembimbing',
-        ['/app', '/app/bimbingan-siswa', '/app/visitasi', '/app/penilaian-industri', '/app/pengaturan-notifikasi'],
+        ['/app', '/app/bimbingan-siswa', '/app/penilaian-industri', '/app/pengaturan-notifikasi'],
         ['/kaprog/antrean-pengajuan', '/app/kanban-kelas', '/app/monitoring', '/app/pengesahan-laporan'],
     ],
     'kaprog' => [
         'app', 'kaprog',
-        ['/app', '/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/app/plotting-guru', '/kaprog/jadwal-sidang', '/app/pengesahan-laporan', '/kaprog/penilaian-sidang', '/app/monitoring', '/app/pengaturan-notifikasi'],
+        ['/app', '/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/kaprog/plotting-guru', '/kaprog/visitasi', '/kaprog/jadwal-sidang', '/app/pengesahan-laporan', '/kaprog/penilaian-sidang', '/app/monitoring', '/app/pengaturan-notifikasi'],
         ['/app/kanban-kelas', '/app/penilaian-industri'],
     ],
     'kepsek' => [
