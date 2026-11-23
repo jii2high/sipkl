@@ -11,14 +11,33 @@ use App\Models\Company;
 use App\Models\SuratTugasVisitasi;
 use App\Models\User;
 use App\Services\PlottingService;
+use App\Support\StatusChip;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
-class KelolaVisitasi extends Page
+/**
+ * Pengelolaan surat tugas visitasi Hubin (T4.3, F5): ajukan manual, setujui,
+ * tolak beralasan, dan terbitkan nomor surat. Semua keputusan ada di Action Visitasi.
+ */
+class KelolaVisitasi extends Page implements HasTable
 {
-    protected string $view = 'filament.hubin.pages.kelola-visitasi';
+    use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Visitasi';
 
@@ -26,20 +45,166 @@ class KelolaVisitasi extends Page
 
     protected static ?int $navigationSort = 3;
 
-    public ?int $guruId = null;
-
-    /** @var array<int, int|string> */
-    public array $companyIds = [];
-
-    public bool $isGeneral = false;
-
-    public ?int $rejectingId = null;
-
-    public ?string $rejectionReason = null;
-
     public static function canAccess(): bool
     {
         return session('active_role') === Role::Hubin->value;
+    }
+
+    public function table(Table $table): Table
+    {
+        Gate::forUser(auth()->user())->authorize('viewAny', SuratTugasVisitasi::class);
+
+        return $table
+            ->query(SuratTugasVisitasi::query()->with(['guru', 'kaprog', 'companies.company']))
+            ->defaultSort('created_at', 'desc')
+            ->columns([
+                TextColumn::make('guru.name')
+                    ->label('Guru pembimbing')
+                    ->searchable(),
+                TextColumn::make('kaprog.name')
+                    ->label('Pengaju')
+                    ->placeholder('Hubin')
+                    ->toggleable(),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => StatusChip::label($state))
+                    ->color(fn (string $state): string => StatusChip::color($state)),
+                TextColumn::make('perusahaan')
+                    ->label('Perusahaan')
+                    ->state(fn (SuratTugasVisitasi $record): string => $record->is_general
+                        ? 'Seluruh perusahaan bimbingan'
+                        : $record->companies->pluck('company.nama')->filter()->join(', '))
+                    ->wrap(),
+                TextColumn::make('nomor_surat')
+                    ->label('Nomor surat')
+                    ->placeholder('Belum terbit')
+                    ->searchable(),
+                TextColumn::make('masa_berlaku')
+                    ->label('Masa berlaku')
+                    ->state(fn (SuratTugasVisitasi $record): string => match (true) {
+                        filled($record->nomor_surat) => $record->tanggal_mulai->format('d/m/Y')
+                            .'–'.$record->tanggal_selesai->format('d/m/Y'),
+                        $record->status === 'disetujui' => 'Nomor surat menunggu scan TTD Kepsek.',
+                        default => 'Masa berlaku dihitung saat surat terbit.',
+                    })
+                    ->wrap(),
+                TextColumn::make('rejection_note')
+                    ->label('Alasan ditolak')
+                    ->placeholder('-')
+                    ->wrap(),
+            ])
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('approve')
+                        ->label('Setujui')
+                        ->icon(Heroicon::OutlinedCheck)
+                        ->requiresConfirmation()
+                        ->visible(fn (SuratTugasVisitasi $record): bool => $record->status === 'diajukan')
+                        ->action(fn (SuratTugasVisitasi $record) => $this->runAction(
+                            fn () => app(ApproveVisitasi::class)->handle($record, auth()->user()),
+                            'Visitasi disetujui.',
+                        )),
+                    Action::make('reject')
+                        ->label('Tolak')
+                        ->icon(Heroicon::OutlinedXMark)
+                        ->color('danger')
+                        ->visible(fn (SuratTugasVisitasi $record): bool => $record->status === 'diajukan')
+                        ->schema([
+                            Textarea::make('reason')
+                                ->label('Alasan penolakan')
+                                ->required()
+                                ->minLength((int) config('pkl.rejection_note.min_length', 10))
+                                ->maxLength(500),
+                        ])
+                        ->action(fn (SuratTugasVisitasi $record, array $data) => $this->runAction(
+                            fn () => app(RejectVisitasi::class)->handle($record, auth()->user(), $data['reason']),
+                            'Pengajuan visitasi ditolak.',
+                        )),
+                    Action::make('issue')
+                        ->label('Terbitkan surat')
+                        ->icon(Heroicon::OutlinedPaperAirplane)
+                        ->visible(fn (SuratTugasVisitasi $record): bool => $record->status === 'disetujui'
+                            && blank($record->nomor_surat))
+                        ->action(function (SuratTugasVisitasi $record): void {
+                            try {
+                                app(IssueSuratTugasVisitasi::class)->handle($record, auth()->user());
+                            } catch (Throwable $exception) {
+                                Notification::make()->title($exception->getMessage())->danger()->send();
+
+                                return;
+                            }
+
+                            Notification::make()->title('Nomor surat visitasi berhasil diterbitkan.')->success()->send();
+                        }),
+                    Action::make('download')
+                        ->label('Unduh surat')
+                        ->icon(Heroicon::OutlinedArrowDownTray)
+                        ->url(fn (SuratTugasVisitasi $record): string => route('documents.download', [
+                            'jenis' => 'surat_tugas_visitasi',
+                            'id' => $record->getKey(),
+                        ]))
+                        ->openUrlInNewTab()
+                        ->visible(fn (SuratTugasVisitasi $record): bool => filled($record->nomor_surat)),
+                ]),
+            ])
+            ->emptyStateHeading('Belum ada pengajuan visitasi')
+            ->emptyStateDescription('Surat tugas manual atau pengajuan Kaprog muncul di sini.');
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('create')
+                ->label('Buat surat tugas manual')
+                ->icon(Heroicon::OutlinedPlus)
+                ->modalHeading('Buat surat tugas manual')
+                ->modalDescription('Surat manual masuk ke antrean persetujuan yang sama.')
+                ->modalSubmitActionLabel('Buat pengajuan')
+                ->schema([
+                    Select::make('guru_id')
+                        ->label('Guru pembimbing')
+                        ->options(fn (): array => $this->teachers())
+                        ->searchable()
+                        ->required()
+                        ->live(),
+                    Select::make('company_ids')
+                        ->label('Perusahaan')
+                        ->options(fn (Get $get): array => $this->companiesFor($get('guru_id')))
+                        ->multiple()
+                        ->required(fn (Get $get): bool => ! $get('is_general'))
+                        ->visible(fn (Get $get): bool => ! $get('is_general')),
+                    Toggle::make('is_general')
+                        ->label('Seluruh perusahaan bimbingan guru')
+                        ->live(),
+                ])
+                ->action(function (array $data): void {
+                    $guru = is_numeric($data['guru_id'] ?? null)
+                        ? User::query()->find((int) $data['guru_id'])
+                        : null;
+
+                    if (! $guru instanceof User) {
+                        Notification::make()->title('Pilih guru pembimbing yang masih aktif.')->danger()->send();
+
+                        return;
+                    }
+
+                    $this->runAction(
+                        fn () => app(RequestVisitasi::class)->handle(
+                            $guru,
+                            array_map('intval', $data['company_ids'] ?? []),
+                            (bool) ($data['is_general'] ?? false),
+                            auth()->user(),
+                        ),
+                        'Surat visitasi manual dibuat untuk persetujuan.',
+                    );
+                }),
+        ];
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema->components([EmbeddedTable::make()]);
     }
 
     /** @return array<int, string> */
@@ -55,122 +220,32 @@ class KelolaVisitasi extends Page
     }
 
     /** @return array<int, string> */
-    public function companies(): array
+    public function companiesFor(mixed $guruId): array
     {
-        if ($this->guruId === null) {
+        $guru = is_numeric($guruId) ? User::query()->find((int) $guruId) : null;
+
+        if (! $guru instanceof User) {
             return [];
         }
 
-        return app(PlottingService::class)->companiesForGuru(User::query()->findOrFail($this->guruId))
+        return app(PlottingService::class)->companiesForGuru($guru)
             ->mapWithKeys(fn (Company $company): array => [$company->id => $company->nama])
             ->all();
     }
 
-    /** @return array<int, SuratTugasVisitasi> */
-    public function visitations(): array
+    private function runAction(callable $callback, string $successTitle): void
     {
-        Gate::forUser(auth()->user())->authorize('viewAny', SuratTugasVisitasi::class);
-
-        return SuratTugasVisitasi::query()
-            ->with(['guru', 'kaprog', 'companies.company'])
-            ->latest('created_at')
-            ->limit(100)
-            ->get()
-            ->all();
-    }
-
-    public function createManual(): void
-    {
-        $this->validate([
-            'guruId' => ['required', 'integer', 'exists:users,id'],
-            'companyIds' => ['array'],
-            'companyIds.*' => ['integer', 'exists:companies,id'],
-        ]);
-
         try {
-            app(RequestVisitasi::class)->handle(
-                User::query()->findOrFail($this->guruId),
-                array_map('intval', $this->companyIds),
-                $this->isGeneral,
-                auth()->user(),
-            );
+            $callback();
         } catch (ValidationException $exception) {
-            $this->showValidation($exception);
+            Notification::make()
+                ->title($exception->errors()[array_key_first($exception->errors())][0] ?? 'Data belum valid')
+                ->danger()
+                ->send();
 
             return;
         }
 
-        $this->reset('guruId', 'companyIds', 'isGeneral');
-        Notification::make()->title('Surat visitasi manual dibuat untuk persetujuan.')->success()->send();
-    }
-
-    public function approve(int $id): void
-    {
-        $visitasi = SuratTugasVisitasi::query()->findOrFail($id);
-
-        try {
-            app(ApproveVisitasi::class)->handle($visitasi, auth()->user());
-        } catch (ValidationException $exception) {
-            $this->showValidation($exception);
-
-            return;
-        }
-
-        Notification::make()->title('Visitasi disetujui.')->success()->send();
-    }
-
-    public function issueLetter(int $id): void
-    {
-        try {
-            app(IssueSuratTugasVisitasi::class)->handle(
-                SuratTugasVisitasi::query()->findOrFail($id),
-                auth()->user(),
-            );
-        } catch (\Throwable $exception) {
-            Notification::make()->title($exception->getMessage())->danger()->send();
-
-            return;
-        }
-
-        Notification::make()->title('Nomor surat visitasi berhasil diterbitkan.')->success()->send();
-    }
-
-    public function startReject(int $id): void
-    {
-        $this->rejectingId = $id;
-        $this->rejectionReason = null;
-    }
-
-    public function reject(): void
-    {
-        $this->validate(['rejectionReason' => ['required', 'string']]);
-
-        try {
-            app(RejectVisitasi::class)->handle(
-                SuratTugasVisitasi::query()->findOrFail($this->rejectingId),
-                auth()->user(),
-                $this->rejectionReason,
-            );
-        } catch (ValidationException $exception) {
-            $this->showValidation($exception);
-
-            return;
-        }
-
-        $this->reset('rejectingId', 'rejectionReason');
-        Notification::make()->title('Pengajuan visitasi ditolak.')->success()->send();
-    }
-
-    private function showValidation(ValidationException $exception): void
-    {
-        foreach ($exception->errors() as $field => $messages) {
-            $this->addError($field, $messages[0]);
-        }
-
-        Notification::make()
-            ->title('Data visitasi belum valid')
-            ->body($exception->errors()[array_key_first($exception->errors())][0] ?? '')
-            ->danger()
-            ->send();
+        Notification::make()->title($successTitle)->success()->send();
     }
 }

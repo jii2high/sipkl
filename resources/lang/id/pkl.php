@@ -276,6 +276,7 @@ return [
         'link_issued' => 'Tautan penilaian industri diterbitkan.',
         'link_reissued' => 'Tautan penilaian industri diterbitkan ulang.',
         'link_revoked' => 'Tautan penilaian industri dicabut.',
+        'link_email_note' => 'Tautan juga dikirim ke email pembimbing industri.',
         'score_saved' => 'Penilaian industri tersimpan dan dikunci.',
         'state_none' => 'belum dibuat',
         'state_active' => 'aktif',

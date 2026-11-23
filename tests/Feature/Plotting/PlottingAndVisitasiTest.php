@@ -29,6 +29,7 @@ use App\Models\VisitasiDokumentasi;
 use App\Notifications\Notification as PklNotification;
 use App\Services\PlottingService;
 use App\Support\JakartaTime;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
@@ -406,7 +407,8 @@ test('hubin visitasi page renders', function () {
 
     Livewire::test(KelolaVisitasi::class)
         ->assertOk()
-        ->assertSee('Pengelolaan Visitasi');
+        ->assertSee('Pengelolaan Visitasi')
+        ->assertSee('Guru pembimbing');
 });
 
 test('approve visitasi tanpa TTD kepsek tetap disetujui dan Hubin diberi tahu', function () {
@@ -565,7 +567,7 @@ test('tombol terbitkan surat hubin menerbitkan nomor setelah TTD tersedia', func
     $this->actingAs($context['hubin'])->withSession(['active_role' => 'hubin']);
 
     Livewire::test(KelolaVisitasi::class)
-        ->call('issueLetter', $visitasi->getKey())
+        ->callAction(TestAction::make('issue')->table($visitasi))
         ->assertOk();
 
     expect($visitasi->refresh()->nomor_surat)->not->toBeNull();
