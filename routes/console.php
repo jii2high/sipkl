@@ -2,7 +2,9 @@
 
 use App\Jobs\ExpireMagicLinksJob;
 use App\Jobs\ExpireVisitasiJob;
+use App\Jobs\IndustryAssessmentReminderJob;
 use App\Jobs\ProvisionalReminderJob;
+use App\Jobs\RelockScoreJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -17,6 +19,12 @@ Schedule::job(new ProvisionalReminderJob)
     ->timezone('Asia/Jakarta')
     ->name('pengingat-provisional');
 
+// Pengingat H-7 penilaian industri, hanya bila tautan belum dibuat (KP-F10-4).
+Schedule::job(new IndustryAssessmentReminderJob)
+    ->dailyAt('07:05')
+    ->timezone('Asia/Jakarta')
+    ->name('pengingat-penilaian-industri');
+
 Schedule::job(new ExpireVisitasiJob)
     ->dailyAt('01:00')
     ->timezone('Asia/Jakarta')
@@ -25,3 +33,8 @@ Schedule::job(new ExpireVisitasiJob)
 Schedule::job(new ExpireMagicLinksJob)
     ->hourly()
     ->name('kedaluwarsa-magic-link');
+
+// Window revisi nilai sidang ditutup otomatis setelah 24 jam (KP-F9-4).
+Schedule::job(new RelockScoreJob)
+    ->hourly()
+    ->name('kunci-ulang-nilai-sidang');

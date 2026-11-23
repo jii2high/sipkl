@@ -44,9 +44,10 @@ final class MagicLinkService
         ?User $createdBy = null,
         ?int $ttlMinutes = null,
         ?int $reissuedFromId = null,
+        ?CarbonImmutable $expiresAt = null,
     ): array {
         return DB::transaction(fn (): array => $this->createLink(
-            $type, $referenceId, $pin, $createdBy, $ttlMinutes, $reissuedFromId,
+            $type, $referenceId, $pin, $createdBy, $ttlMinutes, $reissuedFromId, $expiresAt,
         ));
     }
 
@@ -56,15 +57,20 @@ final class MagicLinkService
      *
      * @return array{link: MagicLink, token: string}
      */
-    public function reissue(MagicLink $old, ?string $pin = null, ?User $actor = null, ?string $reason = null): array
-    {
+    public function reissue(
+        MagicLink $old,
+        ?string $pin = null,
+        ?User $actor = null,
+        ?string $reason = null,
+        ?CarbonImmutable $expiresAt = null,
+    ): array {
         $reason = $reason === null ? null : trim($reason);
 
         if ($actor !== null && ($reason === null || $reason === '')) {
             throw ValidationException::withMessages(['alasan' => __('pkl.eksternal.revoke_reason_required')]);
         }
 
-        return DB::transaction(function () use ($old, $pin, $actor, $reason): array {
+        return DB::transaction(function () use ($old, $pin, $actor, $reason, $expiresAt): array {
             $locked = MagicLink::query()->whereKey($old->getKey())->lockForUpdate()->firstOrFail();
 
             $this->close($locked, $actor, $reason ?? 'Digantikan tautan baru');
@@ -91,6 +97,7 @@ final class MagicLinkService
                 $actor,
                 null,
                 (int) $locked->getKey(),
+                $expiresAt,
             );
         });
     }
@@ -243,6 +250,7 @@ final class MagicLinkService
         ?User $createdBy,
         ?int $ttlMinutes,
         ?int $reissuedFromId,
+        ?CarbonImmutable $expiresAt = null,
     ): array {
         MagicLink::query()
             ->where('type', $type)
@@ -253,7 +261,7 @@ final class MagicLinkService
             ->each(fn (MagicLink $existing) => $this->close($existing, null, 'Digantikan tautan baru'));
 
         $token = $this->randomToken();
-        $expiresAt = $ttlMinutes === null
+        $expiresAt ??= $ttlMinutes === null
             ? $this->defaultExpiry($type)
             : now()->addMinutes(max(1, $ttlMinutes));
 

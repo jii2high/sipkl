@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Table(name: 'pengajuan_siswa')]
 #[Fillable([
@@ -100,6 +101,12 @@ class PengajuanSiswa extends Model
         return $this->hasMany(DocumentSignature::class);
     }
 
+    /** @return HasOne<JadwalSidang, $this> */
+    public function jadwalSidang(): HasOne
+    {
+        return $this->hasOne(JadwalSidang::class);
+    }
+
     /** Pengajuan masih dihitung aktif (BR-F3-1). */
     public function isActive(): bool
     {
@@ -107,6 +114,23 @@ class PengajuanSiswa extends Model
             PengajuanStatus::Rejected->value,
             PengajuanStatus::Withdrawn->value,
         ], true);
+    }
+
+    /** Laporan sudah melewati 5-TTD sehingga siswa boleh dijadwalkan sidang (KP-F9-5). */
+    public function hasLegitReport(): bool
+    {
+        return $this->laporanVersions()->where('is_legit', true)->exists();
+    }
+
+    /**
+     * Pool Siap Sidang: pengajuan yang punya laporan `is_legit` (T6.3).
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeSiapSidang(Builder $query): Builder
+    {
+        return $query->whereHas('laporanVersions', fn (Builder $report) => $report->where('is_legit', true));
     }
 
     /** Kontak perusahaan boleh tampil utuh setelah Kaprog menyetujui (PRD F3 alur 1). */

@@ -1,7 +1,10 @@
 # AGENTS.md
 
 ## Project
-Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Aplikasi Laravel + Filament sudah berjalan (M0–M5): panel `app` dan `hubin`, 12 migrasi, 187 tes Pest hijau di MySQL. Source of truth order: `docs/PRD.md` (behavior) -> `docs/TRD.md` (implementation) -> `docs/schema.sql` (data shape) -> `DESIGN.md` (visual).
+Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Aplikasi Laravel + Filament sudah berjalan (M0–M6): panel `app` dan `hubin`, 13 migrasi, 205 tes Pest hijau di MySQL. Source of truth order: `docs/PRD.md` (behavior) -> `docs/TRD.md` (implementation) -> `docs/schema.sql` (data shape) -> `DESIGN.md` (visual).
+
+## Branch
+- Pekerjaan berjalan di `jii2high`; isinya sama dengan `main` (`origin/jii2high` juga `e69555c`).
 
 ## Stack (from TRD)
 PHP/Laravel + Filament multi-panel (`app`, `hubin`), Livewire/Blade, Tailwind, MySQL 8.0.16+, database queue/cache/session, private local storage. No extra packages or abstractions beyond TRD without a task.
@@ -14,6 +17,7 @@ PHP/Laravel + Filament multi-panel (`app`, `hubin`), Livewire/Blade, Tailwind, M
 - `docs/schema.sql` is design reference, not a migration script.
 - Reference folders have spaces (`docs/old physical dokument examples/`, `docs/form-penilaian-references/`); quote paths in shell.
 - UI text and validation messages are Bahasa Indonesia.
+- Portal `/eksternal/*` hanya lewat guard `eksternal` (`EnsureExternalToken`); rute eksternal tidak masuk grup panel `app`/`hubin`.
 
 ## Database
 - Nama kanonik aplikasi `sistem_pkl`; tes `sistem_pkl_test` (`phpunit.xml`). `.env.example`, CI, dan `.env` lokal memakai nama ini.
