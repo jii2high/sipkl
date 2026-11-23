@@ -19,7 +19,7 @@ test('peran aktif yang tidak dimiliki menghasilkan 403 di panel', function () {
 
     $this->actingAs($user)
         ->withSession(['active_role' => 'kaprog'])
-        ->get('/app')
+        ->get('/guru')
         ->assertForbidden();
 });
 
@@ -28,7 +28,7 @@ test('pengguna dengan peran aktif sah dapat membuka panel', function () {
 
     $this->actingAs($user)
         ->withSession(['active_role' => 'guru_pembimbing'])
-        ->get('/app')
+        ->get('/guru')
         ->assertOk();
 });
 
@@ -50,14 +50,12 @@ test('hak akses panel mengikuti peran yang dimiliki', function () {
     $guru = pklUser(['guru_pembimbing']);
     $kaprog = pklUser(['kaprog']);
 
-    expect($guru->canAccessPanel(Filament::getPanel('app')))->toBeTrue()
-        ->and($guru->canAccessPanel(Filament::getPanel('guru')))->toBeTrue()
+    expect($guru->canAccessPanel(Filament::getPanel('guru')))->toBeTrue()
         ->and($guru->canAccessPanel(Filament::getPanel('kaprog')))->toBeFalse()
         ->and($guru->canAccessPanel(Filament::getPanel('hubin')))->toBeFalse()
         ->and($kaprog->canAccessPanel(Filament::getPanel('kaprog')))->toBeTrue()
         ->and($kaprog->canAccessPanel(Filament::getPanel('guru')))->toBeFalse()
-        ->and($hubin->canAccessPanel(Filament::getPanel('hubin')))->toBeTrue()
-        ->and($hubin->canAccessPanel(Filament::getPanel('app')))->toBeFalse();
+        ->and($hubin->canAccessPanel(Filament::getPanel('hubin')))->toBeTrue();
 });
 
 test('tiap panel hanya terbuka untuk perannya', function () {
@@ -82,6 +80,6 @@ test('akun tanpa peran tidak bisa akses panel', function () {
 
     $this->actingAs($user)
         ->withSession(['active_role' => 'guru_pembimbing'])
-        ->get('/app')
+        ->get('/guru')
         ->assertForbidden();
 });

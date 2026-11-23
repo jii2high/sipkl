@@ -185,13 +185,6 @@ class User extends Authenticatable implements FilamentUser
             'hubin' => $this->hasRole(Role::Hubin),
             'kaprog' => $this->hasRole(Role::Kaprog),
             'guru' => $this->hasRole(Role::GuruPembimbing),
-            'app' => $this->hasRole(
-                Role::Siswa,
-                Role::Walas,
-                Role::GuruPembimbing,
-                Role::Kaprog,
-                Role::Kepsek,
-            ),
             default => false,
         };
     }

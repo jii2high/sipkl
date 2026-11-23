@@ -9,34 +9,36 @@ use Filament\Facades\Filament;
  */
 dataset('halaman per peran', [
     'siswa' => [
-        'app', 'siswa',
-        ['/app', '/siswa', '/siswa/bimbingan', '/siswa/jadwal-sidang', '/app/pengaturan-notifikasi'],
+        null, 'siswa',
+        ['/siswa', '/siswa/bimbingan', '/siswa/jadwal-sidang', '/notifikasi'],
         ['/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/walas/kanban', '/kaprog/monitoring', '/guru/bimbingan-siswa'],
     ],
     'walas' => [
-        'app', 'walas',
-        ['/app', '/walas', '/walas/kanban', '/app/pengaturan-notifikasi'],
+        null, 'walas',
+        ['/walas', '/walas/kanban', '/notifikasi'],
         ['/kaprog/monitoring', '/kaprog/form-builder', '/kaprog/plotting-guru', '/guru/visitasi'],
     ],
     'guru_pembimbing' => [
         'guru', 'guru_pembimbing',
-        ['/guru', '/guru/bimbingan-siswa', '/guru/penilaian-industri', '/guru/visitasi', '/app/pengaturan-notifikasi'],
+        ['/guru', '/guru/bimbingan-siswa', '/guru/penilaian-industri', '/guru/visitasi', '/notifikasi'],
         ['/kaprog/antrean-pengajuan', '/walas/kanban', '/kaprog/monitoring', '/kaprog/pengesahan-laporan'],
     ],
     'kaprog' => [
-        'app', 'kaprog',
-        ['/app', '/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/kaprog/plotting-guru', '/kaprog/visitasi', '/kaprog/jadwal-sidang', '/kaprog/pengesahan-laporan', '/kaprog/penilaian-sidang', '/kaprog/monitoring', '/app/pengaturan-notifikasi'],
+        'kaprog', 'kaprog',
+        ['/kaprog', '/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/kaprog/plotting-guru', '/kaprog/visitasi', '/kaprog/jadwal-sidang', '/kaprog/pengesahan-laporan', '/kaprog/penilaian-sidang', '/kaprog/monitoring', '/notifikasi'],
         ['/walas/kanban', '/guru/penilaian-industri'],
     ],
     'kepsek' => [
-        'app', 'kepsek',
-        ['/kepsek', '/app', '/app/pengaturan-notifikasi'],
+        null, 'kepsek',
+        ['/kepsek', '/notifikasi'],
         ['/walas/kanban', '/kaprog/monitoring'],
     ],
 ]);
 
-test('peran membuka halaman intinya dan ditolak di halaman peran lain', function (string $panel, string $role, array $allowed, array $denied) {
-    Filament::setCurrentPanel(Filament::getPanel($panel));
+test('peran membuka halaman intinya dan ditolak di halaman peran lain', function (?string $panel, string $role, array $allowed, array $denied) {
+    if ($panel !== null) {
+        Filament::setCurrentPanel(Filament::getPanel($panel));
+    }
 
     $user = pklUser([$role]);
     $this->actingAs($user)->withSession(['active_role' => $role]);

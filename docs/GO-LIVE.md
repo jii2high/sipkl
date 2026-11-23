@@ -103,11 +103,12 @@ intinya (200) dan ditolak di halaman peran lain (403). Yang tetap manual: lebar 
 
 | Peran | Halaman inti | 360px | 1280px | Terang | Gelap |
 |---|---|---|---|---|---|
-| Siswa | `/app/pengajuan-saya`, `/app/bimbingan-saya`, `/app/jadwal-sidang-saya` | [ ] | [ ] | [ ] | [ ] |
-| Walas | `/app/antrean-pengajuan`, `/app/kanban-kelas` | [ ] | [ ] | [ ] | [ ] |
-| Guru | `/app/bimbingan-siswa`, `/app/pengesahan-laporan` (via ACC final), `/app/visitasi`, `/app/penilaian-industri` | [ ] | [ ] | [ ] | [ ] |
-| Kaprog | `/app/antrean-pengajuan`, `/app/plotting-guru`, `/app/form-builder`, `/app/jadwal-sidang`, `/app/pengesahan-laporan`, `/app/penilaian-sidang`, `/app/monitoring` | [ ] | [ ] | [ ] | [ ] |
-| Kepsek | `/app/pengesahan-laporan` (bulk TTD di ponsel) | [ ] | [ ] | [ ] | [ ] |
+| Siswa | `/siswa`, `/siswa/bimbingan`, `/siswa/jadwal-sidang` | [ ] | [ ] | [ ] | [ ] |
+| Walas | `/walas`, `/walas/kanban` | [ ] | [ ] | [ ] | [ ] |
+| Guru | `/guru/bimbingan-siswa`, `/guru/penilaian-industri`, `/guru/visitasi` | [ ] | [ ] | [ ] | [ ] |
+| Kaprog | `/kaprog/antrean-pengajuan`, `/kaprog/plotting-guru`, `/kaprog/form-builder`, `/kaprog/jadwal-sidang`, `/kaprog/pengesahan-laporan`, `/kaprog/penilaian-sidang`, `/kaprog/monitoring` | [ ] | [ ] | [ ] | [ ] |
+| Kepsek | `/kepsek` (bulk TTD di ponsel) | [ ] | [ ] | [ ] | [ ] |
+| Semua peran berakun | `/notifikasi` (preferensi notifikasi) | [ ] | [ ] | [ ] | [ ] |
 | Hubin | `/hubin/companies`, `/hubin/users`, `/hubin/signature-assets`, `/hubin/faqs`, `/hubin/ekspor-akreditasi`, `/hubin/monitoring` | [ ] | [ ] | [ ] | [ ] |
 | Penguji | `/eksternal/penguji/{token}` (PIN) | [ ] | [ ] | [ ] | [ ] |
 | Industri | `/eksternal/industri/{token}` (OTP) | [ ] | [ ] | [ ] | [ ] |
@@ -141,7 +142,7 @@ dijalankan. Jalankan saat uji beban di server nyata.
 | Q-A | Nomor surat per **tahun ajaran** (bukan per periode) | Menyimpang dari PD-13; mengubahnya = ganti kunci counter dan UNIQUE nomor surat |
 | Q-E | `nilai_total` = rata-rata item, skala 0–100, 2 desimal, dihitung server (`ScoreService`) | Tidak ada kolom `max`; batas 100 konstanta kelas |
 | Q-F | Stack Filament/Livewire/MySQL | Aplikasi sudah dibangun di atas stack ini; kembali ke TRD v1 berarti bangun ulang |
-| Q-K | 5 kolom kanban: (1) pengajuan & verifikasi, (2) surat & balasan, (3) PKL & bimbingan, (4) pengesahan laporan, (5) sidang & selesai | Dipakai di `/app/kanban-kelas` |
+| Q-K | 5 kolom kanban: (1) pengajuan & verifikasi, (2) surat & balasan, (3) PKL & bimbingan, (4) pengesahan laporan, (5) sidang & selesai | Dipakai di `/walas/kanban` |
 | Q-L | Masa berlaku visitasi dari **tanggal terbit** surat | Sudah keputusan PO |
 | Q-H | Perusahaan tanpa signer boleh jalan sampai step 3; Hubin diberi tahu | Default dipakai |
 

@@ -58,6 +58,23 @@ trait ConfiguresPanel
     }
 
     /**
+     * Item menu akun: tautan preferensi notifikasi lalu pindah peran.
+     * Preferensi notifikasi satu halaman lintas-peran di `/notifikasi` (§5 no. 3).
+     *
+     * @return array<int, Action>
+     */
+    protected function accountMenuItems(): array
+    {
+        return [
+            Action::make('notifikasi')
+                ->label(__('pkl.push.judul'))
+                ->icon('heroicon-o-bell')
+                ->url(fn (): string => route('portal.notifikasi')),
+            ...$this->roleMenuItems(),
+        ];
+    }
+
+    /**
      * Item menu akun untuk berpindah peran. Peran yang sedang aktif dan peran
      * yang tidak dimiliki tidak ditampilkan. POST dipakai agar perpindahan peran
      * tidak terjadi lewat tautan GET.

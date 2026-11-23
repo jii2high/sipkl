@@ -95,8 +95,9 @@ berkas PDF tidak pernah dibuat.
 |---|---|
 | `/` | Beranda publik |
 | `/login` | Satu-satunya pintu masuk semua peran; setelahnya OTP dan/atau ganti sandi |
-| `/app` | Panel peran non-Hubin (siswa, walas, kaprog, guru pembimbing, kepsek) |
 | `/hubin` | Panel Hubin (desktop) |
+| `/kaprog`, `/guru` | Panel Filament Kaprog dan Guru Pembimbing (desktop) |
+| `/siswa`, `/walas`, `/kepsek` | Portal mobile Siswa, Wali Kelas, dan Kepala Sekolah |
 | `/verify/{token}` | Verifikasi surat publik hasil pindai QR |
 | `/documents/{jenis}/{id}` | Unduh PDF surat; wajib login dan berwenang |
 

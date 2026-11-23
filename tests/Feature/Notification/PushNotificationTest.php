@@ -1,10 +1,9 @@
 <?php
 
-use App\Filament\App\Pages\PengaturanNotifikasi;
 use App\Jobs\SendNotificationJob;
+use App\Livewire\Portal\PengaturanNotifikasi;
 use App\Models\NotificationDeliveryFailure;
 use App\Notifications\Notification as AppNotification;
-use Filament\Facades\Filament;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
@@ -51,8 +50,6 @@ test('kegagalan push tercatat dan tidak melempar', function () {
 });
 
 test('halaman notifikasi menyimpan pilihan opt-in dan opt-out', function () {
-    Filament::setCurrentPanel(Filament::getPanel('app'));
-
     $user = pklUser(['siswa'], ['push_opt_in' => null]);
     $this->actingAs($user)->withSession(['active_role' => 'siswa']);
 

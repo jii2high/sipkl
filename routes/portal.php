@@ -6,6 +6,7 @@ use App\Livewire\Portal\JadwalSidang;
 use App\Livewire\Portal\KanbanKelas;
 use App\Livewire\Portal\PengajuanSiswa;
 use App\Livewire\Portal\PengesahanKepsek;
+use App\Livewire\Portal\PengaturanNotifikasi;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,4 +30,9 @@ Route::middleware(['auth', 'portal.role:walas'])->group(function (): void {
 
 Route::middleware(['auth', 'portal.role:kepsek'])->group(function (): void {
     Route::get('/kepsek', PengesahanKepsek::class)->name('portal.kepsek');
+});
+
+// Preferensi notifikasi lintas-peran: satu rute auth-only (§5 no. 3).
+Route::middleware(['auth'])->group(function (): void {
+    Route::get('/notifikasi', PengaturanNotifikasi::class)->name('portal.notifikasi');
 });

@@ -22,7 +22,7 @@ class KaprogPanelProvider extends PanelProvider
             ->brandName('SIM PKL Kaprog')
             ->colors($this->panelColors())
             ->darkMode(true)
-            ->userMenuItems($this->roleMenuItems())
+            ->userMenuItems($this->accountMenuItems())
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): View => view('filament.panel-assets'),

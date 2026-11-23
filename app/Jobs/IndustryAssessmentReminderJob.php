@@ -92,7 +92,7 @@ class IndustryAssessmentReminderJob implements ShouldQueue
                 new AppNotification(
                     'Tautan penilaian industri belum dibuat',
                     'Tautan penilaian industri untuk '.$company->nama.' belum dibuat. PKL siswa selesai '.$days.' hari lagi.',
-                    url('/app/penilaian-industri'),
+                    url('/guru/penilaian-industri'),
                 ),
                 ['related' => $company],
             );

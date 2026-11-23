@@ -19,10 +19,11 @@ class HubinPanelProvider extends PanelProvider
         return $panel
             ->id('hubin')
             ->path('hubin')
+            ->default()
             ->brandName('SIM PKL Hubin')
             ->colors($this->panelColors())
             ->darkMode(true)
-            ->userMenuItems($this->roleMenuItems())
+            ->userMenuItems($this->accountMenuItems())
             // Token dan aturan sentuh Design.md juga berlaku di panel Filament.
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
