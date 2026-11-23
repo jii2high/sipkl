@@ -392,13 +392,15 @@ test('halaman antrean Hubin dan konfirmasi fisik hanya untuk Hubin', function ()
         ->withSession(['active_role' => 'hubin'])
         ->get('/hubin/antrean-surat-pengantar')
         ->assertOk()
-        ->assertSee('Antrean surat pengantar');
+        ->assertSee('Antrean surat pengantar')
+        ->assertSee('Tidak ada group menunggu surat');
 
     $this->actingAs($this->hubin)
         ->withSession(['active_role' => 'hubin'])
         ->get('/hubin/konfirmasi-dokumen-fisik')
         ->assertOk()
-        ->assertSee('Konfirmasi dokumen fisik');
+        ->assertSee('Konfirmasi dokumen fisik')
+        ->assertSee('Tidak ada dokumen fisik tertunda');
 
     $this->actingAs($this->siswa)
         ->withSession(['active_role' => 'siswa'])
