@@ -357,6 +357,23 @@ return [
         'catatan' => 'Pilihan ini tidak pernah ditanyakan ulang otomatis; ubah kapan saja di halaman ini.',
     ],
 
+    'portal' => [
+        'judul' => 'SIM PKL',
+        'notifikasi' => 'Notifikasi',
+        'pengajuan_judul' => 'Pengajuan PKL saya',
+        'walas_judul' => 'Antrean pengajuan kelas',
+        'kepsek_judul' => 'Pengesahan laporan',
+        'nav' => [
+            'pengajuan' => 'Pengajuan',
+            'bimbingan' => 'Bimbingan',
+            'jadwal_sidang' => 'Jadwal sidang',
+            'antrean' => 'Antrean',
+            'kanban' => 'Kanban kelas',
+            'pengesahan' => 'Pengesahan',
+            'notifikasi' => 'Notifikasi',
+        ],
+    ],
+
     'export' => [
         'judul' => 'Ekspor akreditasi',
         'subjudul' => 'Snapshot hasil sidang per periode. Berkas diunduh dari penyimpanan privat dan dihapus otomatis setelah :hari hari.',

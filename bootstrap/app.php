@@ -4,6 +4,7 @@ use App\Exceptions\DocumentIssuanceHeld;
 use App\Exceptions\InvalidTransition;
 use App\Exceptions\QuotaExceeded;
 use App\Http\Middleware\EnsureExternalToken;
+use App\Http\Middleware\EnsurePortalRole;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,10 +20,16 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function (): void {
             // Portal eksternal memakai sesi web tetapi guard token terpisah (TRD.md §9.3).
             Route::middleware('web')->group(base_path('routes/eksternal.php'));
+
+            // Portal mobile per peran (TRD.md §7.1).
+            Route::middleware('web')->group(base_path('routes/portal.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['eksternal' => EnsureExternalToken::class]);
+        $middleware->alias([
+            'eksternal' => EnsureExternalToken::class,
+            'portal.role' => EnsurePortalRole::class,
+        ]);
 
         // Header keamanan untuk semua respons web, termasuk portal eksternal (TRD.md A16).
         $middleware->web(append: [SecurityHeaders::class]);
