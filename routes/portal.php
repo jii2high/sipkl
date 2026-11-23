@@ -1,6 +1,8 @@
 <?php
 
 use App\Livewire\Portal\AntreanWalas;
+use App\Livewire\Portal\BimbinganSiswa;
+use App\Livewire\Portal\JadwalSidang;
 use App\Livewire\Portal\PengajuanSiswa;
 use App\Livewire\Portal\PengesahanKepsek;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'portal.role:siswa'])->group(function (): void {
     Route::get('/siswa', PengajuanSiswa::class)->name('portal.siswa');
+    Route::get('/siswa/bimbingan', BimbinganSiswa::class)->name('portal.siswa.bimbingan');
+    Route::get('/siswa/jadwal-sidang', JadwalSidang::class)->name('portal.siswa.jadwal-sidang');
 });
 
 Route::middleware(['auth', 'portal.role:walas'])->group(function (): void {

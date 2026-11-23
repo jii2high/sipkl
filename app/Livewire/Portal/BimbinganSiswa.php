@@ -1,32 +1,31 @@
 <?php
 
-namespace App\Filament\App\Pages;
+namespace App\Livewire\Portal;
 
 use App\Actions\Bimbingan\MarkBagianAkhir;
 use App\Actions\Bimbingan\SubmitBimbingan;
 use App\Actions\Pengesahan\UploadRevisiLaporan;
 use App\Enums\PengajuanStatus;
-use App\Enums\Role;
 use App\Models\BimbinganSubmission;
 use App\Models\DocumentSignature;
 use App\Models\LaporanVersion;
 use App\Models\PengajuanSiswa;
-use Filament\Notifications\Notification;
-use Filament\Pages\Page;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
-class BimbinganSaya extends Page
+/**
+ * Portal siswa `/siswa/bimbingan` (R4.2): unggah bimbingan, progres interaksi,
+ * revisi laporan setelah step ditolak, dan penanda bagian akhir. Semua guard
+ * tetap di Action domain; kelas ini hanya mengatur state UI.
+ */
+#[Layout('components.layouts.portal')]
+#[Title('Bimbingan laporan')]
+class BimbinganSiswa extends Component
 {
     use WithFileUploads;
-
-    protected string $view = 'filament.app.pages.bimbingan-saya';
-
-    protected static ?string $navigationLabel = 'Bimbingan';
-
-    protected static ?string $title = 'Bimbingan Laporan';
-
-    protected static ?int $navigationSort = 4;
 
     public mixed $file = null;
 
@@ -34,10 +33,10 @@ class BimbinganSaya extends Page
 
     public mixed $revisionFile = null;
 
-    public static function canAccess(): bool
-    {
-        return session('active_role') === Role::Siswa->value;
-    }
+    /** Pesan singkat aksi terakhir; pengganti toast panel. */
+    public ?string $flash = null;
+
+    public string $flashTone = 'info';
 
     public function pengajuan(): ?PengajuanSiswa
     {
@@ -102,54 +101,69 @@ class BimbinganSaya extends Page
             ->first();
     }
 
-    public function uploadRevision(): void
-    {
-        $pengajuan = $this->pengajuan();
-
-        if ($pengajuan === null) {
-            return;
-        }
-
-        $this->validate(['revisionFile' => ['required', 'file']]);
-        $step = $this->rejectedSignature()?->step_order;
-
-        try {
-            app(UploadRevisiLaporan::class)->handle(auth()->user(), $pengajuan, $this->revisionFile);
-        } catch (ValidationException $exception) {
-            $this->showValidation($exception);
-
-            return;
-        }
-
-        $this->reset('revisionFile');
-        Notification::make()->title(__('pkl.pengesahan.revision_uploaded', ['step' => $step ?? '']))->success()->send();
-    }
-
     public function submit(): void
     {
+        $this->flash = null;
         $pengajuan = $this->pengajuan();
 
         if ($pengajuan === null) {
-            Notification::make()->title(__('pkl.bimbingan.only_sedang_pkl'))->danger()->send();
+            $this->notify(__('pkl.bimbingan.only_sedang_pkl'), 'danger');
 
             return;
         }
 
-        $this->validate([
-            'file' => ['required', 'file'],
-            'keterangan' => ['nullable', 'string', 'max:2000'],
-        ]);
+        try {
+            $this->validate([
+                'file' => ['required', 'file'],
+                'keterangan' => ['nullable', 'string', 'max:2000'],
+            ]);
+        } catch (ValidationException $exception) {
+            $this->reportValidation($exception);
+
+            return;
+        }
 
         try {
             app(SubmitBimbingan::class)->handle(auth()->user(), $pengajuan, $this->file, $this->keterangan);
         } catch (ValidationException $exception) {
-            $this->showValidation($exception);
+            $this->reportValidation($exception);
 
             return;
         }
 
         $this->reset('file', 'keterangan');
-        Notification::make()->title(__('pkl.bimbingan.uploaded'))->success()->send();
+        $this->notify(__('pkl.bimbingan.uploaded'), 'success');
+    }
+
+    public function uploadRevision(): void
+    {
+        $this->flash = null;
+        $pengajuan = $this->pengajuan();
+
+        if ($pengajuan === null) {
+            return;
+        }
+
+        try {
+            $this->validate(['revisionFile' => ['required', 'file']]);
+        } catch (ValidationException $exception) {
+            $this->reportValidation($exception);
+
+            return;
+        }
+
+        $step = $this->rejectedSignature()?->step_order;
+
+        try {
+            app(UploadRevisiLaporan::class)->handle(auth()->user(), $pengajuan, $this->revisionFile);
+        } catch (ValidationException $exception) {
+            $this->reportValidation($exception);
+
+            return;
+        }
+
+        $this->reset('revisionFile');
+        $this->notify(__('pkl.pengesahan.revision_uploaded', ['step' => $step ?? '']), 'success');
     }
 
     public function markFinal(int $id): void
@@ -159,23 +173,33 @@ class BimbinganSaya extends Page
         try {
             app(MarkBagianAkhir::class)->handle(auth()->user(), $submission);
         } catch (ValidationException $exception) {
-            $this->showValidation($exception);
+            $this->reportValidation($exception);
 
             return;
         }
 
-        Notification::make()->title(__('pkl.bimbingan.bagian_akhir_marked'))->success()->send();
+        $this->notify(__('pkl.bimbingan.bagian_akhir_marked'), 'success');
     }
 
-    private function showValidation(ValidationException $exception): void
+    private function notify(string $message, string $tone): void
+    {
+        $this->flash = $message;
+        $this->flashTone = $tone;
+    }
+
+    private function reportValidation(ValidationException $exception): void
     {
         foreach ($exception->errors() as $field => $messages) {
             $this->addError($field, $messages[0]);
         }
 
-        Notification::make()
-            ->title($exception->errors()[array_key_first($exception->errors())][0] ?? '')
-            ->danger()
-            ->send();
+        $first = $exception->errors()[array_key_first($exception->errors())][0] ?? 'Bimbingan belum dapat diproses.';
+
+        $this->notify($first, 'danger');
+    }
+
+    public function render(): mixed
+    {
+        return view('livewire.portal.bimbingan-siswa');
     }
 }

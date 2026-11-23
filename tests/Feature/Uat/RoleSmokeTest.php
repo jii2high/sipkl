@@ -10,7 +10,7 @@ use Filament\Facades\Filament;
 dataset('halaman per peran', [
     'siswa' => [
         'app', 'siswa',
-        ['/app', '/siswa', '/app/bimbingan-saya', '/app/jadwal-sidang-saya', '/app/pengaturan-notifikasi'],
+        ['/app', '/siswa', '/siswa/bimbingan', '/siswa/jadwal-sidang', '/app/pengaturan-notifikasi'],
         ['/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/app/kanban-kelas', '/kaprog/monitoring', '/guru/bimbingan-siswa'],
     ],
     'walas' => [

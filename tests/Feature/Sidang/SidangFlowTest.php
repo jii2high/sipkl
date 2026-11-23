@@ -16,6 +16,7 @@ use App\Enums\PengajuanStatus;
 use App\Filament\Kaprog\Pages\JadwalSidangPage;
 use App\Jobs\RelockScoreJob;
 use App\Livewire\Eksternal\ExaminerEntry;
+use App\Livewire\Portal\JadwalSidang as PortalJadwal;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
 use App\Models\ExternalExaminer;
@@ -379,4 +380,44 @@ test('portal penguji menerima PIN dan menampilkan form nilai', function () {
         ->get('/eksternal/penguji-nilai')
         ->assertOk()
         ->assertSee('Aspek Teknis');
+});
+
+test('portal jadwal sidang hanya menampilkan jadwal milik siswa', function () {
+    $context = sidangContext();
+    sidangSchedule($context, '2026-12-07');
+
+    $otherSiswa = User::factory()->siswa((int) $context['siswa']->jurusan_id, (int) $context['siswa']->kelas_id)->create();
+    UserRole::query()->create(['user_id' => $otherSiswa->getKey(), 'role' => 'siswa']);
+    $otherCompany = Company::factory()->create();
+    $otherGroup = PengajuanPkl::query()->create([
+        'company_id' => $otherCompany->getKey(),
+        'academic_period_id' => $context['period']->getKey(),
+        'status' => 'berjalan',
+    ]);
+    $otherPengajuan = PengajuanSiswa::query()->create([
+        'pengajuan_pkl_id' => $otherGroup->getKey(),
+        'company_id' => $otherCompany->getKey(),
+        'academic_period_id' => $context['period']->getKey(),
+        'siswa_id' => $otherSiswa->getKey(),
+        'status' => PengajuanStatus::SedangPkl->value,
+        'snapshot_company_json' => ['nama' => $otherCompany->nama],
+        'tanggal_mulai_pkl' => '2026-06-01',
+        'tanggal_selesai_pkl' => '2026-12-31',
+    ]);
+    JadwalSidang::query()->create([
+        'pengajuan_siswa_id' => $otherPengajuan->getKey(),
+        'external_examiner_id' => $context['examiner']->getKey(),
+        'tanggal' => '2026-12-08',
+        'urutan' => 1,
+        'status' => JadwalSidang::STATUS_TERJADWAL,
+        'scheduled_by' => $context['kaprog']->getKey(),
+    ]);
+
+    $this->actingAs($context['siswa'])->withSession(['active_role' => 'siswa']);
+
+    Livewire::test(PortalJadwal::class)
+        ->assertSee('07 Dec 2026')
+        ->assertDontSee('08 Dec 2026')
+        ->assertSee('Dewi Penguji')
+        ->assertSee('Terjadwal');
 });

@@ -2,7 +2,7 @@
 
 test('tamu diarahkan ke /login di setiap permukaan portal', function (string $url) {
     $this->get($url)->assertRedirect('/login');
-})->with(['/siswa', '/walas', '/kepsek']);
+})->with(['/siswa', '/siswa/bimbingan', '/siswa/jadwal-sidang', '/walas', '/kepsek']);
 
 test('setiap peran membuka portalnya sendiri', function (string $role, string $url) {
     $user = pklUser([$role]);
@@ -12,6 +12,8 @@ test('setiap peran membuka portalnya sendiri', function (string $role, string $u
     $this->get($url)->assertOk();
 })->with([
     ['siswa', '/siswa'],
+    ['siswa', '/siswa/bimbingan'],
+    ['siswa', '/siswa/jadwal-sidang'],
     ['walas', '/walas'],
     ['kepsek', '/kepsek'],
 ]);

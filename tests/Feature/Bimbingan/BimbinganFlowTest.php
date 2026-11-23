@@ -7,6 +7,7 @@ use App\Actions\Bimbingan\SubmitBimbingan;
 use App\Actions\Pengajuan\ApproveWithdrawal;
 use App\Enums\PengajuanStatus;
 use App\Filament\Guru\Pages\BimbinganSiswa;
+use App\Livewire\Portal\BimbinganSiswa as PortalBimbingan;
 use App\Models\AcademicPeriod;
 use App\Models\BimbinganSubmission;
 use App\Models\Company;
@@ -253,4 +254,91 @@ test('guru memberi feedback dan ACC laporan final dari tabel bimbingan', functio
         ->assertNotified(__('pkl.bimbingan.final_approved'));
 
     expect(LaporanVersion::query()->count())->toBe(1);
+});
+
+test('portal bimbingan siswa mengunggah berkas dan menampilkan progres', function () {
+    $context = bimbinganContext();
+    $this->actingAs($context['siswa']);
+    session(['active_role' => 'siswa']);
+
+    Livewire::test(PortalBimbingan::class)
+        ->assertSee('0 dari 4')
+        ->set('file', bimbinganFile())
+        ->set('keterangan', 'Bab 1 pendahuluan')
+        ->call('submit')
+        ->assertHasNoErrors()
+        ->assertSee('1 dari 4');
+
+    $submission = BimbinganSubmission::query()->firstOrFail();
+
+    expect($submission->keterangan)->toBe('Bab 1 pendahuluan');
+    Storage::disk('local')->assertExists($submission->file_path);
+});
+
+test('portal bimbingan menampilkan guard provisional sebagai pesan', function () {
+    $context = bimbinganContext(provisional: true);
+    $this->actingAs($context['siswa']);
+    session(['active_role' => 'siswa']);
+
+    Livewire::test(PortalBimbingan::class)
+        ->assertSee(__('pkl.bimbingan.provisional_locked'))
+        ->set('file', bimbinganFile())
+        ->call('submit')
+        ->assertHasErrors('file');
+
+    expect(BimbinganSubmission::query()->count())->toBe(0);
+});
+
+test('portal bimbingan menahan bagian akhir sebelum empat interaksi', function () {
+    $context = bimbinganContext();
+    $this->actingAs($context['siswa']);
+    session(['active_role' => 'siswa']);
+
+    $first = uploadBimbingan($context);
+    uploadBimbingan($context);
+    uploadBimbingan($context);
+
+    Livewire::test(PortalBimbingan::class)
+        ->assertSee('3 dari 4')
+        ->call('markFinal', $first->getKey())
+        ->assertHasErrors('bagian_akhir');
+
+    uploadBimbingan($context);
+
+    Livewire::test(PortalBimbingan::class)
+        ->assertSee('4 dari 4')
+        ->call('markFinal', $first->getKey())
+        ->assertHasNoErrors();
+
+    expect($first->refresh()->is_bagian_akhir)->toBeTrue();
+});
+
+test('portal bimbingan mengunggah revisi setelah step ditolak', function () {
+    $context = bimbinganContext();
+    $this->actingAs($context['siswa']);
+    session(['active_role' => 'siswa']);
+
+    $version = LaporanVersion::query()->create([
+        'pengajuan_siswa_id' => $context['pengajuan']->getKey(),
+        'version_number' => 1,
+        'file_path' => 'laporan/v1.pdf',
+        'created_by' => $context['kaprog']->getKey(),
+    ]);
+
+    DocumentSignature::query()->create([
+        'pengajuan_siswa_id' => $context['pengajuan']->getKey(),
+        'laporan_version_id' => $version->getKey(),
+        'step_order' => 4,
+        'signer_type' => 'kepala_industri',
+        'status' => 'rejected',
+        'rejection_note' => 'Bab 4 perlu diperbaiki.',
+    ]);
+
+    Livewire::test(PortalBimbingan::class)
+        ->assertSee('Bab 4 perlu diperbaiki.')
+        ->set('revisionFile', bimbinganFile('revisi.pdf'))
+        ->call('uploadRevision')
+        ->assertHasNoErrors();
+
+    expect(LaporanVersion::query()->max('version_number'))->toBe(2);
 });
