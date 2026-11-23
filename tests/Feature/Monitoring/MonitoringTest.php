@@ -1,8 +1,7 @@
 <?php
 
 use App\Enums\PengajuanStatus;
-use App\Filament\App\Pages\KanbanKelas;
-use App\Filament\Kaprog\Pages\Monitoring;
+use App\Livewire\Portal\KanbanKelas;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
 use App\Models\DocumentSignature;
@@ -51,8 +50,6 @@ function monitoringPengajuan(array $base, User $siswa, string $status = 'draft',
 }
 
 test('walas hanya melihat kanban kelasnya sendiri', function () {
-    Filament::setCurrentPanel(Filament::getPanel('app'));
-
     $kelasA = Kelas::factory()->create();
     $kelasB = Kelas::factory()->create();
 
@@ -77,8 +74,6 @@ test('walas hanya melihat kanban kelasnya sendiri', function () {
 });
 
 test('kanban menempatkan pengajuan sesuai posisi alur', function () {
-    Filament::setCurrentPanel(Filament::getPanel('app'));
-
     $kelas = Kelas::factory()->create();
     $walas = pklUser(['walas']);
     $walas->roles()->where('role', 'walas')->update(['kelas_id' => $kelas->id]);
@@ -120,8 +115,6 @@ test('kanban menempatkan pengajuan sesuai posisi alur', function () {
 });
 
 test('pengajuan ditolak dan ditarik tidak tampil di kanban', function () {
-    Filament::setCurrentPanel(Filament::getPanel('app'));
-
     $kelas = Kelas::factory()->create();
     $walas = pklUser(['walas']);
     $walas->roles()->where('role', 'walas')->update(['kelas_id' => $kelas->id]);
@@ -140,13 +133,19 @@ test('pengajuan ditolak dan ditarik tidak tampil di kanban', function () {
 });
 
 test('hanya walas yang dapat membuka kanban dan hanya kaprog yang dapat membuka dashboard', function () {
-    session(['active_role' => 'walas']);
-    expect(KanbanKelas::canAccess())->toBeTrue()
-        ->and(Monitoring::canAccess())->toBeFalse();
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
 
-    session(['active_role' => 'kaprog']);
-    expect(KanbanKelas::canAccess())->toBeFalse()
-        ->and(Monitoring::canAccess())->toBeTrue();
+    $walas = pklUser(['walas']);
+    $this->actingAs($walas)->withSession(['active_role' => 'walas']);
+
+    expect($this->get('/walas/kanban')->getStatusCode())->toBe(200)
+        ->and($this->get('/kaprog/monitoring')->getStatusCode())->toBe(403);
+
+    $kaprog = pklUser(['kaprog']);
+    $this->actingAs($kaprog)->withSession(['active_role' => 'kaprog']);
+
+    expect($this->get('/walas/kanban')->getStatusCode())->toBe(403)
+        ->and($this->get('/kaprog/monitoring')->getStatusCode())->toBe(200);
 });
 
 test('dashboard monitoring dapat dibuka Kaprog dan Hubin', function () {

@@ -11,27 +11,27 @@ dataset('halaman per peran', [
     'siswa' => [
         'app', 'siswa',
         ['/app', '/siswa', '/siswa/bimbingan', '/siswa/jadwal-sidang', '/app/pengaturan-notifikasi'],
-        ['/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/app/kanban-kelas', '/kaprog/monitoring', '/guru/bimbingan-siswa'],
+        ['/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/walas/kanban', '/kaprog/monitoring', '/guru/bimbingan-siswa'],
     ],
     'walas' => [
         'app', 'walas',
-        ['/app', '/app/kanban-kelas', '/app/pengaturan-notifikasi'],
+        ['/app', '/walas', '/walas/kanban', '/app/pengaturan-notifikasi'],
         ['/kaprog/monitoring', '/kaprog/form-builder', '/kaprog/plotting-guru', '/guru/visitasi'],
     ],
     'guru_pembimbing' => [
         'guru', 'guru_pembimbing',
         ['/guru', '/guru/bimbingan-siswa', '/guru/penilaian-industri', '/guru/visitasi', '/app/pengaturan-notifikasi'],
-        ['/kaprog/antrean-pengajuan', '/app/kanban-kelas', '/kaprog/monitoring', '/kaprog/pengesahan-laporan'],
+        ['/kaprog/antrean-pengajuan', '/walas/kanban', '/kaprog/monitoring', '/kaprog/pengesahan-laporan'],
     ],
     'kaprog' => [
         'app', 'kaprog',
         ['/app', '/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/kaprog/plotting-guru', '/kaprog/visitasi', '/kaprog/jadwal-sidang', '/kaprog/pengesahan-laporan', '/kaprog/penilaian-sidang', '/kaprog/monitoring', '/app/pengaturan-notifikasi'],
-        ['/app/kanban-kelas', '/guru/penilaian-industri'],
+        ['/walas/kanban', '/guru/penilaian-industri'],
     ],
     'kepsek' => [
         'app', 'kepsek',
         ['/kepsek', '/app', '/app/pengaturan-notifikasi'],
-        ['/app/kanban-kelas', '/kaprog/monitoring'],
+        ['/walas/kanban', '/kaprog/monitoring'],
     ],
 ]);
 

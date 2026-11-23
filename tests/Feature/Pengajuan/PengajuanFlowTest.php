@@ -10,6 +10,7 @@ use App\Actions\Pengajuan\SubmitPengajuan;
 use App\Enums\PengajuanStatus;
 use App\Exceptions\InvalidTransition;
 use App\Jobs\GroupCompanyJob;
+use App\Livewire\Portal\AntreanWalas;
 use App\Livewire\Portal\PengajuanSiswa as PortalPengajuan;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
@@ -346,4 +347,69 @@ test('portal siswa menyimpan draf lalu mengirim lewat komponen Livewire', functi
 
     expect($pengajuan->refresh()->status)->toBe(PengajuanStatus::MenungguVerifikasiKaprog->value)
         ->and($pengajuan->snapshot_company_json['nama'])->toBe('PT Contoh Awal');
+});
+
+test('portal walas hanya menampilkan pengajuan kelasnya dan menandatanganinya', function () {
+    $draft = buatDraftPkl($this->siswa, $this->period, $this->company);
+    kirimPengajuanPkl($draft, $this->siswa);
+
+    session(['active_role' => 'kaprog']);
+    app(ApproveByKaprog::class)->handle($draft->refresh(), $this->kaprog);
+
+    $kelasLain = Kelas::factory()->create();
+    $siswaLain = pklUser(['siswa'], [
+        'user_type' => 'siswa',
+        'jurusan_id' => $kelasLain->jurusan_id,
+        'kelas_id' => $kelasLain->id,
+        'name' => 'Siswa Kelas Lain',
+    ]);
+
+    PengajuanSiswa::query()->create([
+        'company_id' => $this->company->getKey(),
+        'academic_period_id' => $this->period->getKey(),
+        'siswa_id' => $siswaLain->getKey(),
+        'status' => PengajuanStatus::MenungguTtdWalas->value,
+        'snapshot_company_json' => ['nama' => $this->company->nama],
+        'tanggal_mulai_pkl' => '2026-01-05',
+        'tanggal_selesai_pkl' => '2026-04-30',
+    ]);
+
+    Queue::fake();
+    $this->actingAs($this->walas)->withSession(['active_role' => 'walas']);
+
+    Livewire::test(AntreanWalas::class)
+        ->assertSee($this->siswa->name)
+        ->assertDontSee('Siswa Kelas Lain')
+        ->call('approve', $draft->getKey())
+        ->assertSet('flash', __('pkl.pengajuan.signed_walas'));
+
+    Queue::assertPushed(GroupCompanyJob::class);
+
+    expect($draft->refresh()->status)->toBe(PengajuanStatus::MenungguSuratPengantar->value);
+});
+
+test('portal walas menolak pengajuan dengan catatan minimal', function () {
+    $draft = buatDraftPkl($this->siswa, $this->period, $this->company);
+    kirimPengajuanPkl($draft, $this->siswa);
+
+    session(['active_role' => 'kaprog']);
+    app(ApproveByKaprog::class)->handle($draft->refresh(), $this->kaprog);
+
+    $this->actingAs($this->walas)->withSession(['active_role' => 'walas']);
+
+    $component = Livewire::test(AntreanWalas::class);
+
+    $component->call('startReject', $draft->getKey())
+        ->set('rejectNote', 'pendek')
+        ->call('reject', $draft->getKey())
+        ->assertHasErrors('rejectNote');
+
+    expect($draft->refresh()->status)->toBe(PengajuanStatus::MenungguTtdWalas->value);
+
+    $component->set('rejectNote', 'Surat izin orang tua belum lengkap.')
+        ->call('reject', $draft->getKey())
+        ->assertHasNoErrors()
+        ->assertSet('flash', __('pkl.pengajuan.rejected_walas'));
+
+    expect($draft->refresh()->status)->toBe(PengajuanStatus::DitolakWalas->value);
 });

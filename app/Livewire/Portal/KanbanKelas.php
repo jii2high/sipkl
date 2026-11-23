@@ -1,46 +1,25 @@
 <?php
 
-namespace App\Filament\App\Pages;
+namespace App\Livewire\Portal;
 
 use App\Enums\PengajuanStatus;
 use App\Enums\Role;
 use App\Models\PengajuanSiswa;
 use App\Support\JakartaTime;
-use BackedEnum;
-use Filament\Pages\Page;
-use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
 /**
- * Kanban read-only Walas (BR-F15-1, Q-K). Lima kolom mengikuti posisi pengajuan;
- * query dibatasi `visibleTo()` ke kelas peran aktif, jadi kelas lain tidak pernah
+ * Portal walas `/walas/kanban` (R4.4): kanban read-only 5 kolom (BR-F15-1, Q-K).
+ * Query dibatasi `visibleTo()` ke kelas peran aktif, jadi kelas lain tidak pernah
  * dimuat. Tidak ada aksi ubah di halaman ini.
  */
-class KanbanKelas extends Page
+#[Layout('components.layouts.portal')]
+#[Title('Kanban kelas')]
+class KanbanKelas extends Component
 {
-    protected string $view = 'filament.app.pages.kanban-kelas';
-
-    protected static ?string $navigationLabel = 'Kanban kelas';
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedViewColumns;
-
-    protected static ?int $navigationSort = 3;
-
-    public static function canAccess(): bool
-    {
-        return session('active_role') === Role::Walas->value;
-    }
-
-    public function getTitle(): string
-    {
-        return __('pkl.monitor.kanban_judul');
-    }
-
-    public function getSubheading(): ?string
-    {
-        return __('pkl.monitor.kanban_petunjuk');
-    }
-
     /**
      * @return array<int, array{judul: string, items: Collection<int, PengajuanSiswa>}>
      */
@@ -100,5 +79,10 @@ class KanbanKelas extends Page
             $report->is_legit => 5,
             default => 4,
         };
+    }
+
+    public function render(): mixed
+    {
+        return view('livewire.portal.kanban-kelas');
     }
 }
