@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Project
-Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Aplikasi Laravel + Filament sudah berjalan (M0–M6): panel `app` dan `hubin`, 13 migrasi, 205 tes Pest hijau di MySQL. Source of truth order: `docs/PRD.md` (behavior) -> `docs/TRD.md` (implementation) -> `docs/schema.sql` (data shape) -> `DESIGN.md` (visual).
+Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Aplikasi Laravel + Filament sudah berjalan (M0–M10): panel `app` dan `hubin`, 18 migrasi, 271 tes Pest hijau di MySQL. Source of truth order: `docs/PRD.md` (behavior) -> `docs/TRD.md` (implementation) -> `docs/schema.sql` (data shape) -> `DESIGN.md` (visual).
 
 ## Branch
 - Pekerjaan berjalan di `jii2high`; isinya sama dengan `main` (`origin/jii2high` juga `e69555c`).
@@ -35,7 +35,6 @@ PHP/Laravel + Filament multi-panel (`app`, `hubin`), Livewire/Blade, Tailwind, M
 ## Skills to apply
 - `antislop` core always; `antislop-code` for comment hygiene when editing code.
 - `caveman`/`ponytail` for terse, minimal-change work.
-- `ui-ux-pro-max` for UI/UX work: layout, color, typography, accessibility, charts.
 
 ## ponytail (lazy senior dev mode)
 
