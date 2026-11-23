@@ -162,7 +162,11 @@ test('dashboard monitoring dapat dibuka Kaprog dan Hubin', function () {
     $hubin = pklUser(['hubin']);
     $this->actingAs($hubin)->withSession(['active_role' => 'hubin']);
 
-    $this->get('/hubin/monitoring')->assertOk()->assertSee(__('pkl.monitor.judul'));
+    $this->get('/hubin/monitoring')
+        ->assertOk()
+        ->assertSee(__('pkl.monitor.judul'))
+        ->assertSee(__('pkl.monitor.gate'))
+        ->assertSee(__('pkl.monitor.ttd'));
 });
 
 test('durasi tunggu step 5-TTD dihitung dalam hari kerja', function () {

@@ -11,6 +11,8 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -24,8 +26,6 @@ use Filament\Tables\Table;
 class EksporAkreditasi extends Page implements HasTable
 {
     use InteractsWithTable;
-
-    protected string $view = 'filament.hubin.pages.ekspor-akreditasi';
 
     protected static ?string $navigationLabel = 'Ekspor akreditasi';
 
@@ -128,5 +128,10 @@ class EksporAkreditasi extends Page implements HasTable
                     Notification::make()->title(__('pkl.export.dimulai'))->success()->send();
                 }),
         ];
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema->components([EmbeddedTable::make()]);
     }
 }
