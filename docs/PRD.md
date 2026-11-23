@@ -2,7 +2,7 @@
 
 **Versi**: 3.0 (revisi dari v2 terkonsolidasi)
 **Status**: Draf untuk persetujuan Product Owner (PO)
-**Dokumen pendamping**: `TRD.md` (implementasi teknis), `Design.md` (sistem desain), `TASKS.md` (pekerjaan), `scheme.sql` (skema DB)
+**Dokumen pendamping**: `TRD.md` (implementasi teknis), `DESIGN.md` (sistem desain), `TASKS.md` (pekerjaan), `schema.sql` (skema DB), `TASKS-REFACTOR-UI.md` (rencana refactor UI/UX)
 **Lokasi**: `docs/PRD.md`
 
 ## Tentang Revisi Ini
@@ -12,7 +12,7 @@ PRD ini dirapikan dari v2 agar benar-benar menjadi dokumen **produk**: apa yang 
 | Perubahan | Keterangan |
 |---|---|
 | Tech stack dipindah | Bagian "Tech Stack Strategy" v2 §1.4 dipindahkan ke `TRD.md` §2. PRD hanya memuat batasan yang memengaruhi produk (§1.6). |
-| Wireframe ditiadakan | Implementasi langsung, acuan visual = `Design.md` (§1.7, Lampiran A16). Ketentuan v2 yang mewajibkan wireframe untuk halaman Blade kustom dicabut. |
+| Wireframe ditiadakan | Implementasi langsung, acuan visual = `DESIGN.md` (§1.7, Lampiran A16). Ketentuan v2 yang mewajibkan wireframe untuk halaman Blade kustom dicabut. |
 | Struktur baku | Ditambah tujuan terukur, user story per peran, hak akses, kriteria penerimaan per fitur, persyaratan non-fungsional, glosarium. |
 | Aturan diberi ID | Aturan bisnis diberi ID `BR-F{n}-{m}` dan kriteria penerimaan `KP-F{n}-{m}` supaya dapat ditelusuri dari `TASKS.md` dan tes. |
 | Pertanyaan terbuka | Default tetap dipakai, tetapi kini punya status dan pemilik keputusan (Lampiran B). Ditambah satu pertanyaan baru (Q-K). |
@@ -51,16 +51,18 @@ PRD ini dirapikan dari v2 agar benar-benar menjadi dokumen **produk**: apa yang 
 
 Skala: ±1.752 siswa aktif. Pengguna Siswa dan Kepsek dominan memakai ponsel.
 
-| Peran | Akses | Fungsi utama |
-|---|---|---|
-| Siswa | Akun | Mengajukan PKL, upload balasan, bimbingan, memantau pengesahan |
-| Wali Kelas (Walas) | Akun (bisa rangkap) | Gate TTD pengajuan, monitoring kelas (read-only) |
-| Guru Pembimbing | Akun (bisa rangkap) | Bimbingan, ACC laporan final (TTD 1), visitasi, memicu penilaian industri |
-| Kaprog | Akun (bisa rangkap) | Verifikasi, penerimaan, plotting, TTD 2, jadwal sidang, form builder, revisi nilai |
-| Hubin | Akun, panel admin | Master data, surat pengantar, dokumen fisik, FAQ, ekspor akreditasi |
-| Kepala Sekolah (Kepsek) | Akun, mobile | TTD 5 (bulk/single) |
-| Penguji Eksternal | Magic link + PIN (tanpa akun) | Mengisi nilai sidang |
-| Pembimbing & Kepala Industri | Magic link + OTP email (tanpa akun) | TTD 3/4 dan penilaian industri |
+| Peran | Akses | Permukaan | Fungsi utama |
+|---|---|---|---|
+| Siswa | Akun | Portal `/siswa` | Mengajukan PKL, upload balasan, bimbingan, memantau pengesahan |
+| Wali Kelas (Walas) | Akun (bisa rangkap) | Portal `/walas` | Gate TTD pengajuan, monitoring kelas (read-only) |
+| Guru Pembimbing | Akun (bisa rangkap) | Panel `/guru` | Bimbingan, ACC laporan final (TTD 1), visitasi, memicu penilaian industri |
+| Kaprog | Akun (bisa rangkap) | Panel `/kaprog` | Verifikasi, penerimaan, plotting, TTD 2, jadwal sidang, form builder, revisi nilai |
+| Hubin | Akun | Panel `/hubin` | Master data, surat pengantar, dokumen fisik, FAQ, ekspor akreditasi |
+| Kepala Sekolah (Kepsek) | Akun | Portal `/kepsek` | TTD 5 (bulk/single) |
+| Penguji Eksternal | Magic link + PIN (tanpa akun) | `/eksternal/*` | Mengisi nilai sidang |
+| Pembimbing & Kepala Industri | Magic link + OTP email (tanpa akun) | `/eksternal/*` | TTD 3/4 dan penilaian industri |
+
+Panel Filament hanya untuk Hubin, Kaprog, dan Guru Pembimbing. Siswa, Walas, dan Kepsek memakai portal mobile (`/siswa`, `/walas`, `/kepsek`) dengan satu layout bersama. Satu `/login` untuk semua peran.
 
 ### Matriks Aksi Utama per Peran
 
@@ -127,7 +129,7 @@ Skala: ±1.752 siswa aktif. Pengguna Siswa dan Kepsek dominan memakai ponsel.
 - Revisi nilai penilaian industri; rollback/reset rantai TTD.
 - Pengecualian libur nasional pada hitungan SLA hari kerja.
 - Integrasi antivirus/CDR sebagai syarat (opsional per deployment).
-- Wireframe dan desain visual terpisah (diganti `Design.md`); Redis; pencarian FAQ full-text.
+- Wireframe dan desain visual terpisah (diganti `DESIGN.md`); Redis; pencarian FAQ full-text.
 - NIK wajib untuk penguji.
 
 ## 1.5 Invarian Sistem (tidak boleh dilanggar)
@@ -138,7 +140,7 @@ Skala: ±1.752 siswa aktif. Pengguna Siswa dan Kepsek dominan memakai ponsel.
 4. **Nilai terkunci** setelah `is_submitted`; revisi hanya via izin Kaprog dan link + PIN baru untuk penguji asli.
 5. **`active_role` + scope objek** pada setiap otorisasi (kelas/jurusan/ownership/token).
 6. **Rahasia eksternal ter-hash** (SHA-256 dari secret acak kuat); tidak ada plaintext di DB/log.
-7. **Form dinamis** = MySQL JSON dua tingkat; tanpa JSONB, nested, atau EAV.
+7. **Form dinamis** = dua tingkat konten di tabel relasional (`form_definitions` → `form_sections` → `form_items`); jawaban per submission di kolom JSON. Tanpa tingkat lebih dalam, EAV, atau tabel jawaban per item.
 8. **Idempoten + atomik**: submit/approval ganda tidak membuat baris/surat/notifikasi/nomor ganda; perubahan status dan audit event satu transaksi.
 9. **Waktu**: DB UTC; operasional Asia/Jakarta; date-only inklusif 23:59:59 Jakarta; TTL = durasi elapsed; job harian sekali per tanggal Jakarta; SLA Senin–Jumat.
 
@@ -153,12 +155,12 @@ Skala: ±1.752 siswa aktif. Pengguna Siswa dan Kepsek dominan memakai ponsel.
 | Komunikasi eksternal | Link/PIN dikirim lewat email atau tautan `wa.me` manual; tanpa WhatsApp API |
 | Hari kerja | SLA Senin–Jumat; libur nasional tidak dikecualikan |
 | Perangkat | Siswa dan Kepsek dominan ponsel; layar minimum 360px |
-| Teknologi | Satu bahasa (PHP) dan satu framework UI untuk semua peran. Detail dan trade-off di `TRD.md` §2; persetujuan PO atas penggantian stack tercatat di Lampiran B (Q-F) |
+| Teknologi | Satu bahasa (PHP). Panel Filament untuk Hubin, Kaprog, dan Guru Pembimbing; portal mobile Blade/Livewire untuk Siswa, Walas, dan Kepsek dengan satu layout bersama. Detail dan trade-off di `TRD.md` §2; persetujuan PO atas penggantian stack tercatat di Lampiran B (Q-F) |
 
 ## 1.7 Prinsip Proses dan Desain
 
-- **Tanpa wireframe, langsung implementasi.** Acuan visual adalah `Design.md` (palet 60/30/10, mode terang dan gelap, komponen bersama). Konsistensi tata letak dijaga lewat komponen bersama dan checkpoint visual di akhir tiap milestone (`TRD.md` §14, §17.2).
-- **Perilaku produk = dokumen ini.** Konflik antar dokumen: PRD → TRD → `scheme.sql` → `Design.md` → `TASKS.md`.
+- **Tanpa wireframe, langsung implementasi.** Acuan visual adalah `DESIGN.md` (palet 60/30/10, mode terang dan gelap, komponen bersama). Konsistensi tata letak dijaga lewat komponen bersama dan checkpoint visual di akhir tiap milestone (`TRD.md` §14, §17.2).
+- **Perilaku produk = dokumen ini.** Konflik antar dokumen: PRD → TRD → `schema.sql` → `DESIGN.md` → `TASKS.md`.
 - **Server adalah otoritas.** Tombol disabled hanyalah petunjuk; setiap aturan di dokumen ini wajib ditegakkan di server.
 - **Dokumen fisik tetap hanya di titik wajib**; selebihnya digital.
 
@@ -166,7 +168,7 @@ Skala: ±1.752 siswa aktif. Pengguna Siswa dan Kepsek dominan memakai ponsel.
 
 # BAGIAN 2 — SPESIFIKASI FITUR
 
-Rute: publik `/`, `/faq`, `/login`, `/verify/{token}`; panel Hubin `/hubin`; panel `app` `/app`; eksternal `/eksternal/*`.
+Rute: publik `/`, `/faq`, `/login`, `/verify/{token}`; panel Filament `/hubin`, `/kaprog`, `/guru`; portal mobile `/siswa`, `/walas`, `/kepsek`; eksternal `/eksternal/*`.
 
 Format tiap fitur: **Aktor → Alur → Aturan bisnis (BR) → Edge case → Kriteria penerimaan (KP)**.
 
@@ -364,14 +366,14 @@ Format tiap fitur: **Aktor → Alur → Aturan bisnis (BR) → Edge case → Kri
 
 ---
 
-## F8 — Form Builder (JSON Hybrid)
+## F8 — Form Builder (Section → Items)
 
 **Aktor**: Kaprog.
 
 **Alur**: Kaprog membuat form (tipe `sidang` atau `penilaian_industri`) per jurusan + periode: Section sejajar → Items; opsi "Section Kehadiran" (Sakit/Izin/Tanpa Keterangan) dan "Section Catatan" (free-input) → publish.
 
 **Aturan bisnis**
-- BR-F8-1: Struktur 2 level; setelah ada submission, struktur terkunci (ubah = versi/form baru).
+- BR-F8-1: Struktur dua tingkat relasional (`form_sections` → `form_items`); setelah ada submission, struktur terkunci (ubah = versi/form baru).
 - BR-F8-2: Jawaban di kolom JSON dengan generated column `nilai_total` (rumus: Q-E).
 
 **Edge case**: form tanpa item tidak dapat dipublish; hapus section/item yang sudah dipakai ditolak.
@@ -462,7 +464,7 @@ Format tiap fitur: **Aktor → Alur → Aturan bisnis (BR) → Edge case → Kri
 - BR-F12-2: PDF surat memuat kop, nomor, TTD Kepsek (scan), QR → `/verify/{token}`.
 - BR-F12-3: `/verify/{token}` hanya menampilkan nomor surat, status, tanggal terbit; token tidak valid/dicabut → pesan netral.
 - BR-F12-4: PDF dibuat lewat queue; kegagalan tidak membuat nomor "terpakai tanpa dokumen"; retry idempoten. (Ref lama: AC-46, AC-47)
-- BR-F12-5: Template mengacu pada contoh di `docs/old physical document examples/`.
+- BR-F12-5: Template mengacu pada contoh di `docs/old physical dokument examples/`.
 
 **Kriteria penerimaan**
 - KP-F12-1: Dua penerbitan bersamaan menghasilkan nomor berurutan tanpa duplikat.
@@ -540,8 +542,8 @@ Item bertanda **(usulan)** belum ada di dokumen sumber dan perlu konfirmasi PO.
 | Integritas | Invarian §1.5 ditegakkan di server dan, bila mungkin, di database (CHECK/UNIQUE) |
 | Audit | Setiap perubahan status mencatat aktor, `active_role`, objek, status lama→baru, alasan; satu transaksi dengan perubahan |
 | Performa | Ekspor akreditasi 1.752 siswa < 5 menit (diuji beban); halaman daftar memakai paginasi dan scope di query |
-| Responsif | Seluruh halaman valid di 360px, mode terang dan gelap; target sentuh ≥ 44px |
-| Aksesibilitas | Status tidak hanya dibedakan warna; kontras sesuai aturan `Design.md` **(usulan: target WCAG AA)** |
+| Responsif | Portal mobile (`/siswa`, `/walas`, `/kepsek`) valid di 360px; panel Filament (`/hubin`, `/kaprog`, `/guru`) valid di ponsel dan desktop; mode terang dan gelap; target sentuh ≥ 44px |
+| Aksesibilitas | Status tidak hanya dibedakan warna; kontras sesuai aturan `DESIGN.md` **(usulan: target WCAG AA)** |
 | Lokalisasi | Bahasa Indonesia; format tanggal Asia/Jakarta |
 | Keandalan | Job idempoten dan dapat diulang; kegagalan tercatat; email retry maks 3x |
 | Privasi | Kontak CP perusahaan di-mask sampai disetujui Kaprog; tidak ada NIK penguji |
@@ -555,20 +557,22 @@ Item bertanda **(usulan)** belum ada di dokumen sumber dan perlu konfirmasi PO.
 ```
 docs/
 ├── form-penilaian-references/          # referensi form penilaian → sumber F8, F9, F10
-├── old physical document examples/     # contoh dokumen fisik → sumber template F12
+├── old physical dokument examples/     # contoh dokumen fisik → sumber template F12
 ├── PRD.md                              # dokumen ini
 ├── TRD.md                              # implementasi teknis
 ├── TASKS.md                            # pekerjaan bertahap
-├── Design.md                           # sistem desain terang + gelap
-└── scheme.sql                          # skema MySQL
+├── TASKS-REFACTOR-UI.md                # rencana refactor UI/UX
+└── schema.sql                          # skema MySQL
 ```
+
+`DESIGN.md` berada di root repo, bukan di `docs/`.
 
 | Dokumen | Peran | Aturan pembaruan |
 |---|---|---|
 | `PRD.md` | Sumber kebenaran perilaku produk | Perubahan aturan bisnis dibuat di sini lebih dulu |
 | `TRD.md` | Cara membangun | Tidak boleh bertentangan dengan PRD |
-| `scheme.sql` | Bentuk data | Diperbarui bersama setiap perubahan skema |
-| `Design.md` | Acuan visual (pengganti wireframe) | Diperbarui bila komponen/warna berubah |
+| `schema.sql` | Bentuk data | Diperbarui bersama setiap perubahan skema |
+| `DESIGN.md` | Acuan visual (pengganti wireframe) | Diperbarui bila komponen/warna berubah |
 | `TASKS.md` | Pekerjaan dan hasil uji beban | Menautkan setiap task ke ID `BR-`/`KP-` |
 
 ---
@@ -594,7 +598,7 @@ A1–A15 dipertahankan dari v2. A16–A17 baru pada v3.
 | A13 | Invarian belum dijaga DB | CHECK/UNIQUE ditambahkan (`TRD.md` §6.2) | Diterapkan |
 | A14 | `otp_codes.resend_count/cooldown_until` ambigu | Dihitung dari baris per 30 menit + RateLimiter; `invalidated_at` | Diterapkan |
 | A15 | AC-33 memakai tanggal 20/21 Okt; AC-46/47 bergantung A4 | Perbarui AC bersamaan keputusan Q-A | Menunggu Q-A |
-| A16 | v2 mewajibkan wireframe untuk halaman Blade kustom | **Wireframe ditiadakan**; acuan visual = `Design.md`; verifikasi lewat checkpoint visual | Keputusan baru |
+| A16 | v2 mewajibkan wireframe untuk halaman Blade kustom | **Wireframe ditiadakan**; acuan visual = `DESIGN.md`; verifikasi lewat checkpoint visual | Keputusan baru |
 | A17 | Tech stack tercampur di PRD | Dipindah ke `TRD.md` §2; PRD hanya memuat batasan produk | Keputusan baru |
 
 # LAMPIRAN B — KEPUTUSAN PRODUK DAN PERTANYAAN TERBUKA
