@@ -6,6 +6,7 @@ use App\Actions\Bimbingan\MarkBagianAkhir;
 use App\Actions\Bimbingan\SubmitBimbingan;
 use App\Actions\Pengajuan\ApproveWithdrawal;
 use App\Enums\PengajuanStatus;
+use App\Filament\Guru\Pages\BimbinganSiswa;
 use App\Models\AcademicPeriod;
 use App\Models\BimbinganSubmission;
 use App\Models\Company;
@@ -17,11 +18,14 @@ use App\Models\PengajuanPkl;
 use App\Models\PengajuanSiswa;
 use App\Models\User;
 use App\Models\UserRole;
+use Filament\Actions\Testing\TestAction;
+use Filament\Facades\Filament;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 
 /** @return array{pengajuan: PengajuanSiswa, siswa: User, guru: User, kaprog: User} */
 function bimbinganContext(bool $provisional = false): array
@@ -179,4 +183,74 @@ test('withdrawal archives bimbingan history and resets the count', function () {
     app(ApproveWithdrawal::class)->handle($context['pengajuan']->refresh(), $context['kaprog']);
 
     expect(BimbinganSubmission::query()->where('is_archived', true)->count())->toBe(2);
+});
+
+test('halaman bimbingan guru hanya menampilkan siswa bimbingannya', function () {
+    $context = bimbinganContext();
+    uploadBimbingan($context);
+
+    $otherGuru = pklUser(['guru_pembimbing']);
+    $otherCompany = Company::factory()->create();
+    $otherSiswa = User::factory()->siswa((int) $context['siswa']->jurusan_id, (int) $context['siswa']->kelas_id)->create();
+    UserRole::query()->create(['user_id' => $otherSiswa->getKey(), 'role' => 'siswa']);
+    $otherGroup = PengajuanPkl::query()->create([
+        'company_id' => $otherCompany->getKey(),
+        'academic_period_id' => $context['pengajuan']->academic_period_id,
+        'status' => 'berjalan',
+    ]);
+    $otherPengajuan = PengajuanSiswa::query()->create([
+        'pengajuan_pkl_id' => $otherGroup->getKey(),
+        'company_id' => $otherCompany->getKey(),
+        'academic_period_id' => $context['pengajuan']->academic_period_id,
+        'siswa_id' => $otherSiswa->getKey(),
+        'status' => PengajuanStatus::SedangPkl->value,
+        'snapshot_company_json' => ['nama' => $otherCompany->nama],
+        'tanggal_mulai_pkl' => '2026-01-05',
+        'tanggal_selesai_pkl' => '2026-04-30',
+    ]);
+    GuruPembimbingPlotting::query()->create([
+        'company_id' => $otherCompany->getKey(),
+        'academic_period_id' => $context['pengajuan']->academic_period_id,
+        'guru_id' => $otherGuru->getKey(),
+        'plotted_by' => $context['kaprog']->getKey(),
+        'plotted_at' => now(),
+    ]);
+
+    session(['active_role' => 'siswa']);
+    app(SubmitBimbingan::class)->handle($otherSiswa, $otherPengajuan, bimbinganFile(), null);
+
+    Filament::setCurrentPanel(Filament::getPanel('guru'));
+    $this->actingAs($context['guru'])->withSession(['active_role' => 'guru_pembimbing']);
+
+    Livewire::test(BimbinganSiswa::class)
+        ->assertOk()
+        ->assertSee($context['siswa']->name)
+        ->assertDontSee($otherSiswa->name);
+});
+
+test('guru memberi feedback dan ACC laporan final dari tabel bimbingan', function () {
+    $context = bimbinganContext();
+    $submissions = [];
+
+    for ($i = 0; $i < 4; $i++) {
+        $submissions[] = uploadBimbingan($context);
+    }
+
+    $final = $submissions[3];
+    app(MarkBagianAkhir::class)->handle($context['siswa'], $final);
+
+    Filament::setCurrentPanel(Filament::getPanel('guru'));
+    $this->actingAs($context['guru'])->withSession(['active_role' => 'guru_pembimbing']);
+
+    Livewire::test(BimbinganSiswa::class)
+        ->callAction(TestAction::make('accept')->table($final), ['note' => 'Bagian akhir sudah lengkap.'])
+        ->assertNotified(__('pkl.bimbingan.feedback_saved'));
+
+    expect($final->refresh()->status)->toBe('diterima');
+
+    Livewire::test(BimbinganSiswa::class)
+        ->callAction(TestAction::make('approveFinal')->table($final->refresh()))
+        ->assertNotified(__('pkl.bimbingan.final_approved'));
+
+    expect(LaporanVersion::query()->count())->toBe(1);
 });

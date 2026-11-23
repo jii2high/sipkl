@@ -9,6 +9,7 @@ use App\Actions\Visitasi\RejectVisitasi;
 use App\Actions\Visitasi\RequestVisitasi;
 use App\Actions\Visitasi\UploadDokumentasi;
 use App\Enums\PengajuanStatus;
+use App\Filament\Guru\Pages\Visitasi as GuruVisitasiPage;
 use App\Filament\Hubin\Pages\KelolaVisitasi;
 use App\Filament\Kaprog\Pages\PlottingGuru;
 use App\Filament\Kaprog\Pages\Visitasi as VisitasiPage;
@@ -411,6 +412,45 @@ test('visitasi page renders for kaprog', function () {
 
     $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
     Livewire::test(VisitasiPage::class)->assertOk()->assertSee('Visitasi PKL');
+});
+
+test('halaman visitasi guru menampilkan unggah dokumentasi hanya setelah surat bernomor', function () {
+    $context = plottingContext(withSignature: false);
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    Filament::setCurrentPanel(Filament::getPanel('guru'));
+    $this->actingAs($context['guru'])->withSession(['active_role' => 'guru_pembimbing']);
+
+    Livewire::test(GuruVisitasiPage::class)
+        ->assertOk()
+        ->assertSee('Visitasi PKL')
+        ->assertActionHidden(TestAction::make('upload')->table($visitasi));
+
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+    Storage::disk('local')->put('signature/ttd-terbit.png', UploadedFile::fake()->image('ttd-terbit.png')->getContent());
+    SignatureAsset::query()->create([
+        'owner_user_id' => pklUser(['kepsek'])->getKey(),
+        'file_path' => 'signature/ttd-terbit.png',
+        'is_active' => true,
+        'uploaded_by' => $context['hubin']->getKey(),
+    ]);
+    app(IssueSuratTugasVisitasi::class)->handle($visitasi->refresh(), $context['hubin']);
+
+    grantActiveRole('guru_pembimbing');
+    Livewire::test(GuruVisitasiPage::class)
+        ->assertActionVisible(TestAction::make('upload')->table($visitasi->refresh()))
+        ->callAction(TestAction::make('upload')->table($visitasi->refresh()), [
+            'companyId' => $context['company']->getKey(),
+            'visitDate' => JakartaTime::today()->toDateString(),
+            'photo' => UploadedFile::fake()->image('kunjungan.jpg'),
+            'note' => 'Kunjungan pembukaan PKL.',
+        ])
+        ->assertNotified('Dokumentasi visitasi berhasil diunggah.');
+
+    expect(VisitasiDokumentasi::query()->count())->toBe(1);
 });
 
 test('hubin visitasi page renders', function () {

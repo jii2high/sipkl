@@ -8,6 +8,7 @@ use App\Actions\Industri\ReissueIndustryLink;
 use App\Actions\Industri\RevokeIndustryLink;
 use App\Actions\Industri\SubmitIndustryAssessment;
 use App\Enums\PengajuanStatus;
+use App\Filament\Guru\Pages\PenilaianIndustri as GuruPenilaianIndustri;
 use App\Filament\Hubin\Pages\PenilaianIndustri;
 use App\Jobs\IndustryAssessmentReminderJob;
 use App\Jobs\SendNotificationJob;
@@ -400,4 +401,25 @@ test('halaman penilaian industri Hubin menampilkan tautan dan mencabutnya berala
 
     Livewire::test(PenilaianIndustri::class)
         ->assertActionVisible(TestAction::make('issue')->table($submission->refresh()));
+});
+
+test('halaman penilaian industri guru menerbitkan tautan dalam window', function () {
+    $context = industriContext();
+    $context['period']->update(['is_active' => true]);
+
+    industriTravel('2026-12-01');
+
+    Filament::setCurrentPanel(Filament::getPanel('guru'));
+    $this->actingAs($context['guru'])->withSession(['active_role' => 'guru_pembimbing']);
+
+    $rowKey = $context['company']->getKey().'|'.$context['definition']->getKey();
+
+    Livewire::test(GuruPenilaianIndustri::class)
+        ->assertOk()
+        ->assertSee($context['company']->nama)
+        ->assertSee(__('pkl.industri.state_none'))
+        ->callAction(TestAction::make('issue')->table($rowKey))
+        ->assertNotified(__('pkl.industri.link_issued'));
+
+    expect(FormSubmission::query()->sole()->industryLinkState())->toBe('active');
 });
