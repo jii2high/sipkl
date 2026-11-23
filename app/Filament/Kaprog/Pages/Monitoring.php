@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Filament\App\Pages;
+namespace App\Filament\Kaprog\Pages;
 
 use App\Enums\Role;
-use App\Services\MonitoringService;
+use App\Filament\Widgets\MonitoringGateWidget;
+use App\Filament\Widgets\MonitoringTtdWidget;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -11,8 +12,6 @@ use Filament\Support\Icons\Heroicon;
 /** Dashboard Kaprog: durasi tunggu gate dan step 5-TTD (BR-F15-2). */
 class Monitoring extends Page
 {
-    protected string $view = 'filament.monitoring';
-
     protected static ?string $navigationLabel = 'Monitoring';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
@@ -34,13 +33,11 @@ class Monitoring extends Page
         return __('pkl.monitor.subjudul');
     }
 
-    public function gates(): array
+    protected function getHeaderWidgets(): array
     {
-        return app(MonitoringService::class)->gates();
-    }
-
-    public function ttdSteps(): array
-    {
-        return app(MonitoringService::class)->ttdSteps();
+        return [
+            MonitoringGateWidget::class,
+            MonitoringTtdWidget::class,
+        ];
     }
 }

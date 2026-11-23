@@ -2,7 +2,7 @@
 
 use App\Enums\PengajuanStatus;
 use App\Filament\App\Pages\KanbanKelas;
-use App\Filament\App\Pages\Monitoring;
+use App\Filament\Kaprog\Pages\Monitoring;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
 use App\Models\DocumentSignature;
@@ -150,12 +150,12 @@ test('hanya walas yang dapat membuka kanban dan hanya kaprog yang dapat membuka 
 });
 
 test('dashboard monitoring dapat dibuka Kaprog dan Hubin', function () {
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
 
     $kaprog = pklUser(['kaprog']);
     $this->actingAs($kaprog)->withSession(['active_role' => 'kaprog']);
 
-    $this->get('/app/monitoring')->assertOk()->assertSee(__('pkl.monitor.judul'));
+    $this->get('/kaprog/monitoring')->assertOk()->assertSee(__('pkl.monitor.judul'));
 
     Filament::setCurrentPanel(Filament::getPanel('hubin'));
 

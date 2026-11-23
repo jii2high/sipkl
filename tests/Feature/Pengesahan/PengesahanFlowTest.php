@@ -8,6 +8,7 @@ use App\Actions\Pengesahan\UploadRevisiLaporan;
 use App\Enums\PengajuanStatus;
 use App\Enums\Role;
 use App\Exceptions\DocumentIssuanceHeld;
+use App\Filament\Kaprog\Pages\PengesahanLaporan as PengesahanLaporanPage;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
 use App\Models\DocumentSignature;
@@ -23,11 +24,15 @@ use App\Models\UserRole;
 use App\Notifications\SignerLinkNotification;
 use App\Services\ExternalOtpService;
 use App\Services\MagicLinkService;
+use Filament\Actions\Testing\TestAction;
+use Filament\Facades\Filament;
+use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 
 const PENGESAHAN_PDF = "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF";
 
@@ -370,4 +375,49 @@ test('tautan masuk yang tidak valid memakai pesan netral', function () {
     $this->get('/eksternal/masuk/token-palsu')
         ->assertOk()
         ->assertSee(__('pkl.eksternal.invalid_link'));
+});
+
+test('kaprog menandatangani step 2 dari panel pengesahan', function () {
+    $context = pengesahanContext();
+
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
+    $this->actingAs($context['kaprog'])->withSession(['active_role' => Role::Kaprog->value]);
+
+    Livewire::test(PengesahanLaporanPage::class)
+        ->assertOk()
+        ->assertCanSeeTableRecords([$context['step2']])
+        ->callAction(TestAction::make('approve')->table($context['step2']))
+        ->assertNotified(__('pkl.pengesahan.signed', ['step' => 2]));
+
+    expect($context['step2']->refresh()->status)->toBe('signed');
+});
+
+test('bulk panel pengesahan melaporkan alasan tiap laporan yang gagal', function () {
+    $context = pengesahanContext();
+
+    // Step 3 ditandatangani signer industri lewat tautan, jadi bulk Kaprog harus melewatinya.
+    $step3 = DocumentSignature::query()->create([
+        'pengajuan_siswa_id' => $context['pengajuan']->getKey(),
+        'laporan_version_id' => $context['version']->getKey(),
+        'step_order' => 3,
+        'signer_type' => 'pembimbing_industri',
+        'status' => 'pending',
+    ]);
+
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
+    $this->actingAs($context['kaprog'])->withSession(['active_role' => Role::Kaprog->value]);
+
+    Livewire::test(PengesahanLaporanPage::class)
+        ->selectTableRecords([$context['step2'], $step3])
+        ->callAction(TestAction::make('approveBulk')->table()->bulk())
+        ->assertNotified(
+            FilamentNotification::make()
+                ->title('1 laporan disetujui, 1 gagal.')
+                ->body('#'.$step3->getKey().': '.__('pkl.pengesahan.not_authorized'))
+                ->status('warning')
+                ->persistent(),
+        );
+
+    expect($context['step2']->refresh()->status)->toBe('signed')
+        ->and($step3->refresh()->status)->toBe('pending');
 });
