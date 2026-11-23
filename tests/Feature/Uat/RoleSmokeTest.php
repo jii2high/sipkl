@@ -25,7 +25,7 @@ dataset('halaman per peran', [
     ],
     'kaprog' => [
         'app', 'kaprog',
-        ['/app', '/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/app/plotting-guru', '/app/jadwal-sidang', '/app/pengesahan-laporan', '/app/penilaian-sidang', '/app/monitoring', '/app/pengaturan-notifikasi'],
+        ['/app', '/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/app/plotting-guru', '/kaprog/jadwal-sidang', '/app/pengesahan-laporan', '/kaprog/penilaian-sidang', '/app/monitoring', '/app/pengaturan-notifikasi'],
         ['/app/kanban-kelas', '/app/penilaian-industri'],
     ],
     'kepsek' => [

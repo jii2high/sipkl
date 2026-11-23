@@ -13,7 +13,7 @@ use App\Actions\Sidang\SetKelulusan;
 use App\Actions\Sidang\ShiftSidang;
 use App\Actions\Sidang\SubmitScore;
 use App\Enums\PengajuanStatus;
-use App\Filament\App\Pages\JadwalSidangPage;
+use App\Filament\Kaprog\Pages\JadwalSidangPage;
 use App\Jobs\RelockScoreJob;
 use App\Livewire\Eksternal\ExaminerEntry;
 use App\Models\AcademicPeriod;
@@ -31,6 +31,7 @@ use App\Models\SidangResultsSummary;
 use App\Models\User;
 use App\Models\UserRole;
 use App\Services\MagicLinkService;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Notification;
@@ -305,16 +306,42 @@ test('membatalkan jadwal menghapus baris dan merapatkan urutan', function () {
         $context['kaprog'],
     );
 
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
     $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
 
     Livewire::test(JadwalSidangPage::class)
-        ->call('startShift', $first->getKey())
-        ->call('cancelShift')
+        ->callAction(TestAction::make('cancel')->table($first))
         ->assertOk();
 
     expect(JadwalSidang::query()->find($first->getKey()))->toBeNull()
         ->and($second->refresh()->urutan)->toBe(1);
+});
+
+test('geser jadwal yang konflik ditolak dan konfliknya tampil di panel', function () {
+    $context = sidangContext();
+    $first = sidangSchedule($context);
+    $other = app(ScheduleSidang::class)->handle(
+        sidangAddStudent($context, 2),
+        $context['examiner'],
+        '2026-12-07',
+        $context['kaprog'],
+    );
+
+    // Siswa kedua selesai PKL pada hari yang sama, jadi geseran ke 8 Desember ilegal.
+    PengajuanSiswa::query()
+        ->whereKey($other->pengajuan_siswa_id)
+        ->update(['tanggal_selesai_pkl' => '2026-12-07']);
+
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
+    $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
+
+    Livewire::test(JadwalSidangPage::class)
+        ->callAction(TestAction::make('shift')->table($first), ['tanggal' => '2026-12-08'])
+        ->assertNotified('Perubahan jadwal ditolak');
+
+    expect($first->refresh()->tanggal->toDateString())->toBe('2026-12-07')
+        ->and($first->urutan)->toBe(1)
+        ->and($other->refresh()->tanggal->toDateString())->toBe('2026-12-07');
 });
 
 test('kaprog mencabut tautan penguji beserta sesinya', function () {
@@ -322,13 +349,11 @@ test('kaprog mencabut tautan penguji beserta sesinya', function () {
     $jadwal = sidangSchedule($context);
     [$session, $issued] = sidangLinkAndSession($jadwal, $context['kaprog']);
 
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
     $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
 
     Livewire::test(JadwalSidangPage::class)
-        ->call('startRevoke', $jadwal->getKey())
-        ->set('revokeReason', 'Penguji yang ditetapkan keliru.')
-        ->call('revokeLink')
+        ->callAction(TestAction::make('revoke')->table($jadwal), ['reason' => 'Penguji yang ditetapkan keliru.'])
         ->assertOk();
 
     expect($issued['link']->refresh()->revoked_at)->not->toBeNull()
