@@ -434,7 +434,7 @@ test('antrean Kaprog menampilkan kuota untuk keputusan penerimaan', function () 
 
     $this->actingAs($this->kaprog)
         ->withSession(['active_role' => 'kaprog'])
-        ->get('/app/antrean-pengajuan')
+        ->get('/kaprog/antrean-pengajuan')
         ->assertOk()
         ->assertSee('Kuota perusahaan')
         ->assertSee('0 dari 6');

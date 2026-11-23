@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Filament\App\Pages;
+namespace App\Filament\Kaprog\Pages;
 
 use App\Actions\Pengajuan\AcceptByCompany;
 use App\Actions\Pengajuan\ApproveByKaprog;
 use App\Actions\Pengajuan\ApproveWithdrawal;
 use App\Actions\Pengajuan\RejectByCompany;
 use App\Actions\Pengajuan\RejectByKaprog;
-use App\Actions\Pengajuan\RejectByWalas;
-use App\Actions\Pengajuan\SignByWalas;
 use App\Enums\PengajuanStatus;
 use App\Enums\Role;
 use App\Exceptions\QuotaExceeded;
@@ -22,23 +20,23 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Antrean Gate 1 (Kaprog) dan Gate 2 (Walas). Satu halaman, query dan aksi
- * mengikuti peran aktif; data di luar scope tidak pernah dimuat (TRD.md §7.3).
+ * Antrean Gate 1 (Kaprog): verifikasi pengajuan, keputusan setelah balasan
+ * perusahaan, dan penarikan PKL. Data di luar scope jurusan tidak pernah dimuat
+ * (TRD.md §7.3).
  */
 class AntreanPengajuan extends Page implements HasTable
 {
     use InteractsWithTable;
-
-    protected string $view = 'filament.app.pages.antrean-pengajuan';
 
     protected static ?string $navigationLabel = 'Antrean pengajuan';
 
@@ -48,47 +46,36 @@ class AntreanPengajuan extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return in_array(session('active_role'), [Role::Kaprog->value, Role::Walas->value], true);
+        return session('active_role') === Role::Kaprog->value;
     }
 
     public function getTitle(): string
     {
-        return $this->role() === Role::Kaprog->value
-            ? 'Antrean verifikasi Kaprog'
-            : 'Antrean TTD Walas';
+        return 'Antrean verifikasi Kaprog';
     }
 
     public function getSubheading(): ?string
     {
-        return $this->role() === Role::Kaprog->value
-            ? 'Verifikasi pengajuan, keputusan setelah balasan perusahaan, dan penarikan PKL.'
-            : 'Pengajuan dari siswa kelasmu menunggu tanda tangan.';
+        return 'Verifikasi pengajuan, keputusan setelah balasan perusahaan, dan penarikan PKL.';
     }
 
     public function table(Table $table): Table
     {
-        $role = $this->role();
-
-        $query = PengajuanSiswa::query()
-            ->visibleTo(auth()->user(), $role)
-            ->with(['siswa.kelas', 'company', 'academicPeriod']);
-
-        if ($role === Role::Kaprog->value) {
-            $query->where(function ($query): void {
-                $query->whereIn('status', [
-                    PengajuanStatus::MenungguVerifikasiKaprog->value,
-                    PengajuanStatus::MenungguBalasanPerusahaan->value,
-                ])->orWhere(function ($query): void {
-                    $query->where('status', PengajuanStatus::SedangPkl->value)
-                        ->whereNotNull('withdraw_requested_at');
-                });
-            });
-        } else {
-            $query->where('status', PengajuanStatus::MenungguTtdWalas->value);
-        }
-
         return $table
-            ->query($query)
+            ->query(
+                PengajuanSiswa::query()
+                    ->visibleTo(auth()->user(), Role::Kaprog->value)
+                    ->with(['siswa.kelas', 'company', 'academicPeriod'])
+                    ->where(function ($query): void {
+                        $query->whereIn('status', [
+                            PengajuanStatus::MenungguVerifikasiKaprog->value,
+                            PengajuanStatus::MenungguBalasanPerusahaan->value,
+                        ])->orWhere(function ($query): void {
+                            $query->where('status', PengajuanStatus::SedangPkl->value)
+                                ->whereNotNull('withdraw_requested_at');
+                        });
+                    })
+            )
             ->defaultSort('updated_at')
             ->poll('30s')
             ->columns([
@@ -106,16 +93,21 @@ class AntreanPengajuan extends Page implements HasTable
                 TextColumn::make('academicPeriod.tahun_ajaran')
                     ->label('Periode')
                     ->toggleable(),
-                ViewColumn::make('kuota')
+                TextColumn::make('kuota')
                     ->label('Kuota perusahaan')
-                    ->visible($role === Role::Kaprog->value)
-                    ->view('components.quota-bar')
-                    ->viewData(fn (PengajuanSiswa $record): array => [
-                        'used' => app(QuotaService::class)->used(
-                            (int) $record->company_id,
-                            (int) $record->academic_period_id,
-                        ),
-                    ]),
+                    ->badge()
+                    ->state(fn (PengajuanSiswa $record): string => app(QuotaService::class)->label(
+                        app(QuotaService::class)->used((int) $record->company_id, (int) $record->academic_period_id),
+                    ))
+                    ->color(function (PengajuanSiswa $record): string {
+                        $quota = app(QuotaService::class);
+
+                        return match ($quota->tone($quota->used((int) $record->company_id, (int) $record->academic_period_id))) {
+                            'danger' => 'danger',
+                            'warning' => 'warning',
+                            default => 'gray',
+                        };
+                    }),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -131,23 +123,11 @@ class AntreanPengajuan extends Page implements HasTable
                     ->label('Setujui')
                     ->icon(Heroicon::OutlinedCheck)
                     ->requiresConfirmation()
-                    ->visible(fn (PengajuanSiswa $record): bool => $role === Role::Kaprog->value
-                        && (auth()->user()?->can('approveKaprog', $record) ?? false))
+                    ->visible(fn (PengajuanSiswa $record): bool => auth()->user()?->can('approveKaprog', $record) ?? false)
                     ->action(function (PengajuanSiswa $record): void {
                         app(ApproveByKaprog::class)->handle($record, auth()->user());
 
                         Notification::make()->title(__('pkl.pengajuan.approved_kaprog'))->success()->send();
-                    }),
-                Action::make('signWalas')
-                    ->label('Tanda tangani')
-                    ->icon(Heroicon::OutlinedCheck)
-                    ->requiresConfirmation()
-                    ->visible(fn (PengajuanSiswa $record): bool => $role === Role::Walas->value
-                        && (auth()->user()?->can('signWalas', $record) ?? false))
-                    ->action(function (PengajuanSiswa $record): void {
-                        app(SignByWalas::class)->handle($record, auth()->user());
-
-                        Notification::make()->title(__('pkl.pengajuan.signed_walas'))->success()->send();
                     }),
                 Action::make('acceptCompany')
                     ->label('Terima siswa')
@@ -189,10 +169,8 @@ class AntreanPengajuan extends Page implements HasTable
                     ->label('Tolak')
                     ->color('danger')
                     ->icon(Heroicon::OutlinedXMark)
-                    ->visible(fn (PengajuanSiswa $record): bool => (auth()->user()?->can(
-                        $this->ability('reject'),
-                        $record,
-                    ) ?? false) || (auth()->user()?->can('rejectByCompany', $record) ?? false))
+                    ->visible(fn (PengajuanSiswa $record): bool => (auth()->user()?->can('rejectKaprog', $record) ?? false)
+                        || (auth()->user()?->can('rejectByCompany', $record) ?? false))
                     ->schema([
                         Textarea::make('catatan')
                             ->label('Catatan penolakan')
@@ -203,8 +181,8 @@ class AntreanPengajuan extends Page implements HasTable
                                 'min' => __('pkl.rejection_note.min', ['min' => (int) config('pkl.rejection_note.min_length')]),
                             ]),
                     ])
-                    ->action(function (PengajuanSiswa $record, array $data) use ($role): void {
-                        if ($role === Role::Kaprog->value && $record->status === PengajuanStatus::MenungguBalasanPerusahaan->value) {
+                    ->action(function (PengajuanSiswa $record, array $data): void {
+                        if ($record->status === PengajuanStatus::MenungguBalasanPerusahaan->value) {
                             app(RejectByCompany::class)->handle($record, auth()->user(), $data['catatan']);
 
                             Notification::make()->title(__('pkl.pengajuan.rejected_company'))->success()->send();
@@ -212,18 +190,9 @@ class AntreanPengajuan extends Page implements HasTable
                             return;
                         }
 
-                        if ($role === Role::Kaprog->value) {
-                            app(RejectByKaprog::class)->handle($record, auth()->user(), $data['catatan']);
-                        } else {
-                            app(RejectByWalas::class)->handle($record, auth()->user(), $data['catatan']);
-                        }
+                        app(RejectByKaprog::class)->handle($record, auth()->user(), $data['catatan']);
 
-                        Notification::make()
-                            ->title($role === Role::Kaprog->value
-                                ? __('pkl.pengajuan.rejected_kaprog')
-                                : __('pkl.pengajuan.rejected_walas'))
-                            ->success()
-                            ->send();
+                        Notification::make()->title(__('pkl.pengajuan.rejected_kaprog'))->success()->send();
                     }),
                 Action::make('approveWithdrawal')
                     ->label('Setujui penarikan')
@@ -241,16 +210,8 @@ class AntreanPengajuan extends Page implements HasTable
             ->emptyStateDescription('Antrean akan muncul otomatis saat ada pengajuan baru.');
     }
 
-    private function role(): string
+    public function content(Schema $schema): Schema
     {
-        return (string) session('active_role');
-    }
-
-    private function ability(string $kind): string
-    {
-        return match ($this->role()) {
-            Role::Kaprog->value => $kind === 'approve' ? 'approveKaprog' : 'rejectKaprog',
-            default => $kind === 'approve' ? 'signWalas' : 'rejectWalas',
-        };
+        return $schema->components([EmbeddedTable::make()]);
     }
 }

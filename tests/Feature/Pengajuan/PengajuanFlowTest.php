@@ -316,11 +316,11 @@ test('halaman siswa dan antrean mengikuti peran aktif', function () {
 
     $this->actingAs($this->kaprog)
         ->withSession(['active_role' => 'kaprog'])
-        ->get('/app/antrean-pengajuan')
+        ->get('/kaprog/antrean-pengajuan')
         ->assertOk();
 
     $this->actingAs($this->siswa)
         ->withSession(['active_role' => 'siswa'])
-        ->get('/app/antrean-pengajuan')
+        ->get('/kaprog/antrean-pengajuan')
         ->assertForbidden();
 });

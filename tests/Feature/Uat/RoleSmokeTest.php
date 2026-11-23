@@ -11,21 +11,21 @@ dataset('halaman per peran', [
     'siswa' => [
         'app', 'siswa',
         ['/app', '/app/pengajuan-saya', '/app/bimbingan-saya', '/app/jadwal-sidang-saya', '/app/pengaturan-notifikasi'],
-        ['/app/antrean-pengajuan', '/app/kanban-kelas', '/app/monitoring', '/app/form-builder'],
+        ['/kaprog/antrean-pengajuan', '/app/kanban-kelas', '/app/monitoring', '/app/form-builder'],
     ],
     'walas' => [
         'app', 'walas',
-        ['/app', '/app/antrean-pengajuan', '/app/kanban-kelas', '/app/pengaturan-notifikasi'],
+        ['/app', '/app/kanban-kelas', '/app/pengaturan-notifikasi'],
         ['/app/monitoring', '/app/form-builder', '/app/plotting-guru'],
     ],
     'guru_pembimbing' => [
         'app', 'guru_pembimbing',
         ['/app', '/app/bimbingan-siswa', '/app/visitasi', '/app/penilaian-industri', '/app/pengaturan-notifikasi'],
-        ['/app/antrean-pengajuan', '/app/kanban-kelas', '/app/monitoring', '/app/pengesahan-laporan'],
+        ['/kaprog/antrean-pengajuan', '/app/kanban-kelas', '/app/monitoring', '/app/pengesahan-laporan'],
     ],
     'kaprog' => [
         'app', 'kaprog',
-        ['/app', '/app/antrean-pengajuan', '/app/plotting-guru', '/app/form-builder', '/app/jadwal-sidang', '/app/pengesahan-laporan', '/app/penilaian-sidang', '/app/monitoring', '/app/pengaturan-notifikasi'],
+        ['/app', '/kaprog/antrean-pengajuan', '/app/plotting-guru', '/app/form-builder', '/app/jadwal-sidang', '/app/pengesahan-laporan', '/app/penilaian-sidang', '/app/monitoring', '/app/pengaturan-notifikasi'],
         ['/app/kanban-kelas', '/app/penilaian-industri'],
     ],
     'kepsek' => [
