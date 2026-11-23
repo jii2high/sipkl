@@ -3,63 +3,17 @@
 use Filament\Facades\Filament;
 
 /**
- * UAT otomatis: setiap peran membuka halaman intinya dan ditolak di halaman
- * peran lain. Bagian yang tidak bisa diotomatiskan (360px/1280px, terang/gelap,
- * kontras, target sentuh) tetap checklist manual di `docs/GO-LIVE.md`.
+ * UAT otomatis (R6.1): matriks akses peran × permukaan. Tiap peran membuka
+ * permukaannya sendiri (200), ditolak 403 di lima permukaan lain, dan tamu
+ * diarahkan ke `/login`. Bagian yang tidak bisa diotomatiskan (360px/1280px,
+ * terang/gelap, kontras, target sentuh) tetap checklist manual di
+ * `docs/GO-LIVE.md`.
  */
+$semuaPermukaan = ['/hubin', '/kaprog', '/guru', '/siswa', '/walas', '/kepsek'];
+
 dataset('halaman per peran', [
-    'siswa' => [
-        null, 'siswa',
-        ['/siswa', '/siswa/bimbingan', '/siswa/jadwal-sidang', '/notifikasi'],
-        ['/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/walas/kanban', '/kaprog/monitoring', '/guru/bimbingan-siswa'],
-    ],
-    'walas' => [
-        null, 'walas',
-        ['/walas', '/walas/kanban', '/notifikasi'],
-        ['/kaprog/monitoring', '/kaprog/form-builder', '/kaprog/plotting-guru', '/guru/visitasi'],
-    ],
-    'guru_pembimbing' => [
-        'guru', 'guru_pembimbing',
-        ['/guru', '/guru/bimbingan-siswa', '/guru/penilaian-industri', '/guru/visitasi', '/notifikasi'],
-        ['/kaprog/antrean-pengajuan', '/walas/kanban', '/kaprog/monitoring', '/kaprog/pengesahan-laporan'],
-    ],
-    'kaprog' => [
-        'kaprog', 'kaprog',
-        ['/kaprog', '/kaprog/antrean-pengajuan', '/kaprog/form-builder', '/kaprog/plotting-guru', '/kaprog/visitasi', '/kaprog/jadwal-sidang', '/kaprog/pengesahan-laporan', '/kaprog/penilaian-sidang', '/kaprog/monitoring', '/notifikasi'],
-        ['/walas/kanban', '/guru/penilaian-industri'],
-    ],
-    'kepsek' => [
-        null, 'kepsek',
-        ['/kepsek', '/notifikasi'],
-        ['/walas/kanban', '/kaprog/monitoring'],
-    ],
-]);
-
-test('peran membuka halaman intinya dan ditolak di halaman peran lain', function (?string $panel, string $role, array $allowed, array $denied) {
-    if ($panel !== null) {
-        Filament::setCurrentPanel(Filament::getPanel($panel));
-    }
-
-    $user = pklUser([$role]);
-    $this->actingAs($user)->withSession(['active_role' => $role]);
-
-    foreach ($allowed as $url) {
-        expect($this->get($url)->getStatusCode())->toBe(200, "GET $url seharusnya 200");
-    }
-
-    foreach ($denied as $url) {
-        expect($this->get($url)->getStatusCode())->toBe(403, "GET $url seharusnya 403");
-    }
-})->with('halaman per peran');
-
-test('hubin membuka halaman panel dan peran lain ditolak', function () {
-    Filament::setCurrentPanel(Filament::getPanel('hubin'));
-
-    $hubin = pklUser(['hubin']);
-    $this->actingAs($hubin)->withSession(['active_role' => 'hubin']);
-
-    foreach ([
-        '/hubin',
+    // peran => [panel Filament, peran aktif, permukaan, halaman yang juga boleh dibuka]
+    'hubin' => ['hubin', 'hubin', '/hubin', [
         '/hubin/academic-periods',
         '/hubin/companies',
         '/hubin/users',
@@ -68,13 +22,58 @@ test('hubin membuka halaman panel dan peran lain ditolak', function () {
         '/hubin/faq-categories',
         '/hubin/ekspor-akreditasi',
         '/hubin/monitoring',
-    ] as $url) {
-        $this->get($url)->assertOk();
+        '/notifikasi',
+    ]],
+    'siswa' => [null, 'siswa', '/siswa', [
+        '/siswa/bimbingan',
+        '/siswa/jadwal-sidang',
+        '/notifikasi',
+    ]],
+    'walas' => [null, 'walas', '/walas', [
+        '/walas/kanban',
+        '/notifikasi',
+    ]],
+    'guru_pembimbing' => ['guru', 'guru_pembimbing', '/guru', [
+        '/guru/bimbingan-siswa',
+        '/guru/penilaian-industri',
+        '/guru/visitasi',
+        '/notifikasi',
+    ]],
+    'kaprog' => ['kaprog', 'kaprog', '/kaprog', [
+        '/kaprog/antrean-pengajuan',
+        '/kaprog/form-builder',
+        '/kaprog/plotting-guru',
+        '/kaprog/visitasi',
+        '/kaprog/jadwal-sidang',
+        '/kaprog/pengesahan-laporan',
+        '/kaprog/penilaian-sidang',
+        '/kaprog/monitoring',
+        '/notifikasi',
+    ]],
+    'kepsek' => [null, 'kepsek', '/kepsek', [
+        '/notifikasi',
+    ]],
+]);
+
+test('tiap peran membuka permukaannya dan ditolak 403 di permukaan lain', function (?string $panel, string $role, string $permukaan, array $halaman) use ($semuaPermukaan) {
+    if ($panel !== null) {
+        Filament::setCurrentPanel(Filament::getPanel($panel));
     }
 
-    $guru = pklUser(['guru_pembimbing']);
-    $this->actingAs($guru)->withSession(['active_role' => 'guru_pembimbing']);
+    $user = pklUser([$role]);
+    $this->actingAs($user)->withSession(['active_role' => $role]);
 
-    $this->get('/hubin')->assertForbidden();
-    $this->get('/hubin/ekspor-akreditasi')->assertForbidden();
-});
+    expect($this->get($permukaan)->getStatusCode())->toBe(200, "GET $permukaan seharusnya 200");
+
+    foreach ($halaman as $url) {
+        expect($this->get($url)->getStatusCode())->toBe(200, "GET $url seharusnya 200");
+    }
+
+    foreach (array_diff($semuaPermukaan, [$permukaan]) as $url) {
+        expect($this->get($url)->getStatusCode())->toBe(403, "GET $url seharusnya 403");
+    }
+})->with('halaman per peran');
+
+test('tamu diarahkan ke /login di setiap permukaan', function (string $url) {
+    $this->get($url)->assertRedirect('/login');
+})->with($semuaPermukaan);
