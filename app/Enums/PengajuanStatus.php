@@ -6,12 +6,15 @@ use App\Enums\Concerns\HasTransitions;
 use App\Enums\Contracts\StateEnum;
 use App\Enums\Transitions\TransitionTable;
 use App\Support\StatusChip;
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasIcon;
+use Filament\Support\Contracts\HasLabel;
 
 /**
  * State machine `pengajuan_siswa.status` (TRD.md §5.2). Satu Enum, satu tabel
  * transisi, satu Action per transisi. Aktor ditulis sebagai nilai `user_roles.role`.
  */
-enum PengajuanStatus: string implements StateEnum
+enum PengajuanStatus: string implements HasColor, HasIcon, HasLabel, StateEnum
 {
     use HasTransitions;
 
@@ -30,6 +33,21 @@ enum PengajuanStatus: string implements StateEnum
     public function label(): string
     {
         return StatusChip::label($this->value);
+    }
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string
+    {
+        return StatusChip::color($this->value);
+    }
+
+    public function getIcon(): string
+    {
+        return StatusChip::icon($this->value);
     }
 
     public static function transitions(): TransitionTable
