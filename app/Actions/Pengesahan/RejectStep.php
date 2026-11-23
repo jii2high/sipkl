@@ -51,9 +51,14 @@ final class RejectStep extends PengesahanAction
             $this->assertSequence($locked);
             $from->assertTransitionTo(SignatureStatus::Rejected, (string) $locked->signer_type);
 
-            $this->transitionStatus($locked, SignatureStatus::Rejected->value, SignatureStatus::Pending->value, [
-                'rejection_note' => $note,
-            ]);
+            $attributes = ['rejection_note' => $note];
+
+            // CHECK ck_sign_internal: step 1/2/5 yang rejected wajib punya pencatat internal.
+            if ($actor !== null) {
+                $attributes['signer_user_id'] = $actor->getKey();
+            }
+
+            $this->transitionStatus($locked, SignatureStatus::Rejected->value, SignatureStatus::Pending->value, $attributes);
 
             $this->audit(
                 $locked,

@@ -30,7 +30,7 @@ dataset('halaman per peran', [
     ],
     'kepsek' => [
         'app', 'kepsek',
-        ['/app', '/app/pengaturan-notifikasi'],
+        ['/kepsek', '/app', '/app/pengaturan-notifikasi'],
         ['/app/kanban-kelas', '/kaprog/monitoring'],
     ],
 ]);
