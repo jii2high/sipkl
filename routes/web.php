@@ -4,6 +4,7 @@ use App\Http\Controllers\AccreditationExportDownloadController;
 use App\Http\Controllers\BimbinganFileDownloadController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\LaporanFileDownloadController;
+use App\Http\Controllers\SwitchRoleController;
 use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\VisitasiDocumentationDownloadController;
 use App\Livewire\Auth\ForcePasswordChange;
@@ -29,6 +30,9 @@ Route::get('/verify/{token}', VerifyDocument::class)
     ->name('verify');
 
 Route::middleware('auth')->group(function (): void {
+    // Pindah peran aktif dari menu akun panel (TRD.md §7.2, KP-F1-5).
+    Route::post('/role', SwitchRoleController::class)->name('role.switch');
+
     // Preferensi tema per akun (DESIGN.md "Perilaku tema").
     Route::post('/theme', ThemePreferenceController::class)->name('theme.update');
 

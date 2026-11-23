@@ -24,6 +24,7 @@ class AppPanelProvider extends PanelProvider
             ->brandName('SIM PKL Siswa & Guru')
             ->colors($this->panelColors())
             ->darkMode(true)
+            ->userMenuItems($this->roleMenuItems())
             // Token dan aturan sentuh Design.md juga berlaku di panel Filament.
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
