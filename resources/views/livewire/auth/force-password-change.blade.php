@@ -35,6 +35,7 @@
         </div>
 
         <button type="submit" class="pkl-btn pkl-btn-primary w-full" wire:loading.attr="disabled">
+            <x-heroicon-o-key class="h-5 w-5" aria-hidden="true" />
             <span wire:loading.remove>Simpan dan lanjut</span>
             <span wire:loading>Menyimpan…</span>
         </button>

@@ -28,12 +28,14 @@
         </div>
 
         <button type="submit" class="pkl-btn pkl-btn-primary w-full" wire:loading.attr="disabled">
+            <x-heroicon-o-paper-airplane class="h-5 w-5" aria-hidden="true" />
             <span wire:loading.remove>Verifikasi</span>
             <span wire:loading>Memeriksa…</span>
         </button>
     </form>
 
-    <button type="button" wire:click="resend" class="text-[0.8125rem] font-medium text-[var(--primary)] underline" wire:loading.attr="disabled">
+    <button type="button" wire:click="resend" class="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-[var(--primary)] underline" wire:loading.attr="disabled">
+        <x-heroicon-o-arrow-path class="h-4 w-4" aria-hidden="true" />
         Kirim ulang kode
     </button>
 </div>

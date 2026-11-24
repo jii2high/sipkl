@@ -10,6 +10,8 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -24,8 +26,6 @@ use Filament\Tables\Table;
 class AntreanSuratPengantar extends Page implements HasTable
 {
     use InteractsWithTable;
-
-    protected string $view = 'filament.hubin.pages.antrean-surat-pengantar';
 
     protected static ?string $navigationLabel = 'Surat pengantar';
 
@@ -115,5 +115,10 @@ class AntreanSuratPengantar extends Page implements HasTable
             ])
             ->emptyStateHeading('Tidak ada group menunggu surat')
             ->emptyStateDescription('Group muncul setelah Walas menandatangani pengajuan siswa.');
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema->components([EmbeddedTable::make()]);
     }
 }

@@ -34,6 +34,7 @@
             </div>
 
             <button type="submit" class="pkl-btn pkl-btn-primary min-h-11 w-full" wire:loading.attr="disabled">
+                <x-heroicon-o-paper-airplane class="h-5 w-5" aria-hidden="true" />
                 <span wire:loading.remove>Masuk</span>
                 <span wire:loading>Memeriksa...</span>
             </button>

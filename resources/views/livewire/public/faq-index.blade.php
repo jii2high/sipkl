@@ -39,6 +39,7 @@
             </p>
             @if ($adaFilter)
                 <button type="button" wire:click="resetFilter" class="pkl-btn pkl-btn-secondary mt-4">
+                    <x-heroicon-o-arrow-path class="h-5 w-5" aria-hidden="true" />
                     {{ __('pkl.faq.reset') }}
                 </button>
             @endif
@@ -65,5 +66,8 @@
         </div>
     @endif
 
-    <a href="{{ url('/') }}" class="pkl-btn pkl-btn-secondary mt-6">{{ __('pkl.faq.kembali') }}</a>
+    <a href="{{ url('/') }}" class="pkl-btn pkl-btn-secondary mt-6">
+        <x-heroicon-o-arrow-left class="h-5 w-5" aria-hidden="true" />
+        {{ __('pkl.faq.kembali') }}
+    </a>
 </div>

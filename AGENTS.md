@@ -1,13 +1,13 @@
 # AGENTS.md
 
 ## Project
-Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Aplikasi Laravel + Filament sudah berjalan (M0–M6): panel `app` dan `hubin`, 13 migrasi, 205 tes Pest hijau di MySQL. Source of truth order: `docs/PRD.md` (behavior) -> `docs/TRD.md` (implementation) -> `docs/schema.sql` (data shape) -> `DESIGN.md` (visual).
+Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi. Aplikasi Laravel + Filament sudah berjalan (M0–M10): panel `app` dan `hubin`, 18 migrasi, 271 tes Pest hijau di MySQL. Source of truth order: `docs/PRD.md` (behavior) -> `docs/TRD.md` (implementation) -> `docs/schema.sql` (data shape) -> `DESIGN.md` (visual). Refactor UI/UX (panel `hubin`/`kaprog`/`guru` + portal mobile `/siswa`/`/walas`/`/kepsek`) direncanakan di `docs/TASKS-REFACTOR-UI.md`.
 
 ## Branch
 - Pekerjaan berjalan di `jii2high`; isinya sama dengan `main` (`origin/jii2high` juga `e69555c`).
 
 ## Stack (from TRD)
-PHP/Laravel + Filament multi-panel (`app`, `hubin`), Livewire/Blade, Tailwind, MySQL 8.0.16+, database queue/cache/session, private local storage. No extra packages or abstractions beyond TRD without a task.
+PHP/Laravel + Filament multi-panel (`app`, `hubin`; target refactor: `hubin`, `kaprog`, `guru`), Livewire/Blade (portal mobile dan publik), Tailwind, MySQL 8.0.16+, database queue/cache/session, private local storage. No extra packages or abstractions beyond TRD without a task.
 
 ## Non-obvious rules
 - All business rules and state transitions live in `app/Actions`, `app/Policies`, `app/Services`; UI only calls them.
@@ -17,7 +17,12 @@ PHP/Laravel + Filament multi-panel (`app`, `hubin`), Livewire/Blade, Tailwind, M
 - `docs/schema.sql` is design reference, not a migration script.
 - Reference folders have spaces (`docs/old physical dokument examples/`, `docs/form-penilaian-references/`); quote paths in shell.
 - UI text and validation messages are Bahasa Indonesia.
-- Portal `/eksternal/*` hanya lewat guard `eksternal` (`EnsureExternalToken`); rute eksternal tidak masuk grup panel `app`/`hubin`.
+- Portal `/eksternal/*` hanya lewat guard `eksternal` (`EnsureExternalToken`); rute eksternal tidak masuk grup panel.
+- Permukaan target: panel Filament `/hubin`, `/kaprog`, `/guru`; portal mobile Blade+Livewire `/siswa`, `/walas`, `/kepsek`; `/eksternal/*`, `/verify/{token}`, `/faq`, `/`, `/login*` di luar panel. Satu `/login` untuk semua peran.
+- Panel = Filament-first. Urutan pilihan: Resource → Page + table/schema → Widget → Action/BulkAction → komponen bawaan. Blade kustom di `resources/views/filament/` hanya dengan alasan satu baris.
+- Portal mobile tidak memakai Filament: satu layout bersama, 360px, target sentuh ≥ 44px, token dari `DESIGN.md`.
+- Pengecualian "house component beats native" tidak berlaku di UI panel: komponen bawaan Filament menang atas komponen kustom.
+- Refactor UI/UX tidak boleh mengubah `app/Actions`, `app/Policies`, `app/Services`, `database/migrations`, dan `docs/schema.sql`. Semua aturan bisnis tetap di Action/Policy/Service; UI hanya memanggil.
 
 ## Database
 - Nama kanonik aplikasi `sistem_pkl`; tes `sistem_pkl_test` (`phpunit.xml`). `.env.example`, CI, dan `.env` lokal memakai nama ini.
@@ -35,7 +40,6 @@ PHP/Laravel + Filament multi-panel (`app`, `hubin`), Livewire/Blade, Tailwind, M
 ## Skills to apply
 - `antislop` core always; `antislop-code` for comment hygiene when editing code.
 - `caveman`/`ponytail` for terse, minimal-change work.
-- `ui-ux-pro-max` for UI/UX work: layout, color, typography, accessibility, charts.
 
 ## ponytail (lazy senior dev mode)
 

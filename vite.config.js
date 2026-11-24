@@ -17,6 +17,9 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        // IPv4 agar browser tidak bergantung pada literal [::1] yang belum tentu
+        // bisa dijangkau; PHP server juga memakai 127.0.0.1.
+        host: '127.0.0.1',
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

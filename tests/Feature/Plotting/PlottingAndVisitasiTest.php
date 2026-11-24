@@ -9,9 +9,10 @@ use App\Actions\Visitasi\RejectVisitasi;
 use App\Actions\Visitasi\RequestVisitasi;
 use App\Actions\Visitasi\UploadDokumentasi;
 use App\Enums\PengajuanStatus;
-use App\Filament\App\Pages\PlottingGuru;
-use App\Filament\App\Pages\Visitasi as VisitasiPage;
+use App\Filament\Guru\Pages\Visitasi as GuruVisitasiPage;
 use App\Filament\Hubin\Pages\KelolaVisitasi;
+use App\Filament\Kaprog\Pages\PlottingGuru;
+use App\Filament\Kaprog\Pages\Visitasi as VisitasiPage;
 use App\Jobs\ExpireVisitasiJob;
 use App\Models\AcademicPeriod;
 use App\Models\Company;
@@ -29,6 +30,7 @@ use App\Models\VisitasiDokumentasi;
 use App\Notifications\Notification as PklNotification;
 use App\Services\PlottingService;
 use App\Support\JakartaTime;
+use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\UploadedFile;
@@ -377,7 +379,7 @@ test('visitasi request for company outside guru plotting is rejected', function 
 
 test('plotting page renders eligible companies for kaprog', function () {
     $context = plottingContext();
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
 
     $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
 
@@ -387,15 +389,68 @@ test('plotting page renders eligible companies for kaprog', function () {
         ->assertSee($context['company']->nama);
 });
 
-test('visitasi page renders for kaprog and guru', function () {
+test('kaprog memplot guru dari aksi tabel plotting', function () {
     $context = plottingContext();
-    Filament::setCurrentPanel(Filament::getPanel('app'));
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
+
+    $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
+
+    Livewire::test(PlottingGuru::class)
+        ->callAction(TestAction::make('assign')->table($context['company']), [
+            'guruId' => $context['guru']->getKey(),
+        ])
+        ->assertNotified('Plotting guru berhasil disimpan.');
+
+    expect(GuruPembimbingPlotting::query()
+        ->where('company_id', $context['company']->getKey())
+        ->value('guru_id'))->toBe($context['guru']->getKey());
+});
+
+test('visitasi page renders for kaprog', function () {
+    $context = plottingContext();
+    Filament::setCurrentPanel(Filament::getPanel('kaprog'));
 
     $this->actingAs($context['kaprog'])->withSession(['active_role' => 'kaprog']);
     Livewire::test(VisitasiPage::class)->assertOk()->assertSee('Visitasi PKL');
+});
 
+test('halaman visitasi guru menampilkan unggah dokumentasi hanya setelah surat bernomor', function () {
+    $context = plottingContext(withSignature: false);
+    grantActiveRole('kaprog');
+    app(AssignGuru::class)->handle($context['company'], $context['period'], $context['guru'], $context['kaprog']);
+    $visitasi = app(RequestVisitasi::class)->handle($context['guru'], [$context['company']->getKey()], false, $context['kaprog']);
+
+    Filament::setCurrentPanel(Filament::getPanel('guru'));
     $this->actingAs($context['guru'])->withSession(['active_role' => 'guru_pembimbing']);
-    Livewire::test(VisitasiPage::class)->assertOk();
+
+    Livewire::test(GuruVisitasiPage::class)
+        ->assertOk()
+        ->assertSee('Visitasi PKL')
+        ->assertActionHidden(TestAction::make('upload')->table($visitasi));
+
+    grantActiveRole('hubin');
+    app(ApproveVisitasi::class)->handle($visitasi, $context['hubin']);
+    Storage::disk('local')->put('signature/ttd-terbit.png', UploadedFile::fake()->image('ttd-terbit.png')->getContent());
+    SignatureAsset::query()->create([
+        'owner_user_id' => pklUser(['kepsek'])->getKey(),
+        'file_path' => 'signature/ttd-terbit.png',
+        'is_active' => true,
+        'uploaded_by' => $context['hubin']->getKey(),
+    ]);
+    app(IssueSuratTugasVisitasi::class)->handle($visitasi->refresh(), $context['hubin']);
+
+    grantActiveRole('guru_pembimbing');
+    Livewire::test(GuruVisitasiPage::class)
+        ->assertActionVisible(TestAction::make('upload')->table($visitasi->refresh()))
+        ->callAction(TestAction::make('upload')->table($visitasi->refresh()), [
+            'companyId' => $context['company']->getKey(),
+            'visitDate' => JakartaTime::today()->toDateString(),
+            'photo' => UploadedFile::fake()->image('kunjungan.jpg'),
+            'note' => 'Kunjungan pembukaan PKL.',
+        ])
+        ->assertNotified('Dokumentasi visitasi berhasil diunggah.');
+
+    expect(VisitasiDokumentasi::query()->count())->toBe(1);
 });
 
 test('hubin visitasi page renders', function () {
@@ -406,7 +461,8 @@ test('hubin visitasi page renders', function () {
 
     Livewire::test(KelolaVisitasi::class)
         ->assertOk()
-        ->assertSee('Pengelolaan Visitasi');
+        ->assertSee('Pengelolaan Visitasi')
+        ->assertSee('Guru pembimbing');
 });
 
 test('approve visitasi tanpa TTD kepsek tetap disetujui dan Hubin diberi tahu', function () {
@@ -565,7 +621,7 @@ test('tombol terbitkan surat hubin menerbitkan nomor setelah TTD tersedia', func
     $this->actingAs($context['hubin'])->withSession(['active_role' => 'hubin']);
 
     Livewire::test(KelolaVisitasi::class)
-        ->call('issueLetter', $visitasi->getKey())
+        ->callAction(TestAction::make('issue')->table($visitasi))
         ->assertOk();
 
     expect($visitasi->refresh()->nomor_surat)->not->toBeNull();

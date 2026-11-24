@@ -1,4 +1,4 @@
-{{-- Pemilih peran aktif di header panel `app` (T1.1, TRD.md §14.3). Root selalu ada
+{{-- Pemilih peran aktif di header portal mobile. Root selalu ada
      agar Livewire punya tag akar; isi hanya tampil untuk pengguna multi-peran. --}}
 <div class="flex items-center gap-2">
     @if (count($options) > 1)

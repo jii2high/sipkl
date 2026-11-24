@@ -2,41 +2,28 @@
 
 namespace App\Providers\Filament;
 
-use App\Http\Middleware\EnsureActiveRole;
-use App\Http\Middleware\PanelAuthenticate;
-use App\Http\Middleware\PanelAuthenticateSession;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use App\Providers\Filament\Concerns\ConfiguresPanel;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Contracts\View\View;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
-use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Session\Middleware\StartSession;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class HubinPanelProvider extends PanelProvider
 {
+    use ConfiguresPanel;
+
     public function panel(Panel $panel): Panel
     {
         return $panel
             ->id('hubin')
             ->path('hubin')
+            ->default()
             ->brandName('SIM PKL Hubin')
-            ->colors([
-                'primary' => Color::Blue,
-                'info' => Color::Sky,
-                'success' => Color::Green,
-                'warning' => Color::Amber,
-                'danger' => Color::Red,
-            ])
+            ->colors($this->panelColors())
             ->darkMode(true)
+            ->userMenuItems($this->accountMenuItems())
             // Token dan aturan sentuh Design.md juga berlaku di panel Filament.
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
@@ -56,20 +43,7 @@ class HubinPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
             ])
-            ->middleware([
-                EncryptCookies::class,
-                AddQueuedCookiesToResponse::class,
-                StartSession::class,
-                PanelAuthenticateSession::class,
-                ShareErrorsFromSession::class,
-                PreventRequestForgery::class,
-                SubstituteBindings::class,
-                DisableBladeIconComponents::class,
-                DispatchServingFilamentEvent::class,
-            ])
-            ->authMiddleware([
-                PanelAuthenticate::class,
-                EnsureActiveRole::class,
-            ]);
+            ->middleware($this->panelMiddleware())
+            ->authMiddleware($this->panelAuthMiddleware(), isPersistent: true);
     }
 }

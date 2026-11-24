@@ -79,7 +79,7 @@ CREATE TABLE users (
     kelas_id          BIGINT UNSIGNED NULL,
     is_first_login    BOOLEAN NOT NULL DEFAULT TRUE,
     is_active         BOOLEAN NOT NULL DEFAULT TRUE,
-    theme_preference  ENUM('light','dark','system') NULL,  -- Q-K: preferensi tema; NULL = ikuti sistem
+    theme_preference  ENUM('light','dark','system') NULL,  -- preferensi tema; NULL = ikuti sistem
     push_opt_in       BOOLEAN NULL,                        -- T10.3: NULL belum ditanya; jawaban tidak ditimpa otomatis
     created_at        TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -668,7 +668,7 @@ CREATE TABLE form_submission_siswa (
     CONSTRAINT ck_pivot_type CHECK (form_type = 'penilaian_industri')
 ) ENGINE=InnoDB;
 
--- Revisi nilai sidang: penguji mengajukan dari portal, Kaprog menyetujui (Q-I).
+-- Revisi nilai sidang: penguji mengajukan dari portal, Kaprog menyetujui.
 -- Penilaian industri tanpa revisi. `approved_by_kaprog_id` dan kolom tautan unlock
 -- NULL selama status masih `menunggu_persetujuan`.
 CREATE TABLE nilai_sidang_revisions (
@@ -801,7 +801,7 @@ CREATE TABLE sidang_results_summary (
     academic_period_id        BIGINT UNSIGNED NOT NULL,
     nilai_total_per_kategori  JSON NOT NULL,
     status_kelulusan          VARCHAR(50) NULL,
-    catatan_kelulusan         TEXT NULL,                   -- Q-I: catatan manual Kaprog
+    catatan_kelulusan         TEXT NULL,                   -- catatan manual Kaprog; kosong bila tidak ada
     nama_penguji              VARCHAR(150) NOT NULL,
     tanggal_sidang            DATE NOT NULL,
     synced_at                 TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,

@@ -113,6 +113,13 @@
       "skillPath": "skills/caveman-stats/SKILL.md",
       "computedHash": "d47db80af9353f411b5840fa207ac10c883f04576cd280b135e3a44a0ff86285"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "commit": "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "d91970639e9f5c37682ac7ab60094d35f1c7c1f38d731bd56396563aee10c1d3"
+    },
     "i-have-adhd": {
       "source": "ayghri/i-have-adhd",
       "commit": "1ecea1993b7fce257ffbd686c070948b5e07eda6",
@@ -196,13 +203,6 @@
       "sourceType": "github",
       "skillPath": "skills/safe-refactor/SKILL.md",
       "computedHash": "709db1dfde3fe3baa362ecdb3f1f3c0be27587358242737dfa4ca82a23744269"
-    },
-    "slides": {
-      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
-      "commit": "e59ff376a41f7ca47b7541ad5c116495cbade3ee",
-      "sourceType": "github",
-      "skillPath": ".claude/skills/slides/SKILL.md",
-      "computedHash": "059825b15a508a5f1533ab646f968ffcbcdbb8eadd76c2d122151bfbcf19d287"
     },
     "surgical-patch": {
       "source": "JuliusBrussee/caveman",

@@ -4,9 +4,10 @@ Aplikasi pengelolaan Praktik Kerja Lapangan: pengajuan siswa, plotting pembimbin
 surat menyurat bertanda QR, bimbingan, penilaian, sampai rekap. Dibangun dengan
 Laravel + Filament (panel `app` dan `hubin`), Livewire/Blade, Tailwind, dan MySQL.
 
-Status: M1–M3 selesai (login OTP, master data, nomor surat + PDF + verifikasi
-publik). Rencana dan aturan main ada di `docs/TASKS.md`; perilaku produk di
-`docs/PRD.md`; keputusan teknis di `docs/TRD.md`.
+Status: M0–M10 selesai (login OTP, master data, surat + PDF + verifikasi publik,
+pengajuan, plotting, bimbingan, sidang, penilaian, monitoring, ekspor). Rencana dan
+aturan main ada di `docs/TASKS.md`; perilaku produk di `docs/PRD.md`; keputusan
+teknis di `docs/TRD.md`.
 
 Panduan ini hanya untuk **lingkungan lokal**.
 
@@ -94,8 +95,9 @@ berkas PDF tidak pernah dibuat.
 |---|---|
 | `/` | Beranda publik |
 | `/login` | Satu-satunya pintu masuk semua peran; setelahnya OTP dan/atau ganti sandi |
-| `/app` | Panel peran non-Hubin (siswa, walas, kaprog, guru pembimbing, kepsek) |
 | `/hubin` | Panel Hubin (desktop) |
+| `/kaprog`, `/guru` | Panel Filament Kaprog dan Guru Pembimbing (desktop) |
+| `/siswa`, `/walas`, `/kepsek` | Portal mobile Siswa, Wali Kelas, dan Kepala Sekolah |
 | `/verify/{token}` | Verifikasi surat publik hasil pindai QR |
 | `/documents/{jenis}/{id}` | Unduh PDF surat; wajib login dan berwenang |
 

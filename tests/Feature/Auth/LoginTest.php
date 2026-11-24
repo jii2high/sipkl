@@ -44,7 +44,7 @@ test('login tanpa first-login langsung masuk dan menetapkan peran aktif', functi
         ->set('email', $user->email)
         ->set('password', 'password')
         ->call('submit')
-        ->assertRedirect(url('/app'));
+        ->assertRedirect(url('/guru'));
 
     expect(auth()->check())->toBeTrue()
         ->and(session('active_role'))->toBe('guru_pembimbing');
@@ -114,7 +114,7 @@ test('alur first-login lengkap: OTP lalu wajib ganti kata sandi sampai masuk', f
         ->set('password', 'SandiBaru123')
         ->set('password_confirmation', 'SandiBaru123')
         ->call('submit')
-        ->assertRedirect(url('/app'));
+        ->assertRedirect(url('/guru'));
 
     expect(auth()->check())->toBeTrue()
         ->and($user->fresh()->is_first_login)->toBeFalse()

@@ -9,7 +9,7 @@ namespace App\Support;
 final class StatusChip
 {
     /** @var array<string, array{0: string, 1: string}> */
-    private const CHIPS = [
+    public const CHIPS = [
         // pengajuan_siswa.status (TRD.md §5.2)
         'draft' => ['Draf', 'info'],
         'menunggu_verifikasi_kaprog' => ['Menunggu verifikasi Kaprog', 'info'],
@@ -54,6 +54,15 @@ final class StatusChip
         'failed' => ['Gagal', 'danger'],
     ];
 
+    /** Tone yang sama selalu memakai ikon yang sama agar arti chip konsisten. */
+    private const ICONS = [
+        'success' => 'heroicon-o-check-circle',
+        'warning' => 'heroicon-o-exclamation-triangle',
+        'danger' => 'heroicon-o-x-circle',
+        'info' => 'heroicon-o-information-circle',
+        'neutral' => 'heroicon-o-minus-circle',
+    ];
+
     public static function label(string $status): string
     {
         return self::CHIPS[$status][0] ?? self::humanize($status);
@@ -74,6 +83,12 @@ final class StatusChip
             'info' => 'info',
             default => 'gray',
         };
+    }
+
+    /** Tone Design.md → ikon Heroicon, untuk `HasIcon` di panel. */
+    public static function icon(string $status): string
+    {
+        return self::ICONS[self::tone($status)] ?? self::ICONS['neutral'];
     }
 
     /** Status tanpa pemetaan tetap tampil terbaca, bukan kunci mentah. */

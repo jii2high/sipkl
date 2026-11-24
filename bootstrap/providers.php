@@ -1,7 +1,13 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\Filament\GuruPanelProvider;
+use App\Providers\Filament\HubinPanelProvider;
+use App\Providers\Filament\KaprogPanelProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\AppPanelProvider::class,
-    App\Providers\Filament\HubinPanelProvider::class,
+    AppServiceProvider::class,
+    GuruPanelProvider::class,
+    HubinPanelProvider::class,
+    KaprogPanelProvider::class,
 ];

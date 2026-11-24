@@ -1,6 +1,6 @@
 # TRD — Sistem Informasi Manajemen PKL SMKN 1 Kota Bekasi
 
-**Turunan dari**: `PRD.md` v2 (terkonsolidasi). **Pendamping**: `Design.md` (visual), `scheme.sql` (skema DB), `TASKS.md` (pekerjaan).
+**Turunan dari**: `PRD.md` v3 (terkonsolidasi). **Pendamping**: `DESIGN.md` (visual), `schema.sql` (skema DB), `TASKS.md` (pekerjaan M0–M10), `TASKS-REFACTOR-UI.md` (refactor UI/UX).
 **Status**: Draf untuk implementasi. **Audiens utama**: developer dan AI agent pelaksana.
 
 ## 0. Cara Memakai Dokumen Ini
@@ -9,34 +9,35 @@
 
 1. Perilaku produk, aturan bisnis, dan acceptance criteria → `PRD.md`.
 2. Implementasi teknis → dokumen ini, selama tidak bertentangan dengan PRD (termasuk Lampiran A).
-3. Bentuk data → `scheme.sql` (turunan §6 dokumen ini).
-4. Tampilan → `Design.md`.
-5. Pekerjaan dan urutan → `TASKS.md`.
+3. Bentuk data → `schema.sql` (turunan §6 dokumen ini).
+4. Tampilan → `DESIGN.md`.
+5. Pekerjaan dan urutan M0–M10 → `TASKS.md`. Refactor UI/UX (panel tiga + portal mobile) → `TASKS-REFACTOR-UI.md`.
 
 Konflik yang tidak bisa diselesaikan dengan urutan di atas dicatat di §20 (Risiko & Keputusan Terbuka), bukan ditebak.
 
 **Keputusan proses (berlaku untuk seluruh repo)**
 
-- **Tidak ada tahap wireframe.** Implementasi langsung. Acuan visual hanyalah `Design.md` + komponen bawaan Filament/Tailwind (lihat §14). Ketentuan PRD v2 §1.4 yang masih mewajibkan wireframe untuk halaman Blade kustom (landing, portal eksternal, kanban Walas) **dicabut** dan tercatat di PRD v3 (§1.7, Lampiran A16); verifikasi visual dilakukan lewat checkpoint di §17.
-- Satu bahasa (PHP), satu framework UI, tanpa lapisan API/JSON terpisah.
+- **Tidak ada tahap wireframe.** Implementasi langsung. Acuan visual hanyalah `DESIGN.md` + komponen bawaan Filament/Tailwind (lihat §14). Ketentuan PRD v2 §1.4 yang masih mewajibkan wireframe untuk halaman Blade kustom (landing, portal eksternal, kanban Walas) **dicabut** dan tercatat di PRD v3 (§1.7, Lampiran A16); verifikasi visual dilakukan lewat checkpoint di §17.
+- Satu bahasa (PHP), satu framework UI per permukaan: panel memakai Filament, portal mobile memakai Blade + Livewire tanpa Filament (§14); tanpa lapisan API/JSON terpisah.
 - Semua aturan bisnis hidup di Action/Policy/Service. UI hanya memanggil, tidak memutuskan.
 
 ## 1. Ringkasan Arsitektur
 
 ```
-Browser (Siswa/Walas/Guru/Kaprog/Kepsek)      Browser (Hubin)        Browser (Penguji, Pembimbing/Kepala Industri)
-        │  /app  (Filament panel "app")          │  /hubin (panel "hubin")        │  /eksternal/*  (Blade + Livewire, guard token)
-        └────────────────────┬───────────────────┴──────────────────────────────┬──┘
-                             ▼                                                  ▼
-                 Livewire components / Filament Resources / Pages        Controller tipis + Livewire
-                             │                                                  │
-                             └───────────────► Actions (1 transisi = 1 class) ◄─┘
-                                                │  memakai
-                          Policies ─ Services ─ Enums/TransitionTable ─ Eloquent Models
-                                                │
-                                   MySQL 8.0.16+  ·  Disk private  ·  Queue (database)
-                                                │
-                                   Scheduler (cron per menit) → Jobs idempoten
+Browser (Hubin/Kaprog/Guru)               Browser (Siswa/Walas/Kepsek)         Browser (Penguji, Pembimbing/Kepala Industri)
+  │  /hubin /kaprog /guru                   │  /siswa /walas /kepsek              │  /eksternal/*  (Blade + Livewire, guard token)
+  │  (Filament 3 panel, native)             │  (Blade + Livewire, 360px)          │
+  └───────────────┬─────────────────────────┴──────────────────────┬──────────────┘
+                  ▼                                                ▼
+        Filament Resources / Pages / Widgets              Controller tipis + Livewire
+                  │                                                │
+                  └───────────────► Actions (1 transisi = 1 class) ◄─┘
+                                     │  memakai
+                   Policies ─ Services ─ Enums/TransitionTable ─ Eloquent Models
+                                     │
+                        MySQL 8.0.16+  ·  Disk private  ·  Queue (database)
+                                     │
+                        Scheduler (cron per menit) → Jobs idempoten
 ```
 
 **Prinsip**
@@ -51,9 +52,10 @@ Browser (Siswa/Walas/Guru/Kaprog/Kepsek)      Browser (Hubin)        Browser (Pe
 | Layer | Pilihan | Catatan implementasi |
 |---|---|---|
 | Runtime | PHP + Laravel (versi stabil terbaru yang didukung saat implementasi) | Kunci versi di `composer.json`; Filament dan paket lain harus kompatibel |
-| UI internal | Filament multi-panel + Livewire | Panel `hubin` (desktop) dan `app` (Siswa, Walas, Guru, Kaprog, Kepsek) |
+| UI internal (panel) | Filament multi-panel + Livewire | Tiga panel: `hubin`, `kaprog`, `guru` |
+| UI portal mobile | Blade + Livewire (tanpa Filament) | `/siswa`, `/walas`, `/kepsek`; satu layout bersama, 360px |
 | UI publik/eksternal | Blade + Livewire ringan | Landing, `/faq`, `/login`, OTP, `/verify/{token}`, `/eksternal/*` |
-| Styling | Tailwind + tema Filament | Token dari `Design.md` → CSS variables (§14) |
+| Styling | Tailwind + tema Filament | Token dari `DESIGN.md` → CSS variables (§14) |
 | Auth | Session auth bawaan Laravel + halaman Livewire kustom untuk OTP | Tanpa Fortify/Sanctum |
 | DB | MySQL 8.0.16+ | JSON, CHECK, generated column wajib |
 | Queue/Cache/Session | Driver `database` | Skala MVP |
@@ -75,15 +77,17 @@ Semua dokumen pengembangan berada di `docs/`. Dua folder referensi sudah ada dan
 ```
 docs/
 ├── form-penilaian-references/          # referensi form penilaian (sidang, industri); sumber bagi form builder
-├── old physical document examples/     # contoh dokumen fisik lama (surat pengantar, surat tugas, dll.); sumber bagi template PDF
+├── old physical dokument examples/     # contoh dokumen fisik lama (surat pengantar, surat tugas, dll.); sumber bagi template PDF
 ├── PRD.md                              # sumber kebenaran perilaku produk
 ├── TRD.md                              # dokumen ini
-├── TASKS.md                            # daftar pekerjaan bertahap (turunan PRD + TRD)
-├── Design.md                           # sistem desain (terang + gelap)
-└── scheme.sql                          # skema MySQL (turunan §6)
+├── TASKS.md                            # daftar pekerjaan bertahap M0–M10 (turunan PRD + TRD)
+├── TASKS-REFACTOR-UI.md                # rencana refactor UI/UX (panel tiga + portal mobile)
+└── schema.sql                          # skema MySQL (turunan §6)
 ```
 
-> Nama folder referensi dipakai persis seperti yang ada (termasuk spasi pada `old physical document examples`). Gunakan tanda kutip pada perintah shell.
+`DESIGN.md` berada di root repo, bukan di `docs/`.
+
+> Nama folder referensi dipakai persis seperti yang ada (termasuk spasi dan ejaan pada `old physical dokument examples`). Gunakan tanda kutip pada perintah shell.
 
 ### 3.2 Kode aplikasi (Laravel)
 
@@ -123,35 +127,41 @@ docs/
 │   ├── Jobs/                           # lihat §10
 │   ├── Notifications/                  # email + in-app (+ push opsional)
 │   ├── Filament/
-│   │   ├── Hubin/                      # Resources, Pages, Widgets panel hubin
-│   │   ├── App/                        # Resources, Pages per peran (dipilah oleh active_role)
-│   │   └── Support/                    # komponen bersama (StatusBadge, SignatureStepper, QuotaBar, ThemeSwitcher)
+│   │   ├── Hubin/                      # Resources (Users, Companies, AcademicPeriods, Faqs, FaqCategories,
+│   │   │                               #   SignatureAssets), Pages, Widgets panel hubin
+│   │   ├── Kaprog/                     # Pages (dan Widgets) panel kaprog
+│   │   ├── Guru/                       # Pages (dan Widgets) panel guru
+│   │   └── Support/                    # cadangan komponen panel; saat ini kosong (lihat §14.3)
 │   ├── Livewire/
 │   │   ├── Public/                     # Landing, Faq, Verify
 │   │   ├── Auth/                       # Login, OtpChallenge, ForceChangePassword
+│   │   ├── Portal/                     # PengajuanSiswa, BimbinganSiswa, JadwalSidang, AntreanWalas,
+│   │   │                               #   KanbanKelas, PengesahanKepsek, PengaturanNotifikasi
 │   │   └── Eksternal/                  # ExaminerForm, IndustrySignOff, IndustryAssessment, RequestNewLink
 │   ├── Http/
 │   │   ├── Controllers/                # download file, PDF, QR image (berotorisasi)
 │   │   └── Middleware/                 # EnsureActiveRole, EnsureExternalToken, SetTimezoneContext
-│   ├── Support/                        # helper waktu (Jakarta/UTC), nilai, normalisasi (telp, website)
+│   ├── Support/                        # helper waktu (Jakarta/UTC), StatusChip, nilai, normalisasi (telp, website)
 │   └── Providers/
 ├── bootstrap/
 ├── config/
 │   └── pkl.php                         # konstanta bisnis (kuota=6, TTL, batas upload, ambang, dll.)
 ├── database/
-│   ├── migrations/                     # dibuat dari docs/scheme.sql
+│   ├── migrations/                     # dibuat dari docs/schema.sql
 │   ├── factories/
 │   └── seeders/                        # peran, jurusan, periode contoh, FAQ awal
 ├── resources/
-│   ├── css/app.css                     # token dari Design.md sebagai CSS variables (terang/gelap)
+│   ├── css/app.css                     # token dari DESIGN.md sebagai CSS variables (terang/gelap)
 │   ├── views/
 │   │   ├── public/                     # Blade landing/FAQ/verify
 │   │   ├── eksternal/                  # layout minimal satu-tugas
+│   │   ├── portal/                     # view portal mobile (layout bersama)
 │   │   ├── pdf/                        # template surat (kop, nomor, TTD, QR)
 │   │   └── emails/
 │   └── lang/id/                        # semua teks UI dan pesan validasi dalam Bahasa Indonesia
 ├── routes/
-│   ├── web.php                         # publik + login + verify
+│   ├── web.php                         # publik + login + verify + unduh file
+│   ├── portal.php                      # /siswa, /walas, /kepsek (Blade + Livewire, penjaga peran portal)
 │   ├── eksternal.php                   # /eksternal/* (guard token)
 │   └── console.php                     # jadwal job
 ├── storage/app/private/                # lampiran, laporan, surat, ekspor (tidak pernah publik)
@@ -225,7 +235,7 @@ Catatan: konfirmasi dokumen fisik oleh Hubin **bukan transisi status**, hanya me
 
 `terbentuk → surat_terbit → berjalan → bubar`. `guru_terplot` bukan status; ia diturunkan dari ada atau tidaknya baris plotting (Lampiran A3).
 
-### 5.4 `laporan_signatures.status` (per step 1..5)
+### 5.4 `document_signatures.status` (per `step_order` 1..5)
 
 `pending → signed | rejected`. Aturan:
 
@@ -240,15 +250,15 @@ Kode step: 1 Guru Pembimbing, 2 Kaprog, 3 Pembimbing Industri, 4 Kepala Industri
 
 | Entitas | Status |
 |---|---|
-| `visitasi` | `diajukan → disetujui → kedaluwarsa` atau `diajukan → ditolak` (Kaprog boleh mengajukan ulang sebagai record baru) |
+| `visitasi` (`surat_tugas_visitasi`) | `diajukan → disetujui → dicetak → aktif → kedaluwarsa`, atau `diajukan → ditolak` (Kaprog boleh mengajukan ulang sebagai record baru) |
 | `magic_links` | `active → used`, `active → revoked`, `active → expired` (token tunggal aktif per `(type, target)`) |
-| `form_definitions` | `draft → published`; terkunci setelah ada submission |
+| `form_definitions` | `is_published = false → true`; terkunci setelah ada submission |
 | `form_submissions` | `is_submitted` (terkunci) → `unlock_approved` (24 jam) → `submitted_again` atau auto re-lock |
-| `export_attempts` | `queued → completed` atau `queued → failed` (retry = attempt baru) |
+| `accreditation_exports` | `queued → running → completed` atau `queued/running → failed` (retry = baris baru via `retry_of_id`) |
 
-## 6. Model Data (turunan untuk `scheme.sql`)
+## 6. Model Data (turunan untuk `schema.sql`)
 
-`scheme.sql` ditulis dari bagian ini dan Lampiran A PRD. Nama tabel di bawah adalah usulan; nama final ada di `scheme.sql`.
+`schema.sql` adalah bentuk data final. Nama tabel di bawah mengikuti `schema.sql`.
 
 ### 6.1 Tabel inti
 
@@ -256,12 +266,12 @@ Kode step: 1 Guru Pembimbing, 2 Kaprog, 3 Pembimbing Industri, 4 Kepala Industri
 |---|---|
 | Identitas & akses | `users`, `user_roles`, `jurusan`, `kelas`, `otp_codes`, `sessions` |
 | Master | `companies`, `academic_periods`, `signature_assets` (TTD Kepsek) |
-| Pengajuan | `pengajuan_siswa`, `pengajuan_pkl` (company group), `plotting_guru` |
-| Surat & dokumen | `letter_counters`, `documents`, `document_qr_tokens`, `surat_tugas_visitasi` (`visitasi`), `visitasi_dokumentasi` |
-| Bimbingan & pengesahan | `bimbingan`, `bimbingan_feedback`, `laporan_versions`, `laporan_signatures` |
-| Form & penilaian | `form_definitions`, `form_submissions`, `form_submission_siswa`, `jadwal_sidang` |
-| Akses eksternal | `magic_links`, `external_sessions` |
-| Lain-lain | `faq_categories`, `faqs`, `export_attempts`, `notifications`, `activity_log`, `jobs`, `failed_jobs` |
+| Pengajuan | `pengajuan_siswa`, `pengajuan_pkl` (company group), `guru_pembimbing_plotting` |
+| Surat & dokumen | `nomor_surat_counters`, `surat_tugas_pembimbing`, `surat_tugas_visitasi`, `surat_tugas_visitasi_companies`, `visitasi_dokumentasi`, `document_qr_tokens` |
+| Bimbingan & pengesahan | `bimbingan_submissions`, `laporan_versions`, `document_signatures` |
+| Form & penilaian | `form_definitions`, `form_sections`, `form_items`, `form_submissions`, `form_submission_siswa`, `jadwal_sidang`, `sidang_results_summary`, `nilai_sidang_revisions` |
+| Akses eksternal | `magic_links`, `external_sessions`, `external_examiners` |
+| Lain-lain | `faq_categories`, `faqs`, `accreditation_exports`, `notifications`, `notification_delivery_failures`, `activity_log`, `cache`, `jobs`, `failed_jobs` |
 
 ### 6.2 Constraint yang wajib dijaga database (bukan hanya aplikasi)
 
@@ -271,14 +281,14 @@ Kode step: 1 Guru Pembimbing, 2 Kaprog, 3 Pembimbing Industri, 4 Kepala Industri
 | `pengajuan_pkl_id` wajib terisi sejak `surat_pengantar_terbit` | CHECK berdasarkan status |
 | Komposit group konsisten | FK komposit `(pengajuan_pkl_id, company_id, academic_period_id)` |
 | Signer perusahaan boleh kosong, tetapi bila `verified_at` terisi maka nama dan email wajib | Kolom NULLABLE + CHECK |
-| Kode step TTD hanya 1..5 dan unik per `(laporan_version_id, step)` | CHECK + UNIQUE |
+| Kode step TTD hanya 1..5 dan unik per `(laporan_version_id, step_order)` | CHECK + UNIQUE |
 | `user_roles` unik walau scope NULL | Generated key `jurusan_key`, `kelas_key` + UNIQUE |
 | `kelas.walas_id` tidak ada | Satu sumber kebenaran: `user_roles` |
-| Nomor surat unik per tahun ajaran | UNIQUE `(tahun_ajaran, jenis, nomor_urut)` dan UNIQUE `(tahun_ajaran, nomor_surat)` |
+| Nomor surat unik per tahun ajaran | `nomor_surat_counters` UNIQUE `(tahun_ajaran, jenis_surat)`; tiap tabel surat UNIQUE `(tahun_ajaran, nomor_urut)` dan `(tahun_ajaran, nomor_surat)` |
 | 1 plotting per `(company_id, academic_period_id)` | UNIQUE |
 | 1 submission penilaian industri per `(form_definition_id, company_id, periode)` | UNIQUE |
 | 1 magic link aktif per `(type, target_id)` | Generated column `active_key` + UNIQUE |
-| `export_attempts.status = completed` hanya jika file ada dan checksum terisi | CHECK |
+| `accreditation_exports.status = completed` hanya jika file dan checksum terisi | CHECK |
 | Token/PIN/OTP hanya disimpan sebagai hash | Kolom `*_hash` (CHAR(64)); tidak ada kolom plaintext |
 | `nilai_total` dihitung dari JSON | Generated column (lihat §13) |
 
@@ -288,7 +298,7 @@ Kode step: 1 Guru Pembimbing, 2 Kaprog, 3 Pembimbing Industri, 4 Kepala Industri
 
 ### 6.4 Strategi migrasi
 
-`scheme.sql` adalah acuan. Migrasi Laravel dibuat dari sana (satu migrasi per kelompok di §6.1) dan harus menghasilkan skema yang setara. Perubahan skema sesudahnya dilakukan lewat migrasi baru **dan** diperbarui di `docs/scheme.sql`.
+`schema.sql` adalah acuan. Migrasi Laravel dibuat dari sana (satu migrasi per kelompok di §6.1) dan harus menghasilkan skema yang setara. Perubahan skema sesudahnya dilakukan lewat migrasi baru **dan** diperbarui di `docs/schema.sql`.
 
 ## 7. Autentikasi dan Otorisasi
 
@@ -304,7 +314,7 @@ Kode step: 1 Guru Pembimbing, 2 Kaprog, 3 Pembimbing Industri, 4 Kepala Industri
 - Disimpan di sesi. `SwitchActiveRole` memvalidasi bahwa user memiliki peran itu.
 - `EnsureActiveRole` (middleware) menolak 403 bila peran tidak aktif/tidak dimiliki.
 - Ganti peran membersihkan state peran sebelumnya (filter tabel, cache query per peran, notifikasi terbuka) agar tidak ada kebocoran data.
-- Navigasi panel `app` dibangun dari `active_role`; panel `hubin` hanya untuk peran Hubin.
+- Navigasi dibangun dari `active_role`: panel `hubin`, `kaprog`, `guru` (Filament) atau portal mobile `siswa`, `walas`, `kepsek` (Blade). Satu pengguna hanya melihat permukaan peran aktifnya.
 
 ### 7.3 Policy dan scope
 
@@ -361,7 +371,7 @@ Sesi eksternal berlaku 24 jam dan **turun dari token**: revoke token membatalkan
 
 ### 9.3 Guard dan respons
 
-- Guard terpisah dari sesi internal (`EnsureExternalToken`); tidak memberi akses ke rute `/app` atau `/hubin`.
+- Guard terpisah dari sesi internal (`EnsureExternalToken`); tidak memberi akses ke rute panel (`/hubin`, `/kaprog`, `/guru`) atau portal mobile (`/siswa`, `/walas`, `/kepsek`).
 - Layout minimal; respons hanya berisi data untuk satu tugas.
 - Pesan galat netral (tidak membocorkan apakah target ada). Selalu tampilkan jalur "Minta link baru" (diteruskan ke Kaprog/Guru/Hubin).
 - Override Hubin (revoke/reissue) wajib alasan dan masuk audit.
@@ -392,7 +402,7 @@ Semua job mencatat kegagalan tanpa rahasia (token/PIN/OTP) dan memakai `failed_j
 
 ## 11. Dokumen, Nomor Surat, PDF, QR
 
-- **Template** PDF di `resources/views/pdf/`, mengacu pada contoh di `docs/old physical document examples/` (kop, urutan blok, bahasa surat). Perbedaan terhadap contoh fisik dicatat di `TASKS.md` per template.
+- **Template** PDF di `resources/views/pdf/`, mengacu pada contoh di `docs/old physical dokument examples/` (kop, urutan blok, bahasa surat). Perbedaan terhadap contoh fisik dicatat di `TASKS.md` per template.
 - **Jenis surat**: Surat Pengantar (per company group), Surat Tugas Pembimbing (otomatis saat plotting), Surat Tugas Visitasi (setelah approval Hubin).
 - **Nomor**: `LetterNumberService` per `(tahun_ajaran, jenis)`, bukan per periode (default Q-A; menunggu persetujuan PO).
 - **TTD Kepsek**: dari `signature_assets` (satu aktif). Bila belum ada, penerbitan surat otomatis **ditahan**, data tetap tersimpan, Hubin diberi tahu.
@@ -407,33 +417,22 @@ Semua job mencatat kegagalan tanpa rahasia (token/PIN/OTP) dan memakai `failed_j
 
 ## 13. Form Builder, Sidang, dan Nilai
 
-### 13.1 Struktur JSON dua tingkat
+### 13.1 Struktur form dua tingkat (relasional)
 
-```json
-{
-  "version": 1,
-  "sections": [
-    {
-      "id": "sec_1",
-      "type": "items",
-      "title": "Aspek Teknis",
-      "items": [
-        { "id": "it_1", "label": "Penguasaan materi", "max": 100 }
-      ]
-    },
-    { "id": "sec_k", "type": "kehadiran", "fields": ["sakit", "izin", "tanpa_keterangan"] },
-    { "id": "sec_c", "type": "catatan", "title": "Catatan" }
-  ]
-}
+```
+form_definitions        # per jurusan + periode; form_type = sidang | penilaian_industri
+  └── form_sections     # label + sort_order
+        └── form_items  # label + has_alokasi_waktu + sort_order
 ```
 
-- Tepat dua tingkat (Section → Items). Tanpa nested lebih dalam, EAV, atau JSONB.
-- Form tanpa item tidak dapat dipublish. Setelah ada submission, struktur terkunci; perubahan = versi/form baru.
+- Tepat dua tingkat konten (Section → Items) di tabel relasional. Tanpa tingkat lebih dalam, EAV, atau tabel jawaban per item.
+- Blok Kehadiran dan Catatan adalah flag di `form_definitions` (`has_kehadiran`, `has_catatan`), bukan item bernilai.
+- Form tanpa item tidak dapat dipublish (`is_published`). Setelah ada submission, struktur terkunci; perubahan = form/versi baru.
 - Struktur form mengacu pada contoh di `docs/form-penilaian-references/`.
 
 ### 13.2 Jawaban dan `nilai_total`
 
-- Jawaban disimpan di kolom JSON per submission, divalidasi terhadap definisi form (id item harus ada, nilai dalam rentang).
+- Jawaban disimpan di `form_submissions.jawaban` (JSON) per submission, divalidasi terhadap definisi form: setiap `form_item_id` harus ada dan nilainya dalam rentang.
 - `nilai_total` dihitung **server saat submit** (default Q-E: rata-rata item, skala 0–100) dan diekspos lewat generated column agar bisa diurutkan/diekspor. Rumus final menunggu konfirmasi PO.
 - Section Kehadiran dan Catatan tidak ikut perhitungan.
 
@@ -447,38 +446,44 @@ Semua job mencatat kegagalan tanpa rahasia (token/PIN/OTP) dan memakai `failed_j
 
 ## 14. Implementasi UI (Tanpa Wireframe)
 
-**Sumber kebenaran visual**: `Design.md`. Tidak ada wireframe; halaman dirancang langsung dengan komponen Filament + Blade berdasarkan pola di Design.md.
+**Sumber kebenaran visual**: `DESIGN.md`. Tidak ada wireframe; halaman dirancang langsung dengan komponen Filament (panel) atau Blade + Livewire (portal) berdasarkan pola di `DESIGN.md`.
 
 ### 14.1 Token dan tema
 
-- `resources/css/app.css` memuat CSS variables dari `Design.md` (blok `:root` terang dan blok `.dark`/`[data-theme="dark"]`).
+- `resources/css/app.css` memuat CSS variables dari `DESIGN.md` (blok `:root` terang dan blok `.dark`/`[data-theme="dark"]`).
 - Filament diatur agar warna primer/bahaya/sukses/peringatan mengikuti token; mode gelap memakai mekanisme dark mode Filament.
 - Pilihan tema: Terang/Gelap/Ikuti sistem, disimpan per akun; halaman publik dan eksternal mengikuti `prefers-color-scheme`. Terapkan class tema sebelum render pertama untuk menghindari kilatan.
 
-### 14.2 Pemetaan peran → layar (panel `app` dan `hubin`)
+### 14.2 Pemetaan peran → permukaan dan layar
 
-| Peran | Layar utama |
-|---|---|
-| Siswa | Pengajuan (form + status), unggah balasan, bimbingan (daftar + unggah), status pengesahan (stepper), jadwal sidang |
-| Walas | Gate TTD pengajuan, kanban 5 kolom read-only |
-| Guru | Daftar bimbingan siswa, feedback, Approve Laporan Final, visitasi, detail perusahaan + Generate Link penilaian |
-| Kaprog | Antrean Gate 1, keputusan penerimaan + kuota, plotting, pengajuan visitasi, bulk TTD 2, form builder, jadwal sidang, approval unlock/withdrawal, dashboard durasi tunggu |
-| Hubin | Master data, impor, surat pengantar, konfirmasi dokumen fisik, approval visitasi, FAQ, scan TTD Kepsek, ekspor akreditasi |
-| Kepsek | Daftar TTD 5 (bulk/single) dengan target sentuh 44px |
-| Eksternal | Satu layar per tugas: nilai sidang, TTD 3/4, penilaian industri |
-| Publik | Landing, FAQ, verifikasi QR, login/OTP |
+| Peran | Permukaan | Layar utama |
+|---|---|---|
+| Hubin | Panel `/hubin` (Filament) | Master data, impor, surat pengantar, konfirmasi dokumen fisik, approval visitasi, FAQ, scan TTD Kepsek, ekspor akreditasi |
+| Kaprog | Panel `/kaprog` (Filament) | Antrean Gate 1, keputusan penerimaan + kuota, plotting, pengajuan visitasi, bulk TTD 2, form builder, jadwal sidang, approval unlock/withdrawal, dashboard durasi tunggu |
+| Guru Pembimbing | Panel `/guru` (Filament) | Daftar bimbingan siswa, feedback, Approve Laporan Final, visitasi, detail perusahaan + Generate Link penilaian |
+| Siswa | Portal `/siswa` | Pengajuan (form + status), unggah balasan, bimbingan (daftar + unggah), status pengesahan (stepper), jadwal sidang |
+| Walas | Portal `/walas` | Gate TTD pengajuan, kanban 5 kolom read-only |
+| Kepsek | Portal `/kepsek` | Daftar TTD 5 (bulk/single) dengan target sentuh 44px |
+| Eksternal | `/eksternal/*` | Satu layar per tugas: nilai sidang, TTD 3/4, penilaian industri |
+| Publik | `/`, `/faq`, `/login*`, `/verify/{token}` | Landing, FAQ, verifikasi QR, login/OTP |
 
-### 14.3 Komponen bersama (`app/Filament/Support`)
+### 14.3 Komponen bersama
 
-`StatusBadge` (pemetaan status → chip Design.md), `SignatureStepper` (5-TTD), `QuotaBar` (n/6), `ThemeSwitcher`, `RoleSwitcher`, `MaskedContact`, `OtpInput`, `PinInput`.
+Sumber status tunggal: `app/Support/StatusChip.php` (label, warna, ikon). Enum status mengekspos kontrak Filament (`HasLabel`/`HasColor`/`HasIcon`) yang mendelegasikan ke `StatusChip`, sehingga badge panel (`TextColumn->badge()`) dan chip portal membaca peta yang sama.
+
+Komponen Blade bersama di `resources/views/components/`: `status-badge`, `quota-bar`, `signature-stepper`, `masked-contact`, `otp-input`, `pin-input`, `theme-switcher`, `theme-script`. Layout: `layouts/public`, `layouts/eksternal`, `layouts/auth`, dan `layouts/portal` (portal mobile).
+
+`app/Filament/Support/` ada tetapi kosong; komponen panel memakai fitur bawaan Filament lebih dulu (§14.4).
 
 ### 14.4 Aturan UI
 
 - UI hanya memanggil Action; tidak memuat aturan bisnis.
 - Tombol disabled disertai alasan, otorisasi tetap di server.
+- Panel: pakai fitur bawaan Filament lebih dulu, urutannya Resource → Page + table/schema → Widget → Action/BulkAction → komponen bawaan. Blade kustom di `resources/views/filament/` hanya dengan alasan satu baris.
+- Portal mobile (`/siswa`, `/walas`, `/kepsek`) tidak memakai Filament: satu layout bersama, 360px, target sentuh ≥ 44px, token `DESIGN.md`.
 - Tabel di ponsel menjadi daftar card; target sentuh ≥ 44px; input ≥ 16px di ponsel.
 - Semua teks UI dan pesan galat dalam Bahasa Indonesia di `resources/lang/id/`.
-- Responsif 360px diverifikasi di tiap checkpoint (§17), bukan diasumsikan. **Cadangan**: bila satu halaman tidak bisa memenuhi AC dengan Livewire, boleh memakai komponen Alpine/JS lokal untuk halaman itu saja, tanpa memindahkan stack.
+- Responsif 360px diverifikasi di tiap checkpoint (§17), bukan diasumsikan. **Cadangan**: bila satu halaman panel tidak bisa memenuhi AC dengan Filament, boleh memakai komponen Alpine/JS lokal untuk halaman itu saja, tanpa memindahkan stack.
 
 ## 15. Waktu dan Zona
 
@@ -520,7 +525,7 @@ Di akhir tiap milestone, per halaman baru:
 
 1. Lebar 360px dan 1280px.
 2. Mode terang dan gelap.
-3. Kontras sesuai aturan Design.md (aksen turquoise, biru di mode gelap).
+3. Kontras sesuai aturan `DESIGN.md` (aksen turquoise, biru di mode gelap).
 4. Status memakai chip bertulisan, bukan hanya warna.
 5. Target sentuh dan ukuran input di ponsel.
 
@@ -543,7 +548,7 @@ Rincian per task ada di `TASKS.md`. Urutan ini memastikan dependensi terpenuhi (
 
 | Milestone | Isi |
 |---|---|
-| M0 Fondasi | Repo, paket, `config/pkl.php`, migrasi dari `scheme.sql`, token tema + layout dasar, `AuditService`, helper waktu |
+| M0 Fondasi | Repo, paket, `config/pkl.php`, migrasi dari `schema.sql`, token tema + layout dasar, `AuditService`, helper waktu |
 | M1 Akses | Login, OTP first-login, ganti password, `active_role`, Policy dasar + scope, ThemeSwitcher |
 | M2 Master Data | Perusahaan + `CompanyResolver`, periode, akun, signer, impor, merge, scan TTD Kepsek |
 | M3 Dokumen Dasar | `LetterNumberService`, `DocumentService` (PDF + QR), `/verify` |
@@ -555,11 +560,13 @@ Rincian per task ada di `TASKS.md`. Urutan ini memastikan dependensi terpenuhi (
 | M9 Monitoring & Publik | Kanban Walas, dashboard durasi tunggu, landing, FAQ |
 | M10 Ekspor & Penutup | Ekspor akreditasi, uji beban, audit keamanan, backup, go-live checklist |
 
+Setelah M10 ada pekerjaan **refactor UI/UX**: panel Filament dibagi tiga (`hubin`, `kaprog`, `guru`) dan Siswa/Walas/Kepsek pindah ke portal mobile Blade. Urutan task R0–R6 ada di `TASKS-REFACTOR-UI.md`; dokumen ini sudah memakai bentuk akhirnya.
+
 ## 20. Risiko dan Keputusan Terbuka
 
 | ID | Hal | Default yang dipakai | Dampak bila berubah |
 |---|---|---|---|
-| Q-A | Counter nomor surat per **tahun ajaran** (bukan periode) | Per tahun ajaran | Mengubah kunci `letter_counters` dan UNIQUE nomor; menyimpang dari PD-13/AC-47 |
+| Q-A | Counter nomor surat per **tahun ajaran** (bukan periode) | Per tahun ajaran | Mengubah kunci `nomor_surat_counters` dan UNIQUE nomor; menyimpang dari PD-13/AC-47 |
 | Q-B | Perusahaan lintas >1 jurusan | 1 guru per company+periode; form/link industri per form definition | Skema form/pivot |
 | Q-C | Tanggal PKL per siswa | Disalin dari periode saat penerimaan; Kaprog dapat mengubah | Window penilaian industri |
 | Q-D | TTL link/OTP eksternal | Link 7 hari; OTP 5 menit (maks 3); sesi 24 jam | Nilai di `config/pkl.php` saja |
@@ -567,9 +574,9 @@ Rincian per task ada di `TASKS.md`. Urutan ini memastikan dependensi terpenuhi (
 | Q-F | Penggantian stack (A9) | Filament/Livewire | Bila ditolak: kembali ke TRD v1 dan wireframe |
 | Q-J | Ganti guru setelah plotting | Surat baru + audit | `ReplaceGuru` |
 | R1 | Livewire gagal memenuhi AC tertentu (AC-32 session switching, 360px) | Alpine/JS lokal per halaman | Terbatas pada halaman itu |
-| R2 | Tanpa wireframe, risiko inkonsistensi tata letak | `Design.md` + komponen bersama §14.3 + checkpoint §17.2 | Perlu review visual di tiap milestone |
+| R2 | Tanpa wireframe, risiko inkonsistensi tata letak | `DESIGN.md` + komponen bersama §14.3 + checkpoint §17.2 | Perlu review visual di tiap milestone |
 | R3 | Waktu ekspor melebihi 5 menit | Chunk 500, queue; uji beban dini | Penyetelan chunk/indeks |
-| R4 | Referensi di `docs/form-penilaian-references/` dan `docs/old physical document examples/` belum dipetakan ke template/form | Dipetakan di M3 (surat) dan M7 (form) | Perbedaan isi/format surat dan form |
+| R4 | Referensi di `docs/form-penilaian-references/` dan `docs/old physical dokument examples/` belum dipetakan ke template/form | Dipetakan di M3 (surat) dan M7 (form) | Perbedaan isi/format surat dan form |
 
 ## 21. Definition of Done (per Task)
 
@@ -580,5 +587,6 @@ Rincian per task ada di `TASKS.md`. Urutan ini memastikan dependensi terpenuhi (
 5. Tidak ada rahasia di log/audit/respons.
 6. Halaman baru lolos checkpoint visual §17.2.
 7. Teks UI Bahasa Indonesia di `resources/lang/id/`.
-8. Skema berubah → `docs/scheme.sql` ikut diperbarui.
+8. Skema berubah → `docs/schema.sql` ikut diperbarui.
 9. Tidak ada paket/abstraksi baru di luar §2 tanpa task.
+10. Portal mobile: rute di `routes/portal.php` di luar middleware panel; target sentuh ≥ 44px di 360px; teks Bahasa Indonesia.

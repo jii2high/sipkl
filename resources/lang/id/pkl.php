@@ -46,7 +46,7 @@ return [
     ],
 
     'pengajuan' => [
-        'active_exists' => 'Kamu sudah punya pengajuan aktif pada periode ini. Perbaiki pengajuan itu, bukan membuat yang baru.',
+        'active_exists' => 'Anda sudah punya pengajuan aktif pada periode ini. Perbaiki pengajuan itu, bukan membuat yang baru.',
         'period_locked' => 'Periode ini terkunci untuk pengajuan baru. Hubungi Hubin bila perlu dibuka.',
         'company_missing' => 'Perusahaan yang dipilih tidak tersedia. Pilih perusahaan lain atau isi perusahaan baru.',
         'no_active_period' => 'Belum ada periode PKL aktif. Hubungi Hubin.',
@@ -276,6 +276,7 @@ return [
         'link_issued' => 'Tautan penilaian industri diterbitkan.',
         'link_reissued' => 'Tautan penilaian industri diterbitkan ulang.',
         'link_revoked' => 'Tautan penilaian industri dicabut.',
+        'link_email_note' => 'Tautan juga dikirim ke email pembimbing industri.',
         'score_saved' => 'Penilaian industri tersimpan dan dikunci.',
         'state_none' => 'belum dibuat',
         'state_active' => 'aktif',
@@ -314,7 +315,7 @@ return [
 
     'monitor' => [
         'kanban_judul' => 'Kanban kelas',
-        'kanban_petunjuk' => 'Posisi pengajuan siswa kelasmu. Hanya lihat, tanpa tombol ubah.',
+        'kanban_petunjuk' => 'Posisi pengajuan siswa kelas Anda. Hanya lihat, tanpa tombol ubah.',
         'kanban_geser' => 'Geser ke samping untuk melihat kolom lain.',
         'kanban_kosong' => 'Belum ada siswa di kolom ini.',
         'kanban_tersembunyi' => ':total pengajuan ditolak atau ditarik tidak ditampilkan.',
@@ -355,6 +356,23 @@ return [
         'diaktifkan' => 'Push diaktifkan.',
         'dimatikan' => 'Push dimatikan.',
         'catatan' => 'Pilihan ini tidak pernah ditanyakan ulang otomatis; ubah kapan saja di halaman ini.',
+    ],
+
+    'portal' => [
+        'judul' => 'SIM PKL',
+        'notifikasi' => 'Notifikasi',
+        'pengajuan_judul' => 'Pengajuan PKL saya',
+        'walas_judul' => 'Antrean pengajuan kelas',
+        'kepsek_judul' => 'Pengesahan laporan',
+        'nav' => [
+            'pengajuan' => 'Pengajuan',
+            'bimbingan' => 'Bimbingan',
+            'jadwal_sidang' => 'Jadwal sidang',
+            'antrean' => 'Antrean',
+            'kanban' => 'Kanban kelas',
+            'pengesahan' => 'Pengesahan',
+            'notifikasi' => 'Notifikasi',
+        ],
     ],
 
     'export' => [

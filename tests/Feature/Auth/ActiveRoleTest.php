@@ -19,7 +19,7 @@ test('peran aktif yang tidak dimiliki menghasilkan 403 di panel', function () {
 
     $this->actingAs($user)
         ->withSession(['active_role' => 'kaprog'])
-        ->get('/app')
+        ->get('/guru')
         ->assertForbidden();
 });
 
@@ -28,7 +28,7 @@ test('pengguna dengan peran aktif sah dapat membuka panel', function () {
 
     $this->actingAs($user)
         ->withSession(['active_role' => 'guru_pembimbing'])
-        ->get('/app')
+        ->get('/guru')
         ->assertOk();
 });
 
@@ -48,11 +48,31 @@ test('pindah peran memperbarui sesi dan membersihkan state peran sebelumnya', fu
 test('hak akses panel mengikuti peran yang dimiliki', function () {
     $hubin = pklUser(['hubin']);
     $guru = pklUser(['guru_pembimbing']);
+    $kaprog = pklUser(['kaprog']);
 
-    expect($guru->canAccessPanel(Filament::getPanel('app')))->toBeTrue()
+    expect($guru->canAccessPanel(Filament::getPanel('guru')))->toBeTrue()
+        ->and($guru->canAccessPanel(Filament::getPanel('kaprog')))->toBeFalse()
         ->and($guru->canAccessPanel(Filament::getPanel('hubin')))->toBeFalse()
-        ->and($hubin->canAccessPanel(Filament::getPanel('hubin')))->toBeTrue()
-        ->and($hubin->canAccessPanel(Filament::getPanel('app')))->toBeFalse();
+        ->and($kaprog->canAccessPanel(Filament::getPanel('kaprog')))->toBeTrue()
+        ->and($kaprog->canAccessPanel(Filament::getPanel('guru')))->toBeFalse()
+        ->and($hubin->canAccessPanel(Filament::getPanel('hubin')))->toBeTrue();
+});
+
+test('tiap panel hanya terbuka untuk perannya', function () {
+    $kaprog = pklUser(['kaprog']);
+
+    $this->actingAs($kaprog)->withSession(['active_role' => 'kaprog']);
+
+    $this->get('/kaprog')->assertOk();
+    $this->get('/guru')->assertForbidden();
+    $this->get('/hubin')->assertForbidden();
+
+    $guru = pklUser(['guru_pembimbing']);
+
+    $this->actingAs($guru)->withSession(['active_role' => 'guru_pembimbing']);
+
+    $this->get('/guru')->assertOk();
+    $this->get('/kaprog')->assertForbidden();
 });
 
 test('akun tanpa peran tidak bisa akses panel', function () {
@@ -60,6 +80,6 @@ test('akun tanpa peran tidak bisa akses panel', function () {
 
     $this->actingAs($user)
         ->withSession(['active_role' => 'guru_pembimbing'])
-        ->get('/app')
+        ->get('/guru')
         ->assertForbidden();
 });

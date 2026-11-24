@@ -9,9 +9,10 @@ use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
- * Pemilih peran aktif di header panel `app` (TRD.md §14.3, DESIGN.md "Navigasi").
+ * Pemilih peran aktif di header portal mobile (TRD.md §14.3, DESIGN.md "Navigasi").
  * Hanya muncul untuk pengguna multi-peran. Berpindah peran tanpa reload penuh dan
- * membersihkan state peran sebelumnya lewat `SwitchActiveRole` (KP-F1-5).
+ * membersihkan state peran sebelumnya lewat `SwitchActiveRole` (KP-F1-5). Panel
+ * Filament memakai `userMenuItems()` karena tidak memuat Blade Livewire di topbar.
  */
 class RoleSwitcher extends Component
 {

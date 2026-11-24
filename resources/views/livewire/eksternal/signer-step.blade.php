@@ -26,6 +26,7 @@
             </a>
 
             <button type="button" wire:click="approve" class="pkl-btn pkl-btn-primary min-h-11 w-full" wire:loading.attr="disabled">
+                <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
                 <span wire:loading.remove>Setujui dan tanda tangani</span>
                 <span wire:loading>Memproses...</span>
             </button>
@@ -46,6 +47,7 @@
                     <p class="text-[0.8125rem] text-[var(--danger)]">{{ $message }}</p>
                 @enderror
                 <button type="button" wire:click="reject" class="pkl-btn pkl-btn-secondary min-h-11 w-full text-[var(--danger)]" wire:loading.attr="disabled">
+                    <x-heroicon-o-x-mark class="h-5 w-5" aria-hidden="true" />
                     Tolak dan minta revisi
                 </button>
             </div>

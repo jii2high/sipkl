@@ -55,7 +55,10 @@
         <p class="kode">Galat {{ $status }}</p>
         <h1>{{ $judul }}</h1>
         <p>{{ $message }}</p>
-        <a href="{{ url('/') }}">Kembali ke beranda</a>
+        <a href="{{ url('/') }}">
+            <x-heroicon-o-arrow-left width="16" height="16" aria-hidden="true" style="vertical-align: -0.125em; margin-right: 0.375rem" />
+            Kembali ke beranda
+        </a>
     </main>
 </body>
 </html>

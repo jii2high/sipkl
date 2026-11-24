@@ -1,0 +1,82 @@
+{{--
+    Layout portal mobile (siswa, walas, kepsek): satu kolom, lebar maks 420px,
+    target sentuh >= 44px, token DESIGN.md. Tanpa Filament.
+--}}
+@php
+    $portalRole = (string) session('active_role');
+    $portalNav = collect(match ($portalRole) {
+        'siswa' => [
+            ['route' => 'portal.siswa', 'label' => 'pkl.portal.nav.pengajuan', 'icon' => 'heroicon-o-paper-airplane'],
+            ['route' => 'portal.siswa.bimbingan', 'label' => 'pkl.portal.nav.bimbingan', 'icon' => 'heroicon-o-book-open'],
+            ['route' => 'portal.siswa.jadwal-sidang', 'label' => 'pkl.portal.nav.jadwal_sidang', 'icon' => 'heroicon-o-calendar-days'],
+            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi', 'icon' => 'heroicon-o-bell'],
+        ],
+        'walas' => [
+            ['route' => 'portal.walas', 'label' => 'pkl.portal.nav.antrean', 'icon' => 'heroicon-o-inbox-arrow-down'],
+            ['route' => 'portal.walas.kanban', 'label' => 'pkl.portal.nav.kanban', 'icon' => 'heroicon-o-view-columns'],
+            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi', 'icon' => 'heroicon-o-bell'],
+        ],
+        'kepsek' => [
+            ['route' => 'portal.kepsek', 'label' => 'pkl.portal.nav.pengesahan', 'icon' => 'heroicon-o-check-badge'],
+            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi', 'icon' => 'heroicon-o-bell'],
+        ],
+        default => [],
+    })->filter(fn (array $item): bool => Route::has($item['route']))->values();
+@endphp
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ $title ?? ('Portal SIM PKL ' . config('pkl.school.name')) }}</title>
+    <x-theme-script />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+</head>
+<body class="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <header class="sticky top-0 z-10 border-b border-[var(--border)] bg-[var(--surface)]">
+        <div class="mx-auto flex min-h-[56px] w-full max-w-[420px] items-center justify-between gap-2 px-4 py-2">
+            <p class="text-[0.9375rem] font-semibold">{{ __('pkl.portal.judul') }}</p>
+
+            <div class="flex items-center gap-1">
+                @if (Route::has('portal.notifikasi'))
+                    <a
+                        href="{{ route('portal.notifikasi') }}"
+                        class="flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] text-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                        aria-label="{{ __('pkl.portal.notifikasi') }}"
+                    >
+                        <x-heroicon-o-bell class="h-6 w-6" aria-hidden="true" />
+                    </a>
+                @endif
+
+                @livewire(\App\Livewire\Support\RoleSwitcher::class)
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto w-full max-w-[420px] px-4 py-4 pb-28">
+        {{ $slot }}
+    </main>
+
+    @if ($portalNav->isNotEmpty())
+        <nav class="fixed inset-x-0 bottom-0 border-t border-[var(--border)] bg-[var(--surface)]" aria-label="{{ __('pkl.portal.judul') }}">
+            <ul class="mx-auto flex w-full max-w-[420px]">
+                @foreach ($portalNav as $item)
+                    <li class="flex-1">
+                        <a
+                            href="{{ route($item['route']) }}"
+                            @if (request()->routeIs($item['route'])) aria-current="page" @endif
+                            class="flex min-h-[44px] w-full flex-col items-center justify-center gap-1 px-1 py-2 text-[0.75rem] font-medium {{ request()->routeIs($item['route']) ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]' }} focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                        >
+                            <x-dynamic-component :component="$item['icon']" class="h-6 w-6" aria-hidden="true" />
+                            {{ __($item['label']) }}
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </nav>
+    @endif
+
+    @livewireScripts
+</body>
+</html>

@@ -163,25 +163,28 @@ class User extends Authenticatable implements FilamentUser
         return null;
     }
 
-    /** URL panel untuk peran (Hubin di `/hubin`, sisanya di `/app`). */
+    /** URL permukaan untuk peran: panel Filament atau portal mobile. */
     public function panelHomeUrl(?string $role = null): string
     {
         $role ??= $this->defaultActiveRole();
 
-        return $role === Role::Hubin->value ? url('/hubin') : url('/app');
+        return match ($role) {
+            Role::Hubin->value => url('/hubin'),
+            Role::Kaprog->value => url('/kaprog'),
+            Role::GuruPembimbing->value => url('/guru'),
+            Role::Siswa->value => url('/siswa'),
+            Role::Walas->value => url('/walas'),
+            Role::Kepsek->value => url('/kepsek'),
+            default => route('login'),
+        };
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
         return match ($panel->getId()) {
             'hubin' => $this->hasRole(Role::Hubin),
-            'app' => $this->hasRole(
-                Role::Siswa,
-                Role::Walas,
-                Role::GuruPembimbing,
-                Role::Kaprog,
-                Role::Kepsek,
-            ),
+            'kaprog' => $this->hasRole(Role::Kaprog),
+            'guru' => $this->hasRole(Role::GuruPembimbing),
             default => false,
         };
     }

@@ -159,6 +159,7 @@ class UserResource extends Resource
                 TextColumn::make('roles.role')
                     ->label('Peran')
                     ->badge()
+                    ->limitList(2)
                     ->formatStateUsing(fn (string $state): string => Role::tryFrom($state)?->label() ?? $state),
                 IconColumn::make('is_active')
                     ->label('Aktif')

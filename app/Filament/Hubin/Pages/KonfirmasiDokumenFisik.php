@@ -9,6 +9,8 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\EmbeddedTable;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -22,8 +24,6 @@ use Filament\Tables\Table;
 class KonfirmasiDokumenFisik extends Page implements HasTable
 {
     use InteractsWithTable;
-
-    protected string $view = 'filament.hubin.pages.konfirmasi-dokumen-fisik';
 
     protected static ?string $navigationLabel = 'Dokumen fisik';
 
@@ -94,5 +94,10 @@ class KonfirmasiDokumenFisik extends Page implements HasTable
             ])
             ->emptyStateHeading('Tidak ada dokumen fisik tertunda')
             ->emptyStateDescription('Siswa provisional akan muncul di sini setelah diterima Kaprog.');
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema->components([EmbeddedTable::make()]);
     }
 }

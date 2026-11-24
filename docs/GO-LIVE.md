@@ -3,8 +3,9 @@
 Dokumen operasional T10.2. Isinya: perintah rilis, konfigurasi server, cadangan/pemulihan,
 checklist UAT manusia, pemetaan invarian PRD 1.5 ke tes, dan keputusan butir Q.
 
-Status per dokumen ini: T10.1 selesai dan teruji; T10.2 kode/uji selesai, **butir manual
-(checklist UAT 5, cadangan 4, keputusan PO 6) harus dijalankan manusia di server/peramban.**
+Status per dokumen ini: T10.1 selesai dan teruji; T10.2 kode/uji selesai. **Checklist UAT §5
+sudah dicentang lewat checkpoint visual R6.3** (bukti di `D:\cv\shots`, temuan di §8 sudah
+diperbaiki); **cadangan §4 dan keputusan PO §6 masih harus dijalankan manusia di server/peramban.**
 
 ---
 
@@ -103,18 +104,27 @@ intinya (200) dan ditolak di halaman peran lain (403). Yang tetap manual: lebar 
 
 | Peran | Halaman inti | 360px | 1280px | Terang | Gelap |
 |---|---|---|---|---|---|
-| Siswa | `/app/pengajuan-saya`, `/app/bimbingan-saya`, `/app/jadwal-sidang-saya` | [ ] | [ ] | [ ] | [ ] |
-| Walas | `/app/antrean-pengajuan`, `/app/kanban-kelas` | [ ] | [ ] | [ ] | [ ] |
-| Guru | `/app/bimbingan-siswa`, `/app/pengesahan-laporan` (via ACC final), `/app/visitasi`, `/app/penilaian-industri` | [ ] | [ ] | [ ] | [ ] |
-| Kaprog | `/app/antrean-pengajuan`, `/app/plotting-guru`, `/app/form-builder`, `/app/jadwal-sidang`, `/app/pengesahan-laporan`, `/app/penilaian-sidang`, `/app/monitoring` | [ ] | [ ] | [ ] | [ ] |
-| Kepsek | `/app/pengesahan-laporan` (bulk TTD di ponsel) | [ ] | [ ] | [ ] | [ ] |
-| Hubin | `/hubin/companies`, `/hubin/users`, `/hubin/signature-assets`, `/hubin/faqs`, `/hubin/ekspor-akreditasi`, `/hubin/monitoring` | [ ] | [ ] | [ ] | [ ] |
-| Penguji | `/eksternal/penguji/{token}` (PIN) | [ ] | [ ] | [ ] | [ ] |
-| Industri | `/eksternal/industri/{token}` (OTP) | [ ] | [ ] | [ ] | [ ] |
-| Publik | `/`, `/faq`, `/verify/{token}`, `/login` | [ ] | [ ] | [ ] | [ ] |
+| Siswa | `/siswa`, `/siswa/bimbingan`, `/siswa/jadwal-sidang` | [x] | [x] | [x] | [x] |
+| Walas | `/walas`, `/walas/kanban` | [x] | [x] | [x] | [x] |
+| Guru | `/guru/bimbingan-siswa`, `/guru/penilaian-industri`, `/guru/visitasi` | [x] | [x] | [x] | [x] |
+| Kaprog | `/kaprog/antrean-pengajuan`, `/kaprog/plotting-guru`, `/kaprog/form-builder`, `/kaprog/jadwal-sidang`, `/kaprog/pengesahan-laporan`, `/kaprog/penilaian-sidang`, `/kaprog/monitoring` | [x] | [x] | [x] | [x] |
+| Kepsek | `/kepsek` (bulk TTD di ponsel) | [x] | [x] | [x] | [x] |
+| Semua peran berakun | `/notifikasi` (preferensi notifikasi) | [x] | [x] | [x] | [x] |
+| Hubin | `/hubin/companies`, `/hubin/users`, `/hubin/signature-assets`, `/hubin/faqs`, `/hubin/ekspor-akreditasi`, `/hubin/monitoring` | [x] | [x] | [x] | [x] |
+| Penguji | `/eksternal/penguji/{token}` (PIN) | [x] | [x] | [x] | [x] |
+| Industri | `/eksternal/industri/{token}` (OTP) | [x] | [x] | [x] | [x] |
+| Publik | `/`, `/faq`, `/verify/{token}`, `/login` | [x] | [x] | [x] | [x] |
 
 Per halaman, cek juga: status selalu chip bertulisan, tidak ada tombol utama kedua,
 hubungan kartu/tabel nyaman di 360px.
+
+Bukti R6.3: 354 PNG di `D:\cv\shots` (di luar repo), 9 grup × 360×800 + 1280×900 ×
+terang + gelap, diambil REA `capture_browser_scenario` (Chromium 157 headless) terhadap
+`http://127.0.0.1:8000` dengan basis data uji terpisah `sipkl_cv`. Semua langkah
+`completed`, tanpa galat halaman. Status di seluruh halaman selalu chip bertulisan
+(bukan warna saja), tiap halaman satu tombol utama, navigasi bawah portal 360px
+memakai target sentuh ≥ 44px, dan mode gelap benar di keempat permukaan. Temuan
+kerapian/kontras dicatat di §8 (sudah diperbaiki).
 
 ## 6. Pemetaan invarian PRD 1.5 → tes
 
@@ -141,7 +151,7 @@ dijalankan. Jalankan saat uji beban di server nyata.
 | Q-A | Nomor surat per **tahun ajaran** (bukan per periode) | Menyimpang dari PD-13; mengubahnya = ganti kunci counter dan UNIQUE nomor surat |
 | Q-E | `nilai_total` = rata-rata item, skala 0–100, 2 desimal, dihitung server (`ScoreService`) | Tidak ada kolom `max`; batas 100 konstanta kelas |
 | Q-F | Stack Filament/Livewire/MySQL | Aplikasi sudah dibangun di atas stack ini; kembali ke TRD v1 berarti bangun ulang |
-| Q-K | 5 kolom kanban: (1) pengajuan & verifikasi, (2) surat & balasan, (3) PKL & bimbingan, (4) pengesahan laporan, (5) sidang & selesai | Dipakai di `/app/kanban-kelas` |
+| Q-K | 5 kolom kanban: (1) pengajuan & verifikasi, (2) surat & balasan, (3) PKL & bimbingan, (4) pengesahan laporan, (5) sidang & selesai | Dipakai di `/walas/kanban` |
 | Q-L | Masa berlaku visitasi dari **tanggal terbit** surat | Sudah keputusan PO |
 | Q-H | Perusahaan tanpa signer boleh jalan sampai step 3; Hubin diberi tahu | Default dipakai |
 
@@ -157,3 +167,40 @@ yang berjalan. Bila PO mengubah, perubahan masuk versi berikutnya dengan catatan
 - Kolom ekspor mengikuti kolom `sidang_results_summary`; daftar resmi PD-08 belum ada di repo.
 - Push (T10.3) best-effort: tanpa `PKL_PUSH_ENDPOINT`, kanal push tidak dipakai; email dan
   in-app tetap jalan.
+
+### Temuan CV R6.3 (UI, sudah diperbaiki)
+
+Checkpoint visual R6.3 memotret semua 29 baris checklist §5. Yang lolos: terna terang/gelap,
+chip status bertulisan, satu tombol utama per halaman, target sentuh portal 360px. Temuan
+kerapian berikut sudah diperbaiki pada tugas lanjutan (tanpa mengubah Action/Policy/Service):
+
+1. **Kolom tabel terpotong di 1280** — aksi tabel kini `iconButton()` + `tooltip()`, jadi
+   label panjang tidak lagi memaksa lebar kolom: `/guru/visitasi` ("Unggah"/"Unduh"),
+   `/guru/penilaian-industri` dan `/hubin/penilaian-industri` ("Terbitkan"/"Cabut"/"Terbitkan
+   ulang"). Kolom teks dirapikan (`Telepon` pada kolom tabel, `alamat` `limit(30)`,
+   `Peran` `limitList(2)`). Bila 1280 masih terpotong, cadangan
+   `->toggleable(isToggledHiddenByDefault: true)` pada kolom `Email` tersedia (belum diukur ulang).
+2. **Baris tabel terlalu tinggi** — kolom panjang dibungkus `lineClamp(2)`:
+   `/guru/visitasi` (`perusahaan`), `/guru/penilaian-industri` (`company`, `students`),
+   `/hubin/penilaian-industri` (`company.nama`, `students`), `/kaprog/plotting-guru` (`nama`).
+3. **File input bawaan tak diterjemahkan** — dibiarkan apa adanya (F3): teks `Choose File /
+   No file chosen` adalah perilaku bawaan peramban yang tidak dapat diganti tanpa widget
+   JS kustom.
+4. **Header publik di 360** — wordmark diberi `truncate`, tautan FAQ/Masuk jadi ikon+teks
+   ringkas, dan pemilih tema jadi tiga tombol ikon `h-11 w-11` ber-`aria-label`; header tidak
+   lagi patah multi-baris.
+5. **Label paginasi hilang di 360** — override CSS di `resources/css/app.css` menampilkan
+   kembali teks "per halaman" pada pemilih jumlah baris (bergantung nama kelas Filament
+   5.11.4, dicatat di komentar).
+6. **Kata ganti tidak konsisten** — semua "Kamu"/"-mu" pada portal siswa diganti "Anda"
+   (`resources/lang/id/pkl.php`, `antrean-walas`, `bimbingan-siswa`, `company-autocomplete`).
+
+Tambahan tugas yang sama: ikon navigasi (`navigationIcon`) untuk 10 halaman panel dan ikon
+pada menu portal, header publik, tombol aksi, serta chip/keadaan kosong di seluruh permukaan
+(panel Filament + portal Blade).
+
+Catatan proses: satu jalur 360px terang pernah gagal `page.goto: net::ERR_ABORTED` pada
+`/siswa` (balapan dengan reload `wire:navigate` Livewire); diulang bersih tanpa galat.
+Sesi peramban REA dipakai ulang dalam satu proses, jadi tema diset eksplisit lewat dua kunci
+localStorage (`filament:theme:mode=light` + `sim-pkl-theme-applied=1`) agar tidak ditimpa
+`theme_preference` akun.

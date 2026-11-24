@@ -8,6 +8,8 @@ use App\Actions\Industri\ReissueIndustryLink;
 use App\Actions\Industri\RevokeIndustryLink;
 use App\Actions\Industri\SubmitIndustryAssessment;
 use App\Enums\PengajuanStatus;
+use App\Filament\Guru\Pages\PenilaianIndustri as GuruPenilaianIndustri;
+use App\Filament\Hubin\Pages\PenilaianIndustri;
 use App\Jobs\IndustryAssessmentReminderJob;
 use App\Jobs\SendNotificationJob;
 use App\Livewire\Eksternal\IndustryAssessment;
@@ -30,10 +32,13 @@ use App\Services\MagicLinkService;
 use App\Services\NotificationService;
 use App\Support\JakartaTime;
 use Carbon\CarbonImmutable;
+use Filament\Actions\Testing\TestAction;
+use Filament\Facades\Filament;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Validation\ValidationException;
+use Livewire\Livewire;
 
 /**
  * @param  array<int, string>  $ends  tanggal_selesai_pkl per siswa aktif
@@ -362,4 +367,59 @@ test('portal industri memuat siswa dan mengunci nilai lewat Livewire', function 
 
     expect(FormSubmission::query()->sole()->is_submitted)->toBeTrue()
         ->and($component->notice)->toBe(__('pkl.industri.score_saved'));
+});
+
+test('halaman penilaian industri Hubin menampilkan tautan dan mencabutnya beralasan', function () {
+    $context = industriContext();
+    industriTravel('2026-12-01');
+    industriIssue($context);
+
+    $hubin = pklUser(['hubin']);
+    Filament::setCurrentPanel(Filament::getPanel('hubin'));
+    $this->actingAs($hubin)->withSession(['active_role' => 'hubin']);
+
+    $submission = FormSubmission::query()->sole();
+
+    Livewire::test(PenilaianIndustri::class)
+        ->assertOk()
+        ->assertSee($context['company']->nama)
+        ->assertSee(__('pkl.industri.state_active'));
+
+    Livewire::test(PenilaianIndustri::class)
+        ->callAction(TestAction::make('revoke')->table($submission), ['reason' => 'pendek'])
+        ->assertOk();
+
+    expect($submission->refresh()->industryLinkState())->toBe('active');
+
+    Livewire::test(PenilaianIndustri::class)
+        ->callAction(TestAction::make('revoke')->table($submission), [
+            'reason' => 'Pembimbing industri minta tautan baru.',
+        ])
+        ->assertOk();
+
+    expect($submission->refresh()->industryLinkState())->toBe('expired');
+
+    Livewire::test(PenilaianIndustri::class)
+        ->assertActionVisible(TestAction::make('issue')->table($submission->refresh()));
+});
+
+test('halaman penilaian industri guru menerbitkan tautan dalam window', function () {
+    $context = industriContext();
+    $context['period']->update(['is_active' => true]);
+
+    industriTravel('2026-12-01');
+
+    Filament::setCurrentPanel(Filament::getPanel('guru'));
+    $this->actingAs($context['guru'])->withSession(['active_role' => 'guru_pembimbing']);
+
+    $rowKey = $context['company']->getKey().'|'.$context['definition']->getKey();
+
+    Livewire::test(GuruPenilaianIndustri::class)
+        ->assertOk()
+        ->assertSee($context['company']->nama)
+        ->assertSee(__('pkl.industri.state_none'))
+        ->callAction(TestAction::make('issue')->table($rowKey))
+        ->assertNotified(__('pkl.industri.link_issued'));
+
+    expect(FormSubmission::query()->sole()->industryLinkState())->toBe('active');
 });

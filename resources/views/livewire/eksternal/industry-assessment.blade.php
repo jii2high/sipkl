@@ -32,7 +32,10 @@
                 @forelse ($this->students() as $row)
                     <li>{{ $row->pengajuanSiswa?->siswa?->name ?? '-' }}</li>
                 @empty
-                    <li>{{ __('pkl.industri.students_missing') }}</li>
+                    <li class="flex items-center gap-2">
+                        <x-heroicon-o-user-group class="h-5 w-5 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+                        <span>{{ __('pkl.industri.students_missing') }}</span>
+                    </li>
                 @endforelse
             </ul>
         </section>
@@ -106,6 +109,7 @@
             @endif
 
             <button type="submit" class="pkl-btn pkl-btn-primary min-h-11 w-full" wire:loading.attr="disabled">
+                <x-heroicon-o-paper-airplane class="h-5 w-5" aria-hidden="true" />
                 <span wire:loading.remove>Simpan dan selesaikan</span>
                 <span wire:loading>Menyimpan...</span>
             </button>
