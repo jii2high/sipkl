@@ -137,14 +137,14 @@ class CompanyResource extends Resource
                     ->sortable(),
                 TextColumn::make('alamat')
                     ->label('Alamat')
-                    ->limit(40)
+                    ->limit(30)
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('telp_fax')
-                    ->label('Telepon/faks')
+                    ->label('Telepon')
                     ->toggleable(),
                 IconColumn::make('pembimbing_industri_email_verified_at')
                     ->label('Pembimbing terverifikasi')

@@ -27,10 +27,12 @@
 
             @if ($pushOptIn === true)
                 <button type="button" class="pkl-btn pkl-btn-secondary" wire:click="setPush(false)">
+                    <x-heroicon-o-x-mark class="h-5 w-5" aria-hidden="true" />
                     {{ __('pkl.push.matikan') }}
                 </button>
             @else
                 <button type="button" class="pkl-btn pkl-btn-primary" wire:click="setPush(true)">
+                    <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
                     {{ __('pkl.push.aktifkan') }}
                 </button>
             @endif

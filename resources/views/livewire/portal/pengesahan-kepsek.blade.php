@@ -48,7 +48,10 @@
                 type="button"
                 class="pkl-btn pkl-btn-secondary"
                 wire:click="toggleAll"
-            >{{ $allSelected ? 'Kosongkan pilihan' : 'Pilih semua' }}</button>
+            >
+                <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
+                {{ $allSelected ? 'Kosongkan pilihan' : 'Pilih semua' }}
+            </button>
         </div>
 
         @foreach ($signatures as $signature)
@@ -107,12 +110,18 @@
                                 wire:click="reject({{ $signature->getKey() }})"
                                 wire:loading.attr="disabled"
                                 wire:target="reject"
-                            >Simpan penolakan</button>
+                            >
+                                <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
+                                Simpan penolakan
+                            </button>
                             <button
                                 type="button"
                                 class="pkl-btn pkl-btn-secondary flex-1"
                                 wire:click="cancelReject"
-                            >Batal</button>
+                            >
+                                <x-heroicon-o-x-mark class="h-5 w-5" aria-hidden="true" />
+                                Batal
+                            </button>
                         </div>
                     </div>
                 @else
@@ -125,6 +134,7 @@
                             wire:loading.attr="disabled"
                             wire:target="approve"
                         >
+                            <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
                             <span wire:loading.remove wire:target="approve">Setujui (TTD step 5)</span>
                             <span wire:loading wire:target="approve">Menyimpan...</span>
                         </button>
@@ -132,7 +142,10 @@
                             type="button"
                             class="pkl-btn pkl-btn-secondary flex-1"
                             wire:click="startReject({{ $signature->getKey() }})"
-                        >Tolak</button>
+                        >
+                            <x-heroicon-o-x-mark class="h-5 w-5" aria-hidden="true" />
+                            Tolak
+                        </button>
                     </div>
                 @endif
             </article>
@@ -156,6 +169,7 @@
                 wire:loading.attr="disabled"
                 wire:target="approveSelected"
             >
+                <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
                 <span wire:loading.remove wire:target="approveSelected">Setujui ({{ count($selectedIds) }})</span>
                 <span wire:loading wire:target="approveSelected">Memproses...</span>
             </button>

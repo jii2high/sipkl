@@ -11,8 +11,14 @@
         </p>
 
         <div class="mt-6 flex flex-wrap gap-3">
-            <a href="{{ route('login') }}" class="pkl-btn pkl-btn-primary">{{ __('pkl.home.masuk') }}</a>
-            <a href="{{ route('faq') }}" class="pkl-btn pkl-btn-secondary">{{ __('pkl.home.faq') }}</a>
+            <a href="{{ route('login') }}" class="pkl-btn pkl-btn-primary">
+                <x-heroicon-o-arrow-right-end-on-rectangle class="h-5 w-5" aria-hidden="true" />
+                {{ __('pkl.home.masuk') }}
+            </a>
+            <a href="{{ route('faq') }}" class="pkl-btn pkl-btn-secondary">
+                <x-heroicon-o-question-mark-circle class="h-5 w-5" aria-hidden="true" />
+                {{ __('pkl.home.faq') }}
+            </a>
         </div>
     </section>
 

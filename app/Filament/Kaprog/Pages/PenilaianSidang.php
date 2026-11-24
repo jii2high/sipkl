@@ -9,6 +9,7 @@ use App\Models\FormDefinition;
 use App\Models\FormSubmission;
 use App\Models\NilaiSidangRevision;
 use App\Models\SidangResultsSummary;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Select;
@@ -33,6 +34,8 @@ class PenilaianSidang extends Page implements HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Nilai sidang';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
 
     protected static ?string $title = 'Nilai Sidang';
 

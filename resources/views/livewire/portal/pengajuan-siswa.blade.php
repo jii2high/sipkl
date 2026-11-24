@@ -80,12 +80,14 @@
 
             @if ($this->canReopen())
                 <button type="button" class="pkl-btn pkl-btn-primary w-full" wire:click="reopen" wire:loading.attr="disabled">
+                    <x-heroicon-o-arrow-path class="h-5 w-5" aria-hidden="true" />
                     Perbaiki pengajuan
                 </button>
             @endif
 
             @if ($this->isWithdrawn())
                 <button type="button" class="pkl-btn pkl-btn-secondary w-full" wire:click="startNew" wire:loading.attr="disabled">
+                    <x-heroicon-o-document-text class="h-5 w-5" aria-hidden="true" />
                     Buat pengajuan baru
                 </button>
             @endif
@@ -170,6 +172,7 @@
                 </label>
 
                 <button type="button" class="pkl-btn pkl-btn-danger w-full" wire:click="requestWithdrawal" wire:loading.attr="disabled">
+                    <x-heroicon-o-x-mark class="h-5 w-5" aria-hidden="true" />
                     Ajukan penarikan
                 </button>
             @endif
@@ -196,6 +199,7 @@
                         @endif
                     </p>
                     <button type="button" class="pkl-btn pkl-btn-secondary self-start" wire:click="clearCompany" wire:loading.attr="disabled">
+                        <x-heroicon-o-x-mark class="h-5 w-5" aria-hidden="true" />
                         Ganti perusahaan
                     </button>
                 </div>
@@ -267,6 +271,7 @@
                     </ul>
                     <p>Bila yakin perusahaan ini berbeda, lanjutkan menyimpan draf.</p>
                     <button type="button" class="pkl-btn pkl-btn-primary self-start" wire:click="confirmSimilarity" wire:loading.attr="disabled">
+                        <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
                         Tetap simpan
                     </button>
                 </div>
@@ -274,12 +279,14 @@
 
             <div class="flex flex-col gap-2">
                 <button type="button" class="pkl-btn pkl-btn-secondary w-full" wire:click="saveDraft" wire:loading.attr="disabled">
+                    <x-heroicon-o-document-text class="h-5 w-5" aria-hidden="true" />
                     <span wire:loading.remove wire:target="saveDraft">Simpan draf</span>
                     <span wire:loading wire:target="saveDraft">Menyimpan...</span>
                 </button>
 
                 @if ($this->isDraft())
                     <button type="button" class="pkl-btn pkl-btn-primary w-full" wire:click="submit" wire:loading.attr="disabled">
+                        <x-heroicon-o-paper-airplane class="h-5 w-5" aria-hidden="true" />
                         <span wire:loading.remove wire:target="submit">Kirim pengajuan</span>
                         <span wire:loading wire:target="submit">Mengirim...</span>
                     </button>

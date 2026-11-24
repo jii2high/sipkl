@@ -272,3 +272,18 @@
         color: var(--text-muted);
     }
 }
+
+/* Filament menyembunyikan label "per halaman" di bawah breakpoint sm (varian
+   compact). Teks tetap ada di DOM sebagai .fi-sr-only; tampilkan lagi agar
+   paginasi di 360px terbaca. Selektor mengikuti kelas Filament 5.11.4. */
+.fi-pagination-records-per-page-select.fi-compact .fi-sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin-left: 6px;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+}

@@ -12,6 +12,7 @@ use App\Models\SuratTugasVisitasi;
 use App\Models\User;
 use App\Services\PlottingService;
 use App\Support\StatusChip;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Select;
@@ -40,6 +41,8 @@ class KelolaVisitasi extends Page implements HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Visitasi';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
     protected static ?string $title = 'Pengelolaan Visitasi';
 

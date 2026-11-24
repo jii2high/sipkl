@@ -10,6 +10,7 @@ use App\Models\VisitasiDokumentasi;
 use App\Services\PlottingService;
 use App\Support\JakartaTime;
 use App\Support\StatusChip;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -38,6 +39,8 @@ class Visitasi extends Page implements HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Visitasi';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
     protected static ?string $title = 'Visitasi PKL';
 
@@ -73,7 +76,8 @@ class Visitasi extends Page implements HasTable
                     ->state(fn (SuratTugasVisitasi $record): string => $record->is_general
                         ? 'Seluruh perusahaan bimbingan'
                         : $record->companies->pluck('company.nama')->filter()->join(', '))
-                    ->wrap(),
+                    ->wrap()
+                    ->lineClamp(2),
                 TextColumn::make('nomor_surat')
                     ->label('Nomor surat')
                     ->placeholder('Belum terbit'),
@@ -107,6 +111,8 @@ class Visitasi extends Page implements HasTable
                 Action::make('upload')
                     ->label('Unggah dokumentasi')
                     ->icon(Heroicon::OutlinedArrowUpTray)
+                    ->iconButton()
+                    ->tooltip('Unggah dokumentasi')
                     ->modalHeading('Unggah dokumentasi kunjungan')
                     ->modalDescription('Gunakan foto JPG atau PNG, maksimal 5 MB.')
                     ->visible(fn (SuratTugasVisitasi $record): bool => $this->canUpload($record))
@@ -154,6 +160,8 @@ class Visitasi extends Page implements HasTable
                 Action::make('download')
                     ->label('Unduh surat')
                     ->icon(Heroicon::OutlinedArrowDownTray)
+                    ->iconButton()
+                    ->tooltip('Unduh surat')
                     ->url(fn (SuratTugasVisitasi $record): string => route('documents.download', [
                         'jenis' => 'surat_tugas_visitasi',
                         'id' => $record->getKey(),

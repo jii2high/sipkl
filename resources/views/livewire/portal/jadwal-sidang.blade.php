@@ -17,11 +17,15 @@
             </dl>
         </article>
     @empty
-        <div class="pkl-card flex flex-col gap-3 text-center">
+        <div class="pkl-card flex flex-col items-center gap-3 text-center">
+            <x-heroicon-o-calendar-days class="h-8 w-8 text-[var(--text-muted)]" aria-hidden="true" />
             <p class="text-[0.875rem] text-[var(--text-muted)]">
                 Belum ada jadwal sidang. Jadwal muncul setelah laporan sah dan Kaprog menjadwalkan sidang.
             </p>
-            <a href="{{ route('portal.siswa') }}" class="pkl-btn pkl-btn-secondary w-full">Kembali ke pengajuan</a>
+            <a href="{{ route('portal.siswa') }}" class="pkl-btn pkl-btn-secondary w-full">
+                <x-heroicon-o-arrow-left class="h-5 w-5" aria-hidden="true" />
+                Kembali ke pengajuan
+            </a>
         </div>
     @endforelse
 </section>

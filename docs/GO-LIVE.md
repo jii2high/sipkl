@@ -3,9 +3,9 @@
 Dokumen operasional T10.2. Isinya: perintah rilis, konfigurasi server, cadangan/pemulihan,
 checklist UAT manusia, pemetaan invarian PRD 1.5 ke tes, dan keputusan butir Q.
 
-Status per dokumen ini: T10.1 selesai dan teruji; T10.2 kode/uji selesai. **Checklist UAT 5
-sudah dicentang lewat checkpoint visual R6.3** (bukti di `D:\cv\shots`, temuan di §8);
-**cadangan 4 dan keputusan PO 6 masih harus dijalankan manusia di server/peramban.**
+Status per dokumen ini: T10.1 selesai dan teruji; T10.2 kode/uji selesai. **Checklist UAT §5
+sudah dicentang lewat checkpoint visual R6.3** (bukti di `D:\cv\shots`, temuan di §8 sudah
+diperbaiki); **cadangan §4 dan keputusan PO §6 masih harus dijalankan manusia di server/peramban.**
 
 ---
 
@@ -124,7 +124,7 @@ terang + gelap, diambil REA `capture_browser_scenario` (Chromium 157 headless) t
 `completed`, tanpa galat halaman. Status di seluruh halaman selalu chip bertulisan
 (bukan warna saja), tiap halaman satu tombol utama, navigasi bawah portal 360px
 memakai target sentuh ≥ 44px, dan mode gelap benar di keempat permukaan. Temuan
-kerapian/kontras dicatat di §8 (belum diperbaiki).
+kerapian/kontras dicatat di §8 (sudah diperbaiki).
 
 ## 6. Pemetaan invarian PRD 1.5 → tes
 
@@ -168,27 +168,36 @@ yang berjalan. Bila PO mengubah, perubahan masuk versi berikutnya dengan catatan
 - Push (T10.3) best-effort: tanpa `PKL_PUSH_ENDPOINT`, kanal push tidak dipakai; email dan
   in-app tetap jalan.
 
-### Temuan CV R6.3 (UI, belum diperbaiki)
+### Temuan CV R6.3 (UI, sudah diperbaiki)
 
 Checkpoint visual R6.3 memotret semua 29 baris checklist §5. Yang lolos: terna terang/gelap,
 chip status bertulisan, satu tombol utama per halaman, target sentuh portal 360px. Temuan
-kerapian berikut dicatat untuk tugas perbaikan terpisah (tidak mengubah Action/Policy/Service):
+kerapian berikut sudah diperbaiki pada tugas lanjutan (tanpa mengubah Action/Policy/Service):
 
-1. **Kolom tabel terpotong di 1280** — kolom/aksi paling kanan terpotong di tepi viewport:
-   `/hubin/companies` ("Telepon"), `/hubin/users` ("Peran"), `/guru/visitasi` ("Unggah
-   dokumentasi"), `/guru/penilaian-industri` ("Terbitkan"/"Cabut tautan"). Tabel tidak
-   menyusut; label aksi tak terbaca tanpa geser horizontal.
-2. **Baris tabel terlalu tinggi** — `/guru/visitasi` menampilkan "Perusahaan" sampai 5 baris
-   (`PT Telkom Indonesia (Persero) Tbk`), tinggi baris ± 200px. Pola sama di
-   `/guru/penilaian-industri` dan `/kaprog/plotting-guru`; sulit dipindai.
-3. **File input bawaan tak diterjemahkan** — `/siswa/bimbingan` menampilkan `Choose File
-   No file chosen` (teks bawaan peramban, Inggris), menyalahi aturan UI Bahasa Indonesia.
-4. **Header publik di 360** — wordmark `SMKN 1 Kota Bekasi` patah jadi 4 baris dan baris
-   navigasi (FAQ / Masuk / tema / Ikuti sistem) jadi 2 baris; rapat dan mendorong konten.
-5. **Label paginasi hilang di 360** — `/kaprog/form-builder` menyisakan pilihan `10` tanpa
-   teks "per halaman".
-6. **Kata ganti tidak konsisten** — portal siswa memakai "Kamu" ("Kamu bisa menandai bagian
-   akhir laporan"), panel memakai "Anda".
+1. **Kolom tabel terpotong di 1280** — aksi tabel kini `iconButton()` + `tooltip()`, jadi
+   label panjang tidak lagi memaksa lebar kolom: `/guru/visitasi` ("Unggah"/"Unduh"),
+   `/guru/penilaian-industri` dan `/hubin/penilaian-industri` ("Terbitkan"/"Cabut"/"Terbitkan
+   ulang"). Kolom teks dirapikan (`Telepon` pada kolom tabel, `alamat` `limit(30)`,
+   `Peran` `limitList(2)`). Bila 1280 masih terpotong, cadangan
+   `->toggleable(isToggledHiddenByDefault: true)` pada kolom `Email` tersedia (belum diukur ulang).
+2. **Baris tabel terlalu tinggi** — kolom panjang dibungkus `lineClamp(2)`:
+   `/guru/visitasi` (`perusahaan`), `/guru/penilaian-industri` (`company`, `students`),
+   `/hubin/penilaian-industri` (`company.nama`, `students`), `/kaprog/plotting-guru` (`nama`).
+3. **File input bawaan tak diterjemahkan** — dibiarkan apa adanya (F3): teks `Choose File /
+   No file chosen` adalah perilaku bawaan peramban yang tidak dapat diganti tanpa widget
+   JS kustom.
+4. **Header publik di 360** — wordmark diberi `truncate`, tautan FAQ/Masuk jadi ikon+teks
+   ringkas, dan pemilih tema jadi tiga tombol ikon `h-11 w-11` ber-`aria-label`; header tidak
+   lagi patah multi-baris.
+5. **Label paginasi hilang di 360** — override CSS di `resources/css/app.css` menampilkan
+   kembali teks "per halaman" pada pemilih jumlah baris (bergantung nama kelas Filament
+   5.11.4, dicatat di komentar).
+6. **Kata ganti tidak konsisten** — semua "Kamu"/"-mu" pada portal siswa diganti "Anda"
+   (`resources/lang/id/pkl.php`, `antrean-walas`, `bimbingan-siswa`, `company-autocomplete`).
+
+Tambahan tugas yang sama: ikon navigasi (`navigationIcon`) untuk 10 halaman panel dan ikon
+pada menu portal, header publik, tombol aksi, serta chip/keadaan kosong di seluruh permukaan
+(panel Filament + portal Blade).
 
 Catatan proses: satu jalur 360px terang pernah gagal `page.goto: net::ERR_ABORTED` pada
 `/siswa` (balapan dengan reload `wire:navigate` Livewire); diulang bersih tanpa galat.

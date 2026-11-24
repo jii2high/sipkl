@@ -7,6 +7,7 @@ use App\Actions\Bimbingan\GiveFeedback;
 use App\Enums\Role;
 use App\Models\BimbinganSubmission;
 use App\Support\StatusChip;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -31,6 +32,8 @@ class BimbinganSiswa extends Page implements HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Bimbingan siswa';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
 
     protected static ?string $title = 'Bimbingan Siswa';
 

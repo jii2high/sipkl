@@ -10,6 +10,7 @@ use App\Models\AcademicPeriod;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\PlottingService;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
@@ -37,6 +38,8 @@ class PlottingGuru extends Page implements HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Plotting guru';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserPlus;
 
     protected static ?string $title = 'Plotting Guru Pembimbing';
 
@@ -81,7 +84,8 @@ class PlottingGuru extends Page implements HasTable
             ->columns([
                 TextColumn::make('nama')
                     ->label('Perusahaan')
-                    ->wrap(),
+                    ->wrap()
+                    ->lineClamp(2),
                 TextColumn::make('jumlah_siswa')
                     ->label('Siswa PKL aktif')
                     ->badge()

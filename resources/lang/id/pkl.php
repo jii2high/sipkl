@@ -46,7 +46,7 @@ return [
     ],
 
     'pengajuan' => [
-        'active_exists' => 'Kamu sudah punya pengajuan aktif pada periode ini. Perbaiki pengajuan itu, bukan membuat yang baru.',
+        'active_exists' => 'Anda sudah punya pengajuan aktif pada periode ini. Perbaiki pengajuan itu, bukan membuat yang baru.',
         'period_locked' => 'Periode ini terkunci untuk pengajuan baru. Hubungi Hubin bila perlu dibuka.',
         'company_missing' => 'Perusahaan yang dipilih tidak tersedia. Pilih perusahaan lain atau isi perusahaan baru.',
         'no_active_period' => 'Belum ada periode PKL aktif. Hubungi Hubin.',
@@ -315,7 +315,7 @@ return [
 
     'monitor' => [
         'kanban_judul' => 'Kanban kelas',
-        'kanban_petunjuk' => 'Posisi pengajuan siswa kelasmu. Hanya lihat, tanpa tombol ubah.',
+        'kanban_petunjuk' => 'Posisi pengajuan siswa kelas Anda. Hanya lihat, tanpa tombol ubah.',
         'kanban_geser' => 'Geser ke samping untuk melihat kolom lain.',
         'kanban_kosong' => 'Belum ada siswa di kolom ini.',
         'kanban_tersembunyi' => ':total pengajuan ditolak atau ditarik tidak ditampilkan.',

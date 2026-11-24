@@ -6,19 +6,19 @@
     $portalRole = (string) session('active_role');
     $portalNav = collect(match ($portalRole) {
         'siswa' => [
-            ['route' => 'portal.siswa', 'label' => 'pkl.portal.nav.pengajuan'],
-            ['route' => 'portal.siswa.bimbingan', 'label' => 'pkl.portal.nav.bimbingan'],
-            ['route' => 'portal.siswa.jadwal-sidang', 'label' => 'pkl.portal.nav.jadwal_sidang'],
-            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi'],
+            ['route' => 'portal.siswa', 'label' => 'pkl.portal.nav.pengajuan', 'icon' => 'heroicon-o-paper-airplane'],
+            ['route' => 'portal.siswa.bimbingan', 'label' => 'pkl.portal.nav.bimbingan', 'icon' => 'heroicon-o-book-open'],
+            ['route' => 'portal.siswa.jadwal-sidang', 'label' => 'pkl.portal.nav.jadwal_sidang', 'icon' => 'heroicon-o-calendar-days'],
+            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi', 'icon' => 'heroicon-o-bell'],
         ],
         'walas' => [
-            ['route' => 'portal.walas', 'label' => 'pkl.portal.nav.antrean'],
-            ['route' => 'portal.walas.kanban', 'label' => 'pkl.portal.nav.kanban'],
-            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi'],
+            ['route' => 'portal.walas', 'label' => 'pkl.portal.nav.antrean', 'icon' => 'heroicon-o-inbox-arrow-down'],
+            ['route' => 'portal.walas.kanban', 'label' => 'pkl.portal.nav.kanban', 'icon' => 'heroicon-o-view-columns'],
+            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi', 'icon' => 'heroicon-o-bell'],
         ],
         'kepsek' => [
-            ['route' => 'portal.kepsek', 'label' => 'pkl.portal.nav.pengesahan'],
-            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi'],
+            ['route' => 'portal.kepsek', 'label' => 'pkl.portal.nav.pengesahan', 'icon' => 'heroicon-o-check-badge'],
+            ['route' => 'portal.notifikasi', 'label' => 'pkl.portal.nav.notifikasi', 'icon' => 'heroicon-o-bell'],
         ],
         default => [],
     })->filter(fn (array $item): bool => Route::has($item['route']))->values();
@@ -66,8 +66,9 @@
                         <a
                             href="{{ route($item['route']) }}"
                             @if (request()->routeIs($item['route'])) aria-current="page" @endif
-                            class="flex min-h-[44px] w-full flex-col items-center justify-center px-1 py-2 text-[0.75rem] font-medium {{ request()->routeIs($item['route']) ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]' }} focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+                            class="flex min-h-[44px] w-full flex-col items-center justify-center gap-1 px-1 py-2 text-[0.75rem] font-medium {{ request()->routeIs($item['route']) ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]' }} focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
                         >
+                            <x-dynamic-component :component="$item['icon']" class="h-6 w-6" aria-hidden="true" />
                             {{ __($item['label']) }}
                         </a>
                     </li>

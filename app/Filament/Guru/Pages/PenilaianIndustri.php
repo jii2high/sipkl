@@ -13,6 +13,7 @@ use App\Models\FormSubmission;
 use App\Models\PengajuanSiswa;
 use App\Services\PlottingService;
 use App\Support\IndustryWindow;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -39,6 +40,8 @@ class PenilaianIndustri extends Page implements HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Penilaian industri';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
 
     protected static ?string $slug = 'penilaian-industri';
 
@@ -86,7 +89,8 @@ class PenilaianIndustri extends Page implements HasTable
                 TextColumn::make('company')
                     ->label('Perusahaan')
                     ->state(fn (array $record): string => $record['company']->nama)
-                    ->wrap(),
+                    ->wrap()
+                    ->lineClamp(2),
                 TextColumn::make('definition')
                     ->label('Form')
                     ->state(fn (array $record): string => $record['definition']->nama)
@@ -97,7 +101,8 @@ class PenilaianIndustri extends Page implements HasTable
                         ->map(fn (PengajuanSiswa $student): string => (string) $student->siswa?->name)
                         ->filter()
                         ->join(', '))
-                    ->wrap(),
+                    ->wrap()
+                    ->lineClamp(2),
                 TextColumn::make('tautan')
                     ->label('Status tautan')
                     ->badge()
@@ -122,11 +127,15 @@ class PenilaianIndustri extends Page implements HasTable
                 Action::make('issue')
                     ->label('Terbitkan tautan')
                     ->icon(Heroicon::OutlinedLink)
+                    ->iconButton()
+                    ->tooltip('Terbitkan tautan')
                     ->visible(fn (array $record): bool => in_array($this->linkState($record), ['none', 'expired'], true))
                     ->action(fn (array $record) => $this->issue($record)),
                 Action::make('revoke')
                     ->label('Cabut tautan')
                     ->icon(Heroicon::OutlinedNoSymbol)
+                    ->iconButton()
+                    ->tooltip('Cabut tautan')
                     ->color('danger')
                     ->visible(fn (array $record): bool => $this->linkState($record) === 'active')
                     ->schema([$this->reasonField()])
@@ -139,6 +148,8 @@ class PenilaianIndustri extends Page implements HasTable
                 Action::make('reissue')
                     ->label('Terbitkan ulang')
                     ->icon(Heroicon::OutlinedArrowPath)
+                    ->iconButton()
+                    ->tooltip('Terbitkan ulang')
                     ->visible(fn (array $record): bool => $this->linkState($record) === 'active')
                     ->schema([$this->reasonField()])
                     ->action(function (array $record, array $data): void {

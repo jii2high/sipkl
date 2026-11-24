@@ -4,7 +4,7 @@
     <div>
         <h1 class="text-[1.125rem] font-semibold">{{ __('pkl.portal.walas_judul') }}</h1>
         <p class="mt-1 text-[0.8125rem] text-[var(--text-muted)]">
-            Pengajuan dari siswa kelasmu menunggu tanda tangan. Tanda tangan meneruskan ke surat pengantar Hubin.
+            Pengajuan dari siswa kelas Anda menunggu tanda tangan. Tanda tangan meneruskan ke surat pengantar Hubin.
         </p>
     </div>
 
@@ -22,8 +22,8 @@
 
     @if ($queue === [])
         <div class="pkl-card">
-            <p class="text-[0.875rem] font-medium">Tidak ada pengajuan yang menunggu tanda tanganmu.</p>
-            <p class="mt-1 text-[0.8125rem] text-[var(--text-muted)]">Antrean muncul setelah Kaprog menyetujui pengajuan siswa kelasmu.</p>
+            <p class="text-[0.875rem] font-medium">Tidak ada pengajuan yang menunggu tanda tangan Anda.</p>
+            <p class="mt-1 text-[0.8125rem] text-[var(--text-muted)]">Antrean muncul setelah Kaprog menyetujui pengajuan siswa kelas Anda.</p>
         </div>
     @else
         <p class="text-[0.8125rem] text-[var(--text-muted)]">{{ count($queue) }} pengajuan menunggu TTD Walas.</p>
@@ -64,12 +64,18 @@
                                 wire:click="reject({{ $pengajuan->getKey() }})"
                                 wire:loading.attr="disabled"
                                 wire:target="reject"
-                            >Simpan penolakan</button>
+                            >
+                                <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
+                                Simpan penolakan
+                            </button>
                             <button
                                 type="button"
                                 class="pkl-btn pkl-btn-secondary flex-1"
                                 wire:click="cancelReject"
-                            >Batal</button>
+                            >
+                                <x-heroicon-o-x-mark class="h-5 w-5" aria-hidden="true" />
+                                Batal
+                            </button>
                         </div>
                     </div>
                 @else
@@ -82,6 +88,7 @@
                             wire:loading.attr="disabled"
                             wire:target="approve"
                         >
+                            <x-heroicon-o-check class="h-5 w-5" aria-hidden="true" />
                             <span wire:loading.remove wire:target="approve">Tanda tangani</span>
                             <span wire:loading wire:target="approve">Menyimpan...</span>
                         </button>
@@ -89,7 +96,10 @@
                             type="button"
                             class="pkl-btn pkl-btn-secondary flex-1"
                             wire:click="startReject({{ $pengajuan->getKey() }})"
-                        >Tolak</button>
+                        >
+                            <x-heroicon-o-x-mark class="h-5 w-5" aria-hidden="true" />
+                            Tolak
+                        </button>
                     </div>
                 @endif
             </article>

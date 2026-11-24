@@ -24,8 +24,11 @@
 
     @if ($pengajuan === null)
         <div class="pkl-card flex flex-col gap-3">
-            <p class="text-[0.875rem] text-[var(--text-muted)]">Bimbingan tersedia setelah kamu berstatus Sedang PKL.</p>
-            <a href="{{ route('portal.siswa') }}" class="pkl-btn pkl-btn-secondary w-full">Kembali ke pengajuan</a>
+            <p class="text-[0.875rem] text-[var(--text-muted)]">Bimbingan tersedia setelah Anda berstatus Sedang PKL.</p>
+            <a href="{{ route('portal.siswa') }}" class="pkl-btn pkl-btn-secondary w-full">
+                <x-heroicon-o-arrow-left class="h-5 w-5" aria-hidden="true" />
+                Kembali ke pengajuan
+            </a>
         </div>
     @else
         @if ($pengajuan->is_provisional)
@@ -52,7 +55,7 @@
             </div>
 
             @if ($progress['count'] >= $progress['min'])
-                <p class="text-[0.875rem] text-[var(--success)]">Kamu bisa menandai bagian akhir laporan.</p>
+                <p class="text-[0.875rem] text-[var(--success)]">Anda bisa menandai bagian akhir laporan.</p>
             @else
                 <p class="text-[0.875rem] text-[var(--text-muted)]">
                     Unggah bimbingan sampai minimal {{ $progress['min'] }} interaksi sebelum menandai bagian akhir.
@@ -92,6 +95,7 @@
                     wire:loading.attr="disabled"
                     wire:target="uploadRevision, revisionFile"
                 >
+                    <x-heroicon-o-arrow-up-tray class="h-5 w-5" aria-hidden="true" />
                     <span wire:loading.remove wire:target="uploadRevision, revisionFile">Unggah revisi laporan</span>
                     <span wire:loading wire:target="uploadRevision, revisionFile">Mengunggah...</span>
                 </button>
@@ -139,6 +143,7 @@
                 wire:target="submit, file"
                 @disabled($pengajuan->is_provisional)
             >
+                <x-heroicon-o-arrow-up-tray class="h-5 w-5" aria-hidden="true" />
                 <span wire:loading.remove wire:target="submit, file">Unggah bimbingan</span>
                 <span wire:loading wire:target="submit, file">Mengunggah...</span>
             </button>
@@ -176,6 +181,7 @@
                             class="pkl-btn pkl-btn-secondary"
                             href="{{ route('bimbingan.download', ['id' => $submission->getKey()]) }}"
                         >
+                            <x-heroicon-o-arrow-down-tray class="h-5 w-5" aria-hidden="true" />
                             Unduh berkas
                         </a>
 
@@ -186,14 +192,16 @@
                                 wire:click="markFinal({{ $submission->getKey() }})"
                                 wire:loading.attr="disabled"
                             >
+                                <x-heroicon-o-check-badge class="h-5 w-5" aria-hidden="true" />
                                 Tandai bagian akhir
                             </button>
                         @endif
                     </div>
                 </article>
             @empty
-                <div class="pkl-card text-center text-[0.875rem] text-[var(--text-muted)]">
-                    Belum ada bimbingan yang diunggah.
+                <div class="pkl-card flex flex-col items-center gap-2 text-center text-[0.875rem] text-[var(--text-muted)]">
+                    <x-heroicon-o-book-open class="h-8 w-8" aria-hidden="true" />
+                    <span>Belum ada bimbingan yang diunggah.</span>
                 </div>
             @endforelse
         </section>

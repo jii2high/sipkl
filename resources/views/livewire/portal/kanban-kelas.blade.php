@@ -41,8 +41,9 @@
                                     </div>
                                 </li>
                             @empty
-                                <li class="rounded-[var(--radius-md)] bg-[var(--surface-muted)] px-3 py-6 text-center text-[0.75rem] text-[var(--text-muted)]">
-                                    {{ __('pkl.monitor.kanban_kosong') }}
+                                <li class="flex flex-col items-center gap-1 rounded-[var(--radius-md)] bg-[var(--surface-muted)] px-3 py-6 text-center text-[0.75rem] text-[var(--text-muted)]">
+                                    <x-heroicon-o-view-columns class="h-6 w-6" aria-hidden="true" />
+                                    <span>{{ __('pkl.monitor.kanban_kosong') }}</span>
                                 </li>
                             @endforelse
                         </ul>

@@ -13,6 +13,7 @@ use App\Exceptions\DocumentIssuanceHeld;
 use App\Models\DocumentSignature;
 use App\Models\MagicLink;
 use App\Services\MagicLinkService;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -41,6 +42,8 @@ class PengesahanLaporan extends Page implements HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Pengesahan laporan';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCheck;
 
     protected static ?string $title = 'Pengesahan Laporan 5-TTD';
 

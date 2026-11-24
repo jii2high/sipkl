@@ -12,6 +12,7 @@ use App\Models\ExternalExaminer;
 use App\Models\JadwalSidang;
 use App\Models\PengajuanSiswa;
 use App\Services\MagicLinkService;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
@@ -42,6 +43,8 @@ class JadwalSidangPage extends Page implements HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationLabel = 'Jadwal sidang';
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
     protected static ?string $slug = 'jadwal-sidang';
 
